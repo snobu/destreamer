@@ -1,5 +1,7 @@
 # Destreamer
 
+![](logo.png)
+
 ## Saves Microsoft Stream videos for offline enjoyment.
 
 Alpha-quality, don't expect much. It does work though, so that's a neat feature.
