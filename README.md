@@ -16,7 +16,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 * **Node.js**: anything above v8.0 will probably work. Tested on v11.6.0.
 * **youtube-dl**: https://ytdl-org.github.io/youtube-dl/download.html, you'll need a fairly recent version that understands encrypted HLS streams. This needs to be in your $PATH. Destreamer calls `youtube-dl` with a bunch of arguments.
-* Should take a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, results may vary, feel free to open an Issue if trouble arise.
+* Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, results may vary, feel free to open an Issue if trouble arise.
 
 
 ### USAGE
