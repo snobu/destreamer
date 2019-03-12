@@ -9,26 +9,26 @@ Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 It's slow (2x real-time). Not much i can do about it for now unless i find a better way than ripping HLS.
 
 
-### **DISCLAIMER**
+## DISCLAIMER
 
 Hopefully this doesn't break the end user agreement for Microsoft Stream. Since we're simply saving the HLS stream to disk as if we were a browser, this does not abuse the streaming endpoints. However i take no responsibility if either Microsoft or your Office 365 admins request a chat with you in a small white room.
 
 
-### PREREQS
+## PREREQS
 
 * **Node.js**: anything above v8.0 will probably work. Tested on v11.6.0.
 * **youtube-dl**: https://ytdl-org.github.io/youtube-dl/download.html, you'll need a fairly recent version that understands encrypted HLS streams. This needs to be in your $PATH. Destreamer calls `youtube-dl` with a bunch of arguments.
 * Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, results may vary, feel free to open an Issue if trouble arise.
 
 
-### USAGE
+## USAGE
 
 * Edit `destreamer.js` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 
 * `npm start <URL of the video>`
 
 
-### Expected output
+## EXPECTED OUTPUT
 
 ```
 Using youtube-dl version 2019.01.17
