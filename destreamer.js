@@ -1,6 +1,9 @@
+//@ts-check
 const execSync = require('child_process').execSync;
 const puppeteer = require('puppeteer');
 const term = require('terminal-kit').terminal;
+const fs = require('fs');
+const path = require('path');
 
 // Type in your username here (the one you use to
 // login to Microsoft Stream).
@@ -19,6 +22,12 @@ function sanityChecks() {
         process.exit(22);
     }
 
+    if (!fs.existsSync(outputDirectory)){
+        console.log('Creating output directory: ' +
+            process.cwd() + path.sep + outputDirectory);
+        fs.mkdirSync(outputDirectory);
+    }
+
     if (args[0] == null || args[0].length < 10) {
         console.error('Pass in video URL as first argument: \n' +
             'Example: npm start https://www.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc\n');
@@ -29,7 +38,8 @@ function sanityChecks() {
 async function rentVideoForLater() {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
-        headless: false, // Switch to false if you have to login interactively
+        // Switch to false if you need to login interactively
+        headless: false,
         args: ['--disable-dev-shm-usage']
     });
     const page = await browser.newPage();
@@ -71,7 +81,7 @@ async function rentVideoForLater() {
     await browser.close();
 
     console.log('Constructing HLSv3 URL...');
-    hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl-v3)';
+    const hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl-v3)';
 
 
     console.log('Spawning youtube-dl with cookie and HLSv3 URL...');
@@ -107,5 +117,3 @@ async function exfiltrateCookie(page) {
 
 sanityChecks();
 rentVideoForLater();
-
-console.log('\nEverything is okay when everything is okay. Exiting...');
