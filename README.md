@@ -24,7 +24,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 ## USAGE
 
 * Edit `destreamer.js` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
-
+* `npm i` to restore packages
 * `npm start <URL of the video>`
 
 
