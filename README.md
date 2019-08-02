@@ -6,7 +6,7 @@
 
 Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 
-It's slow (2x real-time). Not much i can do about it for now unless i find a better way than ripping HLS.
+It's slow (e.g. a 60-min video takes 20-30 minutes to download). Not much i can do about it for now unless i find a better way than ripping HLS.
 
 
 ## DISCLAIMER
