@@ -30,11 +30,9 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 ## USAGE
 
-<<<<<<< HEAD
 * Edit `destreamer.ts` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 =======
 * Edit `destreamer.ts` (`.js` if using the vanilla JS master branch) and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
->>>>>>> 29d81b72100b508b7b6429fc05a30c8b6e2f0f1d
 * `npm install` to restore packages
 * `npm start <URL of the video>`
 
