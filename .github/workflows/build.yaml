@@ -2,6 +2,8 @@ name: Node CI
 
 on:
   push:
+    paths-ignore:
+    - 'README.md'
     branches:
     - dev
 
@@ -16,17 +18,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Should this run?
-      run: |
-        COUNT=$(git diff --name-only HEAD~1 | wc -l)
-        if [ $COUNT = 1 ]; then
-            ISREADME=$( (git diff --name-only HEAD~1 | grep README) || printf false )
-        fi
+    # - name: Should this run?
+    #   run: |
+    #     COUNT=$(git diff --name-only HEAD~1 | wc -l)
+    #     if [ $COUNT = 1 ]; then
+    #         ISREADME=$( (git diff --name-only HEAD~1 | grep README) || printf false )
+    #     fi
 
-        if [ $ISREADME != 'false' ]; then
-            echo 'Only the README has changed, skipping build.'
-            exit 66
-        fi
+    #     if [ $ISREADME != 'false' ]; then
+    #         echo 'Only the README has changed, skipping build.'
+    #         exit 66
+    #     fi
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
