@@ -1,5 +1,9 @@
 {
-  "name": "destreamer-node",
+  "name": "destreamer",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/snobu/destreamer.git"
+  },
   "version": "1.0.0",
   "description": "",
   "main": "destreamer.js",
@@ -8,8 +12,8 @@
     "test": "node ./destreamer.js test"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "snobu",
+  "license": "MIT",
   "devDependencies": {
     "@types/puppeteer": "^1.19.1",
     "@types/terminal-kit": "^1.28.0"
