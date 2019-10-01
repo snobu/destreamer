@@ -25,7 +25,7 @@ jobs:
 
         if [ $ISREADME != 'false' ]; then
             echo 'Only the README has changed, skipping build.'
-            exit 66
+            exit 0
         fi
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
