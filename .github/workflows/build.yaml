@@ -19,8 +19,14 @@ jobs:
     - name: Should this run?
       run: |
         COUNT=$(git diff --name-only HEAD~1 | wc -l)
-        if [ $COUNT = 1 ]; then git diff --name-only HEAD~1 | grep README; fi
-        if [ $? = 0 ]; then echo 'Only the README has changed, skipping build.'; exit 66; fi
+        if [ $COUNT = 1 ]; then
+            ISREADME=$( (git diff --name-only HEAD~1 | grep README) || printf false )
+        fi
+
+        if [ $ISREADME != 'false' ]; then
+            echo 'Only the README has changed, skipping build.'
+            exit 66
+        fi
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
