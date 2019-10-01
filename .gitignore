@@ -1,3 +1,7 @@
 *.log
+destreamer.js
 node_modules
 videos
+
+swagger.json
+cc.json
