@@ -68,4 +68,3 @@ video:186494kB audio:5380kB subtitle:0kB other streams:0kB global headers:0kB mu
 ```
 
 The video is now saved under `videos/`, or whatever the `outputDirectory` const points to.
-
