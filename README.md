@@ -8,6 +8,9 @@ Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 
 It's slow (e.g. a 60-min video takes 20-30 minutes to download). Not much i can do about it for now unless i find a better way than ripping HLS.
 
+## NEW `dev` BRANCH!
+
+This is now a TypeScript project if you checkout the `dev` branch. Use the `master` branch for the older vanilla JavaScript version.
 
 ## DISCLAIMER
 
