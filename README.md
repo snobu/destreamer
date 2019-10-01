@@ -8,6 +8,9 @@ Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 
 It's slow (e.g. a 60-min video takes 20-30 minutes to download). Not much i can do about it for now unless i find a better way than ripping HLS.
 
+## NEW `dev` BRANCH!
+
+This is now a TypeScript project if you checkout the `dev` branch. Use the `master` branch for the older vanilla JavaScript version.
 
 ## DISCLAIMER
 
@@ -25,7 +28,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 ## USAGE
 
 * Edit `destreamer.js` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
-* `npm i` to restore packages
+* `npm install` to restore packages
 * `npm start <URL of the video>`
 
 
