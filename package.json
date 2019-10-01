@@ -5,7 +5,7 @@
     "url": "git://github.com/snobu/destreamer.git"
   },
   "version": "1.0.0",
-  "description": "",
+  "description": "Save Microsoft Stream videos for offline enjoyment.",
   "main": "destreamer.js",
   "scripts": {
     "start": "echo Transpiling TypeScript to JavaScript... && tsc && node ./destreamer.js",
