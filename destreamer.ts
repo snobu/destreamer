@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
+import { AssertionError } from 'assert';
 
 
 // Type in your username here (the one you use to
@@ -15,7 +16,7 @@ const outputDirectory: string = 'videos';
 function sanityChecks() {
     try {
         const ytdlVer = execSync('youtube-dl --version');
-        term.green(`\nUsing youtube-dl version ${ytdlVer}`);
+        term.green(`Using youtube-dl version ${ytdlVer}\n`);
     }
     catch (e) {
         console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
@@ -25,7 +26,7 @@ function sanityChecks() {
     try {
         const ffmpegVer = execSync('ffmpeg -version')
             .toString().split('\n')[0];
-        term.green(`\nUsing ffmpeg version ${ffmpegVer}`);
+        term.green(`Using ffmpeg version ${ffmpegVer}\n`);
     }
     catch (e) {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
@@ -38,10 +39,28 @@ function sanityChecks() {
     }
 
     if (args[0] == null || args[0].length < 10) {
-        console.error('Pass in video URL as first argument: \n' +
+        console.error('Pass in video URL as first argument:\n' +
             'Example: npm start https://www.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc\n');
         process.exit(-1);
     }
+}
+
+async function runBrowserTest() {
+    console.log('[BROWSER TEST] Launching headless Chrome...');
+    const browser = await puppeteer.launch({
+        // Switch to false if you need to login interactively
+        headless: true,
+        args: ['--disable-dev-shm-usage']
+    });
+    const page = await browser.newPage();
+    await page.goto("https://github.com/", { waitUntil: 'networkidle2' });
+    let pageTitle = await page.title();
+    await browser.close();
+    if (!pageTitle.includes('GitHub'))
+    {
+        process.exit(44);
+    }
+    console.log('[BROWSER TEST] PASS');
 }
 
 async function rentVideoForLater() {
@@ -126,5 +145,13 @@ async function exfiltrateCookie(page: puppeteer.Page) {
     return `Authorization=${authzCookie.value}; Signature=${sigCookie.value}`;
 }
 
-sanityChecks();
-rentVideoForLater();
+// We should probably use Mocha or something
+if (args[0] === 'test')
+{
+    runBrowserTest();
+}
+
+else {
+    sanityChecks();
+    rentVideoForLater();
+}

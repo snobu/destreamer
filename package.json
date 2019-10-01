@@ -4,7 +4,8 @@
   "description": "",
   "main": "destreamer.js",
   "scripts": {
-    "start": "echo Transpiling TypeScript to JavaScript... && tsc && node ./destreamer.js"
+    "start": "echo Transpiling TypeScript to JavaScript... && tsc && node ./destreamer.js",
+    "test": "node ./destreamer.js test"
   },
   "keywords": [],
   "author": "",

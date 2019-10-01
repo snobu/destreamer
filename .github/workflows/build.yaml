@@ -24,5 +24,6 @@ jobs:
       run: |
         npm install
         tsc --listEmittedFiles
+        npm test
       env:
         CI: true
