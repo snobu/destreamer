@@ -58,6 +58,7 @@ async function runBrowserTest() {
     await browser.close();
     if (!pageTitle.includes('GitHub'))
     {
+        console.log('[BROWSER TEST] FAIL (Page title does not include "GitHub"');
         process.exit(44);
     }
     console.log('[BROWSER TEST] PASS');
