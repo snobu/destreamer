@@ -16,7 +16,7 @@ const outputDirectory: string = 'videos';
 function sanityChecks() {
     try {
         const ytdlVer = execSync('youtube-dl --version');
-        term.green(`Using youtube-dl version ${ytdlVer}\n`);
+        term.green(`Using youtube-dl version ${ytdlVer}`);
     }
     catch (e) {
         console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
@@ -26,7 +26,7 @@ function sanityChecks() {
     try {
         const ffmpegVer = execSync('ffmpeg -version')
             .toString().split('\n')[0];
-        term.green(`Using ffmpeg version ${ffmpegVer}\n`);
+        term.green(`Using ${ffmpegVer}\n`);
     }
     catch (e) {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');

@@ -8,7 +8,9 @@
   "description": "Save Microsoft Stream videos for offline enjoyment.",
   "main": "destreamer.js",
   "scripts": {
-    "start": "echo Transpiling TypeScript to JavaScript... && tsc && node ./destreamer.js",
+    "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
+    "run": "node ./destreamer.js",
+    "start": "npm run -s build & npm run -s run",
     "test": "node ./destreamer.js test"
   },
   "keywords": [],
@@ -21,6 +23,7 @@
   "dependencies": {
     "ffmpeg-progressbar-cli": "^1.5.0",
     "puppeteer": "^1.19.1",
-    "terminal-kit": "^1.26.10"
+    "terminal-kit": "^1.26.10",
+    "typescript": "^3.6.3"
   }
 }
