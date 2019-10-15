@@ -36,6 +36,21 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 * `npm install` to restore packages
 * `npm start <URL of the video>`
 
+### To download a list of videos:
+
+There's no implementation that does that, but you can use this handy workaround -
+
+Place the video URLs on by line in `list.txt`, then:
+
+Bash -
+```bash
+cat list.txt | while read line; do npm start $line; done
+```
+
+PowerShell -
+```powershell
+ForEach-Object ($line in Get-Content .\list.txt) { npm start $line }
+```
 
 ## EXPECTED OUTPUT
 
