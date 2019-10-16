@@ -38,19 +38,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 ### To download a list of videos
 
-There's no implementation that does that (yet), but you can use this handy workaround:
-
-Place the video URLs one by line in `list.txt`, then do:
-
-Bash -
-```bash
-cat list.txt | while read line; do npm start $line; done
-```
-
-PowerShell -
-```powershell
-ForEach-Object ($line in Get-Content .\list.txt) { npm start $line }
-```
+There's no implementation that does that (yet). There's some work happening to support this, give it some time.
 
 ## EXPECTED OUTPUT
 
