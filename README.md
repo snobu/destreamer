@@ -71,3 +71,8 @@ video:186494kB audio:5380kB subtitle:0kB other streams:0kB global headers:0kB mu
 ```
 
 The video is now saved under `videos/`, or whatever the `outputDirectory` const points to.
+
+
+## _IT JUST KEEPS CRASHING FOR ME!_
+Check out this issue if it crashes for you before launching the browser -
+https://github.com/snobu/destreamer/issues/6
