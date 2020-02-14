@@ -74,5 +74,5 @@ The video is now saved under `videos/`, or whatever the `outputDirectory` const 
 
 
 ## _IT JUST KEEPS CRASHING FOR ME!_
-Check out this issue if it crashes for you before launching the browser -
+Check out this issue if it keeps crashing for you -
 https://github.com/snobu/destreamer/issues/6
