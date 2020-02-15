@@ -18,11 +18,13 @@
   "license": "MIT",
   "devDependencies": {
     "@types/puppeteer": "^1.20.0",
-    "@types/terminal-kit": "^1.28.0"
+    "@types/terminal-kit": "^1.28.0",
+    "@types/yargs": "^15.0.3"
   },
   "dependencies": {
     "puppeteer": "^1.20.0",
     "terminal-kit": "^1.26.10",
-    "typescript": "^3.6.3"
+    "typescript": "^3.6.3",
+    "yargs": "^15.0.3"
   }
 }
