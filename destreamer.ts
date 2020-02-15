@@ -4,13 +4,21 @@ import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
 import { BrowserTests } from './BrowserTests';
+import yargs = require('yargs');
 
 // Type in your username here (the one you use to
 // login to Microsoft Stream).
-const username: string = 'somebody@example.com';
-const args: string[] = process.argv.slice(2);
-const videoUrl: string = args[0];
-const outputDirectory: string = 'videos';
+const args: string[] = process.argv.slice(2); // TODO: Remove this
+
+const argv = yargs.options({
+  videoUrls: { type: 'array', demandOption: true },
+  username: { type: 'string', demandOption: true },
+  outputDirectory: { type: 'string', default: 'videos' }
+}).argv;
+
+console.info('Video URLs: %s', argv.videoUrls);
+console.info('Username: %s', argv.username);
+console.info('Output Directory: %s', argv.outputDirectory);
 
 function sanityChecks() {
     try {
@@ -31,10 +39,10 @@ function sanityChecks() {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
     }
 
-    if (!fs.existsSync(outputDirectory)){
+    if (!fs.existsSync(argv.outputDirectory)){
         console.log('Creating output directory: ' +
-            process.cwd() + path.sep + outputDirectory);
-        fs.mkdirSync(outputDirectory);
+            process.cwd() + path.sep + argv.outputDirectory);
+        fs.mkdirSync(argv.outputDirectory);
     }
 
     if (args[0] == null || args[0].length < 10) {
@@ -44,7 +52,7 @@ function sanityChecks() {
     }
 }
 
-async function rentVideoForLater() {
+async function rentVideoForLater(videoUrls: string[], username: string, outputDirectory: string) {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         // Switch to false if you need to login interactively
@@ -56,7 +64,7 @@ async function rentVideoForLater() {
 
     // This breaks on slow connections, needs more reliable logic
     //const oidcUrl = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=cf53fce8-def6-4aeb-8d30-b158e7b1cf83&response_mode=form_post&response_type=code+id_token&scope=openid+profile&state=OpenIdConnect.AuthenticationProperties%3d1VtrsKV5QUHtzn8cDWL4wJmacu-VHH_DfpPxMQBhnfbar-_e8X016GGJDPfqfvcyUK3F3vBoiFwUpahR2ANfrzHE469vcw7Mk86wcAqBGXCvAUmv59MDU_OZFHpSL360oVRBo84GfVXAKYdhCjhPtelRHLHEM_ADiARXeMdVTAO3SaTiVQMhw3c9vLWuXqrKKevpI7E5esCQy5V_dhr2Q7kKrlW3gHX0232b8UWAnSDpc-94&nonce=636832485747560726.NzMyOWIyYWQtM2I3NC00MmIyLTg1NTMtODBkNDIwZTI1YjAxNDJiN2JkNDMtMmU5Ni00OTc3LWFkYTQtNTNlNmUwZmM1NTVl&nonceKey=OpenIdConnect.nonce.F1tPks6em0M%2fWMwvatuGWfFM9Gj83LwRKLvbx9rYs5M%3d&site_id=500453&redirect_uri=https%3a%2f%2fmsit.microsoftstream.com%2f&post_logout_redirect_uri=https%3a%2f%2fproducts.office.com%2fmicrosoft-stream&msafed=0";
-    await page.goto(videoUrl, { waitUntil: 'networkidle2' });
+    await page.goto(videoUrls[0], { waitUntil: 'networkidle2' });
     await page.waitForSelector('input[type="email"]');
     await page.keyboard.type(username);
     await page.click('input[type="submit"]');
@@ -66,40 +74,42 @@ async function rentVideoForLater() {
     await sleep(1500);
     console.log('Sorry, i mean "you".');
 
-    await page.goto(videoUrl, { waitUntil: 'networkidle2' });
-    await sleep(2000);
-    // try this instead of hardcoding sleep
-    // https://github.com/GoogleChrome/puppeteer/issues/3649
+    for (let videoUrl of videoUrls) {
+        await page.goto(videoUrl, { waitUntil: 'networkidle2' });
+        await sleep(2000);
+        // try this instead of hardcoding sleep
+        // https://github.com/GoogleChrome/puppeteer/issues/3649
 
-    const cookie = await exfiltrateCookie(page);
-    console.log('Got cookie. Consuming cookie...');
+        const cookie = await exfiltrateCookie(page);
+        console.log('Got cookie. Consuming cookie...');
 
-    await sleep(4000);
-    console.log('Looking up AMS stream locator...');
-    let amp: any;
-    const amsUrl = await page.evaluate(
-        () => { return amp.Player.players["vjs_video_3"].cache_.src }
-    );
+        await sleep(4000);
+        console.log('Looking up AMS stream locator...');
+        let amp: any;
+        const amsUrl = await page.evaluate(
+            () => { return amp.Player.players["vjs_video_3"].cache_.src }
+        );
 
-    const title = await page.evaluate(
-        // Clear abuse of null assertion operator,
-        // someone fix this please
-        () => { return document!.querySelector(".title")!.textContent!.trim() }
-    );
+        const title = await page.evaluate(
+            // Clear abuse of null assertion operator,
+            // someone fix this please
+            () => { return document!.querySelector(".title")!.textContent!.trim() }
+        );
 
-    console.log(`Video title is: ${title}`);
+        console.log(`Video title is: ${title}`);
+
+        console.log('Constructing HLS URL...');
+        const hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl)';
+
+        console.log('Spawning youtube-dl with cookie and HLS URL...');
+        const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' +
+            `--output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`;
+        // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
+        var result = execSync(youtubedlCmd, { stdio: 'inherit' });
+    }
     
     console.log("At this point Chrome's job is done, shutting it down...");
     await browser.close();
-
-    console.log('Constructing HLS URL...');
-    const hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl)';
-
-    console.log('Spawning youtube-dl with cookie and HLS URL...');
-    const youtubedlCmd = 'youtube-dl --no-call-home --no-progress --no-warnings ' +
-        `--output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`;
-    // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
-    var result = execSync(youtubedlCmd, { stdio: 'inherit' });
 }
 
 function sleep(ms: number) {
@@ -134,5 +144,5 @@ if (args[0] === 'test')
 
 else {
     sanityChecks();
-    rentVideoForLater();
+    rentVideoForLater(argv.videoUrls as string[], argv.username, argv.outputDirectory);
 }
