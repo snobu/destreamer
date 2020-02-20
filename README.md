@@ -35,16 +35,23 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 * Edit `destreamer.ts` (`.js` if using the vanilla JS master branch) and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 * `npm install` to restore packages* `npm install` to restore packages
 * `npm run -s build` to transpile TypeScript to JavaScript
-* `node ./destreamer.js`
+
 ```
+$ node ./destreamer.js
+
 Options:
   --help             Show help                                         [boolean]
   --version          Show version number                               [boolean]
   --videoUrls                                                 [array] [required]
   --username                                                 [string] [required]
   --outputDirectory                                 [string] [default: "videos"]
+
+
+$ node destreamer.js --username username@example.com --outputDirectory "videos" \
+    --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
+                "https://web.microsoftstream.com/video/VIDEO-2" \
+                "https://web.microsoftstream.com/video/VIDEO-3"
 ```
-* `node destreamer.js --username username@example.com --outputDirectory "C:\videos" --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" "https://web.microsoftstream.com/video/VIDEO-2" "https://web.microsoftstream.com/video/VIDEO-3"`
 
 ### To download a list of videos
 
