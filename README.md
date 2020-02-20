@@ -52,6 +52,7 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
+You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
 ### To download a list of videos
 
