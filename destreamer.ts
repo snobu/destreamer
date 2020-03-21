@@ -13,12 +13,18 @@ const args: string[] = process.argv.slice(2); // TODO: Remove this
 const argv = yargs.options({
   videoUrls: { type: 'array', demandOption: true },
   username: { type: 'string', demandOption: true },
-  outputDirectory: { type: 'string', default: 'videos' }
+  outputDirectory: { type: 'string', default: 'videos' },
+    format: {alias:"f",
+           describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
+           type:'string',
+           default:'best'
+          }
 }).argv;
 
 console.info('Video URLs: %s', argv.videoUrls);
 console.info('Username: %s', argv.username);
 console.info('Output Directory: %s', argv.outputDirectory);
+console.info('Video/Audio Quality: %s', argv.format);
 
 function sanityChecks() {
     try {
@@ -103,7 +109,7 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
         const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' +
-            `--output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`;
+            `-f "${argv.format}" --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`;
         // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
         var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
