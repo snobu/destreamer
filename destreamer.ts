@@ -90,11 +90,14 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
             () => { return amp.Player.players["vjs_video_3"].cache_.src }
         );
 
-        const title = await page.evaluate(
+        let title = await page.evaluate(
             // Clear abuse of null assertion operator,
             // someone fix this please
             () => { return document!.querySelector(".title")!.textContent!.trim() }
         );
+
+        // Sanitize title
+        title = title.replace(/"/g, '');
 
         console.log(`Video title is: ${title}`);
 
