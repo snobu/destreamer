@@ -12,10 +12,10 @@ It's slow (e.g. a 60-min video takes 20-30 minutes to download). Not much i can 
 <img src="https://www.whitesourcesoftware.com/wp-content/uploads/2018/02/10-github-to-follow.jpg" width=400 />
 
 Roadmap -
-* Token cache (so you don't have to log in every time you run destreamer)
-* Download closed captions if available
-* Performance improvements (via aria2c maybe?)
-* Single static binary (for each major OS)
+- [ ] Token cache (so you don't have to log in every time you run destreamer)
+- [ ] Download closed captions if available
+- [ ] Performance improvements (via aria2c maybe?)
+- [ ] Single static binary (for each major OS)
 
 Send a quality PR first and i'll add you as a contributor to the repository.
 
