@@ -14,10 +14,10 @@ const argv = yargs.options({
   videoUrls: { type: 'array', demandOption: true },
   username: { type: 'string', demandOption: true },
   outputDirectory: { type: 'string', default: 'videos' },
-    format: {alias:"f",
-           describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
-           type:'string',
-           default:'best'
+  format: { alias:"f",
+            describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
+            type:'string',
+            demandOption: false
           }
 }).argv;
 
@@ -111,8 +111,14 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         const hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl)';
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
-        const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' +
-            `-f "${argv.format}" --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`;
+        let format = ''
+        if (argv.format) {
+            format = `-f "${argv.format}"`
+        }
+
+        const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+            ` --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`
+            
         // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
         var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
