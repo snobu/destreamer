@@ -31,10 +31,6 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 ## USAGE
 
 * Edit `destreamer.ts` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
-* To choose preferred video format and quality you can use the "--format" option, it doesn't add anyting new, it only expose a native youtube-dl option, you can find details about accepted parameters on official youtube-dl README here ===> [FORMAT SELECTION](https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection)
-If you do not pass any option it will download the best available quality by default.
-=======
-* Edit `destreamer.ts` (`.js` if using the vanilla JS master branch) and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 * `npm install` to restore packages* `npm install` to restore packages
 * `npm run -s build` to transpile TypeScript to JavaScript
 
@@ -59,10 +55,8 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
 ```
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
-### To download a list of videos
-
-~~There's no implementation that does that (yet). There's some work happening to support this, give it some time.~~
-See usage above.
+To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
+If you do not pass this parameter then `youtube-dl` will download the best available quality for each video.
 
 ## EXPECTED OUTPUT
 
@@ -100,3 +94,6 @@ The video is now saved under `videos/`, or whatever the `outputDirectory` const 
 ## _IT JUST KEEPS CRASHING FOR ME!_
 Check out this issue if it keeps crashing for you -
 https://github.com/snobu/destreamer/issues/6
+
+
+[4]: https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection
