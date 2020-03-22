@@ -31,6 +31,8 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 ## USAGE
 
 * Edit `destreamer.ts` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
+* To choose preferred video format and quality you can use the "--format" option, it doesn't add anyting new, it only expose a native youtube-dl option, you can find details about accepted parameters on official youtube-dl README here ===> [FORMAT SELECTION](https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection)
+If you do not pass any option it will download the best available quality by default.
 =======
 * Edit `destreamer.ts` (`.js` if using the vanilla JS master branch) and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 * `npm install` to restore packages* `npm install` to restore packages
@@ -45,6 +47,9 @@ Options:
   --videoUrls                                                 [array] [required]
   --username                                                 [string] [required]
   --outputDirectory                                 [string] [default: "videos"]
+  --format, -f       Expose youtube-dl --format option, for details see
+                     https://github.com/ytdl-org/youtube-dl/blob/master/README.m
+                     d#format-selection               [string] [default: "best"]
 
 
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
