@@ -15,6 +15,7 @@ Roadmap -
 * Token cache (so you don't have to log in every time you run destreamer)
 * Download closed captions if available
 * Performance improvements (via aria2c maybe?)
+* Single static binary (for each major OS)
 
 Send a quality PR first and i'll add you as a contributor to the repository.
 
