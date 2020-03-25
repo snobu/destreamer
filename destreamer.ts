@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { BrowserTests } from './BrowserTests';
 import yargs = require('yargs');
+import sanitize = require('sanitize-filename')
 
 // Type in your username here (the one you use to
 // login to Microsoft Stream).
@@ -91,19 +92,27 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
         await sleep(4000);
         console.log('Looking up AMS stream locator...');
-        let amp: any;
+        // let amp: any;
+        let document: any;
         const amsUrl = await page.evaluate(
-            () => { return amp.Player.players["vjs_video_3"].cache_.src }
+            // maybe there should be some check in case the url fetch fails
+            () => { return document?.querySelector(".azuremediaplayer")?.player?.cache_?.src; }
         );
+
+        // console.log(`Video url is: ${amsUrl}`);
+        console.log('Fetching title');
 
         let title = await page.evaluate(
-            // Clear abuse of null assertion operator,
-            // someone fix this please
-            () => { return document!.querySelector(".title")!.textContent!.trim() }
+            // Using optional chaining to return handle null case, generating default name
+            () => { return document?.querySelector(".title")?.textContent?.trim() ??
+            `Video${videoUrls.indexOf(videoUrl)}`; }
         );
 
-        // Sanitize title
-        title = title.replace(/"/g, '');
+        // Implemented sanitize-filename as suggested in issue #11
+        title = sanitize(title)
+
+        if (title == "")
+            title = `Video${videoUrls.indexOf(videoUrl)}`
 
         console.log(`Video title is: ${title}`);
 
@@ -118,11 +127,11 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
         const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
             ` --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`
-            
+
         // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
         var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
-    
+
     console.log("At this point Chrome's job is done, shutting it down...");
     await browser.close();
 }

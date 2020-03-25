@@ -1,3 +1,4 @@
+*.txt
 *.log
 *.js
 node_modules
