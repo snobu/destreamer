@@ -12,20 +12,36 @@ import sanitize = require('sanitize-filename')
 const args: string[] = process.argv.slice(2); // TODO: Remove this
 
 const argv = yargs.options({
-  videoUrls: { type: 'array', demandOption: true },
-  username: { type: 'string', demandOption: true },
-  outputDirectory: { type: 'string', default: 'videos' },
-  format: { alias:"f",
-            describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
-            type:'string',
-            demandOption: false
-          }
+    videoUrls: { type: 'array', demandOption: true },
+    username: { type: 'string', demandOption: true },
+    outputDirectory: { type: 'string', default: 'videos' },
+    format: {
+        alias:"f",
+        describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
+        type:'string',
+        demandOption: false
+    },
+    simulate: {
+        alias: "s",
+        describe: "If this is set to true no video will be downloaded and the script will log the video info (default: false)",
+        type: "boolean",
+        default: false,
+        demandOption: false
+    }
+
 }).argv;
 
-console.info('Video URLs: %s', argv.videoUrls);
-console.info('Username: %s', argv.username);
-console.info('Output Directory: %s', argv.outputDirectory);
-console.info('Video/Audio Quality: %s', argv.format);
+if (argv.simulate){
+    console.info('Video URLs: %s', argv.videoUrls);
+    console.info('Username: %s', argv.username);
+    term.blue("There will be no video downloaded, it's only a simulation \n")
+} else {
+    console.info('Video URLs: %s', argv.videoUrls);
+    console.info('Username: %s', argv.username);
+    console.info('Output Directory: %s', argv.outputDirectory);
+    console.info('Video/Audio Quality: %s', argv.format);
+}
+
 
 function sanityChecks() {
     try {
@@ -52,11 +68,8 @@ function sanityChecks() {
         fs.mkdirSync(argv.outputDirectory);
     }
 
-    if (args[0] == null || args[0].length < 10) {
-        console.error('Pass in video URL as first argument:\n' +
-            'Example: npm start https://www.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc\n');
-        process.exit(-1);
-    }
+    /* Removed check on the first argoumenti not being null or
+    longer than 10 since we have yargs now */
 }
 
 async function rentVideoForLater(videoUrls: string[], username: string, outputDirectory: string) {
@@ -92,20 +105,24 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
         await sleep(4000);
         console.log('Looking up AMS stream locator...');
-        // let amp: any;
+
         let document: any;
         const amsUrl = await page.evaluate(
             // maybe there should be some check in case the url fetch fails
-            () => { return document?.querySelector(".azuremediaplayer")?.player?.cache_?.src; }
+            () => {
+                return document?.querySelector(".azuremediaplayer")?.player?.cache_?.src;
+            }
         );
 
         // console.log(`Video url is: ${amsUrl}`);
-        console.log('Fetching title');
+        console.log('Fetching title...');
 
         let title = await page.evaluate(
             // Using optional chaining to return handle null case, generating default name
-            () => { return document?.querySelector(".title")?.textContent?.trim() ??
-            `Video${videoUrls.indexOf(videoUrl)}`; }
+            () => {
+                return document?.querySelector(".title")?.textContent?.trim() ??
+                `Video${videoUrls.indexOf(videoUrl)}`;
+            }
         );
 
         // Implemented sanitize-filename as suggested in issue #11
@@ -114,22 +131,31 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         if (title == "")
             title = `Video${videoUrls.indexOf(videoUrl)}`
 
-        console.log(`Video title is: ${title}`);
+        //console.log(`Video title is: ${title}`);
 
         console.log('Constructing HLS URL...');
         const hlsUrl = amsUrl.substring(0, amsUrl.lastIndexOf('/')) + '/manifest(format=m3u8-aapl)';
 
-        console.log('Spawning youtube-dl with cookie and HLS URL...');
-        let format = ''
-        if (argv.format) {
-            format = `-f "${argv.format}"`
+        // If the simulate flag is true skip the download
+        if (!argv.simulate) {
+            console.log('Spawning youtube-dl with cookie and HLS URL...');
+            let format = ''
+            if (argv.format) {
+                format = `-f "${argv.format}"`
+            }
+
+            const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+                ` --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`
+
+            // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
+            var result = execSync(youtubedlCmd, { stdio: 'inherit' });
+        } else {
+            // Logging the video info
+            term.blue("Video title is: ")
+            console.log(`${title}`)
+            term.blue("Video url is: ")
+            console.log(`${hlsUrl}`)
         }
-
-        const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-            ` --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`
-
-        // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
-        var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
 
     console.log("At this point Chrome's job is done, shutting it down...");
