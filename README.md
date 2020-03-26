@@ -41,7 +41,6 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 ## USAGE
 
-* Edit `destreamer.ts` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
 * `npm install` to restore packages* `npm install` to restore packages
 * `npm run -s build` to transpile TypeScript to JavaScript
 
@@ -68,6 +67,9 @@ You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
 To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
 If you do not pass this parameter then `youtube-dl` will download the best available quality for each video.
+
+## IMPORTANT NOTE
+For now you need to keep the puppeteer browser window open (the one that pops up for logging in) if you download more than one video in one go.
 
 ## EXPECTED OUTPUT
 
