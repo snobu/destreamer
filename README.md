@@ -19,13 +19,6 @@ Roadmap -
 
 Send a quality PR first and i'll add you as a contributor to the repository.
 
-## NEW `dev` BRANCH!
-
-This is now a TypeScript project if you checkout the `dev` branch.
-All new development happens on `dev` branch.
-
-Use the `master` branch for the older vanilla JavaScript version.
-
 ## DISCLAIMER
 
 Hopefully this doesn't break the end user agreement for Microsoft Stream. Since we're simply saving the HLS stream to disk as if we were a browser, this does not abuse the streaming endpoints. However i take no responsibility if either Microsoft or your Office 365 admins request a chat with you in a small white room.
@@ -41,7 +34,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 ## USAGE
 
-* `npm install` to restore packages* `npm install` to restore packages
+* `npm install` to restore packages
 * `npm run -s build` to transpile TypeScript to JavaScript
 
 ```
@@ -103,10 +96,6 @@ video:186494kB audio:5380kB subtitle:0kB other streams:0kB global headers:0kB mu
 
 The video is now saved under `videos/`, or whatever the `outputDirectory` const points to.
 
-
-## _IT JUST KEEPS CRASHING FOR ME!_
-Check out this issue if it keeps crashing for you -
-https://github.com/snobu/destreamer/issues/6
 
 
 [4]: https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection
