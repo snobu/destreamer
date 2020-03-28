@@ -57,6 +57,7 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
+
 Your video URLs **must** include the URL schema (the leading `https://`).
 
 To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
