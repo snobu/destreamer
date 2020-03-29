@@ -102,7 +102,6 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
     console.log('Navigating to STS login page...');
 
     // This breaks on slow connections, needs more reliable logic
-    //const oidcUrl = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=cf53fce8-def6-4aeb-8d30-b158e7b1cf83&response_mode=form_post&response_type=code+id_token&scope=openid+profile&state=OpenIdConnect.AuthenticationProperties%3d1VtrsKV5QUHtzn8cDWL4wJmacu-VHH_DfpPxMQBhnfbar-_e8X016GGJDPfqfvcyUK3F3vBoiFwUpahR2ANfrzHE469vcw7Mk86wcAqBGXCvAUmv59MDU_OZFHpSL360oVRBo84GfVXAKYdhCjhPtelRHLHEM_ADiARXeMdVTAO3SaTiVQMhw3c9vLWuXqrKKevpI7E5esCQy5V_dhr2Q7kKrlW3gHX0232b8UWAnSDpc-94&nonce=636832485747560726.NzMyOWIyYWQtM2I3NC00MmIyLTg1NTMtODBkNDIwZTI1YjAxNDJiN2JkNDMtMmU5Ni00OTc3LWFkYTQtNTNlNmUwZmM1NTVl&nonceKey=OpenIdConnect.nonce.F1tPks6em0M%2fWMwvatuGWfFM9Gj83LwRKLvbx9rYs5M%3d&site_id=500453&redirect_uri=https%3a%2f%2fmsit.microsoftstream.com%2f&post_logout_redirect_uri=https%3a%2f%2fproducts.office.com%2fmicrosoft-stream&msafed=0";
     await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
     await page.waitForSelector('input[type="email"]');
     await page.keyboard.type(username);
