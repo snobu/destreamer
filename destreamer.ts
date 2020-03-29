@@ -193,7 +193,7 @@ async function getVideoInfo(videoID: string, accesToken: string) {
     let hlsUrl: string;
 
     let content = axios.get(
-        `https://euwe-1.api.microsoftstream.com/api/videos/${videoID}` +
+        `https://use2-2.api.microsoftstream.com/api/videos/${videoID}` +
         `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${ApiVersion}`,
         {
             headers: {
@@ -201,12 +201,13 @@ async function getVideoInfo(videoID: string, accesToken: string) {
             }
         })
         .then(function (response) {
-            return response.data
+            return response.data;
         })
         .catch(function (error) {
-            term.red("ERROR ")
-            console.error(error.response.status)
-            console.error("Exiting...")
+            term.red("Error when calling Microsoft Stream API:")
+            console.error(error.response.status);
+            console.error(error.response.data);
+            console.error("Exiting...");
             if (argv.verbose)
                 console.error(error)
 
