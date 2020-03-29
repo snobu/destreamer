@@ -12,9 +12,11 @@ import axios from 'axios';
 /**
  * exitCode 25 = cannot split videoID from videUrl
  * exitCode 27 = no hlsUrl in the API response
+ * exitCode 29 = invalid response from API
  * exitCode 88 = error extracting cookies
  */
 
+const ApiVersion = "1.3-private"
 const args: string[] = process.argv.slice(2); // TODO: Remove this
 
 const argv = yargs.options({
@@ -23,18 +25,27 @@ const argv = yargs.options({
     outputDirectory: { type: 'string', default: 'videos' },
     format: {
         alias:"f",
-        describe: 'Expose youtube-dl --format option, for details see\n https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection',
+        describe: `Expose youtube-dl --format option, for details see\n
+        https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection`,
         type:'string',
         demandOption: false
     },
     simulate: {
         alias: "s",
-        describe: "If this is set to true no video will be downloaded and the script will log the video info (default: false)",
+        describe: `If this is set to true no video will be downloaded and the script
+        will log the video info (default: false)`,
+        type: "boolean",
+        default: false,
+        demandOption: false
+    },
+    verbose: {
+        alias: "v",
+        describe: `Print additional informations to the console
+        (don't use this if you don't need/ not told to)`,
         type: "boolean",
         default: false,
         demandOption: false
     }
-
 }).argv;
 
 if (argv.simulate){
@@ -182,17 +193,24 @@ async function getVideoInfo(videoID: string, accesToken: string) {
     let hlsUrl: string;
 
     let content = axios.get(
-        `https://euwe-1.api.microsoftstream.com/api/videos/${videoID}?$expand=creator,tokens,status,liveEvent,extensions&api-version=1.3-private`,
+        `https://euwe-1.api.microsoftstream.com/api/videos/${videoID}` +
+        `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${ApiVersion}`,
         {
             headers: {
-                Authorization: "Bearer " + accesToken
+                Authorization: `Bearer ${accesToken}`
             }
         })
         .then(function (response) {
             return response.data
         })
         .catch(function (error) {
-            console.error(error)
+            term.red("ERROR ")
+            console.error(error.response.status)
+            console.error("Exiting...")
+            if (argv.verbose)
+                console.error(error)
+
+            process.exit(29)
         })
 
 
@@ -201,6 +219,9 @@ async function getVideoInfo(videoID: string, accesToken: string) {
         })
 
         hlsUrl = await content.then(data => {
+            if (argv.verbose)
+                console.log(JSON.stringify(data, undefined, 2))
+
             for (const item of data["playbackUrls"]) {
                 if (item["mimeType"] == "application/vnd.apple.mpegurl")
                     return item["playbackUrl"]
