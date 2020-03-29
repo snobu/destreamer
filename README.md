@@ -47,8 +47,16 @@ Options:
   --username                                                 [string] [required]
   --outputDirectory                                 [string] [default: "videos"]
   --format, -f       Expose youtube-dl --format option, for details see
+
                      https://github.com/ytdl-org/youtube-dl/blob/master/README.m
-                     d#format-selection               [string] [default: "best"]
+                     d#format-selection                                 [string]
+  --simulate, -s     If this is set to true no video will be downloaded and the
+                     script
+                     will log the video info (default: false)
+                                                      [boolean] [default: false]
+  --verbose, -v      Print additional information to the console
+                     (use this before opening an issue on GitHub)
+                                                      [boolean] [default: false]
 
 
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
