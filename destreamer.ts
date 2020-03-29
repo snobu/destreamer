@@ -40,8 +40,8 @@ const argv = yargs.options({
     },
     verbose: {
         alias: "v",
-        describe: `Print additional informations to the console
-        (don't use this if you don't need/ not told to)`,
+        describe: `Print additional information to the console
+        (use this before opening an issue on GitHub)`,
         type: "boolean",
         default: false,
         demandOption: false
