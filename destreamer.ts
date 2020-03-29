@@ -4,14 +4,14 @@ import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
 import { BrowserTests } from './BrowserTests';
-import yargs = require('yargs');
-import sanitize = require('sanitize-filename');
+import yargs from 'yargs'
+import sanitize from 'sanitize-filename'
 import axios from 'axios';
 
 
 /**
  * exitCode 25 = cannot split videoID from videUrl
- * exitCode 27 = no hlsUrl in the api
+ * exitCode 27 = no hlsUrl in the API response
  * exitCode 88 = error extracting cookies
  */
 
@@ -41,11 +41,13 @@ if (argv.simulate){
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
     term.blue("There will be no video downloaded, it's only a simulation \n")
+    console.log("\n")
 } else {
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
     console.info('Output Directory: %s', argv.outputDirectory);
     console.info('Video/Audio Quality: %s', argv.format);
+    console.log("\n")
 }
 
 
@@ -128,25 +130,22 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
         title = (sanitize(title) == "") ? `Video${videoUrls.indexOf(videoUrl)}` : sanitize(title)
 
-        if (!argv.simulate) {
-            console.log('Spawning youtube-dl with cookie and HLS URL...');
-            let format = ''
-            if (argv.format) {
-                format = `-f "${argv.format}"`
-            }
+        term.blue("Video title is: ")
+        console.log(`${title} \n`)
 
-            const youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-                ` --output "${outputDirectory}/${title}.mp4" --add-header Cookie:"${cookie}" "${hlsUrl}"`
+        console.log('Spawning youtube-dl with cookie and HLS URL...');
 
-            // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
-            var result = execSync(youtubedlCmd, { stdio: 'inherit' });
-        } else {
-            // Logging the video info
-            term.blue("Video title is: ")
-            console.log(`${title}`)
-            term.blue("Video url is: ")
-            console.log(`${hlsUrl}`)
-        }
+        const format = argv.format ? `-f "${argv.format}"` : ""
+
+        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+                ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
+                `Cookie:"${cookie}" "${hlsUrl}"`
+
+        if (argv.simulate)
+            youtubedlCmd = youtubedlCmd + " -s"
+
+        // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
+        var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
 
     console.log("At this point Chrome's job is done, shutting it down...");
