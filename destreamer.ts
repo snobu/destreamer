@@ -110,7 +110,6 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
     await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
     process.stdout.write('We are logged in. ');
     await sleep(1500);
-    console.log('Sorry, i mean "you".');
 
     for (let videoUrl of videoUrls) {
         let videoID = videoUrl.split('/').pop() ?? (console.error("Couldn't split the videoID, wrong url"), process.exit(25))
@@ -192,7 +191,7 @@ async function getVideoInfo(videoID: string, accesToken: string) {
     let hlsUrl: string;
 
     let content = axios.get(
-        `https://use2-2.api.microsoftstream.com/api/videos/${videoID}` +
+        `https://api.microsoftstream.com/api/videos/${videoID}` +
         `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${ApiVersion}`,
         {
             headers: {
