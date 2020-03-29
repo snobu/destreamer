@@ -18,6 +18,7 @@ import axios from 'axios';
 
 const ApiVersion = "1.3-private"
 const args: string[] = process.argv.slice(2); // TODO: Remove this
+let isMsTenant: boolean = false;
 
 const argv = yargs.options({
     videoUrls: { type: 'array', demandOption: true },
@@ -111,6 +112,10 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
     process.stdout.write('We are logged in. ');
     await sleep(1500);
 
+    if (videoUrls[0].includes('msit.microsoftstream.com')) {
+        isMsTenant = true;
+    }
+
     for (let videoUrl of videoUrls) {
         let videoID = videoUrl.split('/').pop() ?? (console.error("Couldn't split the videoID, wrong url"), process.exit(25))
 
@@ -190,8 +195,12 @@ async function getVideoInfo(videoID: string, accesToken: string) {
     let title: string;
     let hlsUrl: string;
 
+    let apiEndpoint = isMsTenant ?
+        'https://use2-2.api.microsoftstream.com' : 
+        'https://api.microsoftstream.com';
+
     let content = axios.get(
-        `https://api.microsoftstream.com/api/videos/${videoID}` +
+        `${apiEndpoint}/api/videos/${videoID}` +
         `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${ApiVersion}`,
         {
             headers: {
