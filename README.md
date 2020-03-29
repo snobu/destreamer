@@ -19,13 +19,6 @@ Roadmap -
 
 Send a quality PR first and i'll add you as a contributor to the repository.
 
-## NEW `dev` BRANCH!
-
-This is now a TypeScript project if you checkout the `dev` branch.
-All new development happens on `dev` branch.
-
-Use the `master` branch for the older vanilla JavaScript version.
-
 ## DISCLAIMER
 
 Hopefully this doesn't break the end user agreement for Microsoft Stream. Since we're simply saving the HLS stream to disk as if we were a browser, this does not abuse the streaming endpoints. However i take no responsibility if either Microsoft or your Office 365 admins request a chat with you in a small white room.
@@ -41,8 +34,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 ## USAGE
 
-* Edit `destreamer.ts` and replace the username const with your own, you may still need to enter your password or go through 2FA if you don't have the STS cookie saved in Chrome. If you do (i.e. you usually log in to Microsoft Stream with Chrome), then you may try turning `headless: false` to `true` for a truly headless experience)
-* `npm install` to restore packages* `npm install` to restore packages
+* `npm install` to restore packages
 * `npm run -s build` to transpile TypeScript to JavaScript
 
 ```
@@ -66,8 +58,13 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
 ```
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
+Your video URLs **must** include the URL schema (the leading `https://`).
+
 To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
 If you do not pass this parameter then `youtube-dl` will download the best available quality for each video.
+
+## IMPORTANT NOTE
+For now you need to keep the puppeteer browser window open (the one that pops up for logging in) if you download more than one video in one go.
 
 ## EXPECTED OUTPUT
 
@@ -101,10 +98,6 @@ video:186494kB audio:5380kB subtitle:0kB other streams:0kB global headers:0kB mu
 
 The video is now saved under `videos/`, or whatever the `outputDirectory` const points to.
 
-
-## _IT JUST KEEPS CRASHING FOR ME!_
-Check out this issue if it keeps crashing for you -
-https://github.com/snobu/destreamer/issues/6
 
 
 [4]: https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection
