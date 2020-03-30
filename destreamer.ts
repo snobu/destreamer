@@ -18,7 +18,7 @@ import axios from 'axios';
 
 const argv = yargs.options({
     videoUrls: { type: 'array', demandOption: true },
-    username: { type: 'string', demandOption: true },
+    username: { type: 'string', demandOption: false },
     outputDirectory: { type: 'string', default: 'videos' },
     format: {
         alias:"f",
@@ -85,21 +85,24 @@ function sanityChecks() {
     }
 }
 
-async function rentVideoForLater(videoUrls: string[], username: string, outputDirectory: string) {
+async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         // Switch to false if you need to login interactively
         headless: false,
         args: ['--disable-dev-shm-usage']
     });
-    const page = await browser.newPage();
+    const page = (await browser.pages())[0];
     console.log('Navigating to STS login page...');
 
     // This breaks on slow connections, needs more reliable logic
     await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
     await page.waitForSelector('input[type="email"]');
-    await page.keyboard.type(username);
-    await page.click('input[type="submit"]');
+    
+    if (username) {
+        await page.keyboard.type(username);
+        await page.click('input[type="submit"]');
+    }
 
     await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
     console.log('We are logged in.');
@@ -254,5 +257,5 @@ if (args[0] === 'test')
 
 else {
     sanityChecks();
-    rentVideoForLater(argv.videoUrls as string[], argv.username, argv.outputDirectory);
+    rentVideoForLater(argv.videoUrls as string[], argv.outputDirectory, argv.username);
 }
