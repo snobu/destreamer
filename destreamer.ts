@@ -17,6 +17,8 @@ import axios from 'axios';
  * exitCode 88 = error extracting cookies
  */
 
+let tokenCache = new TokenCache();
+
 const argv = yargs.options({
     videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
     username: { type: 'string', demandOption: false },
@@ -85,6 +87,21 @@ function sanityChecks() {
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
+    
+    let accessToken = null;
+
+    try {
+        accessToken = tokenCache.Read();
+        console.log(`Read returned: ${accessToken}`);
+        process.exit(200);
+    }
+    catch (e)
+    {
+        console.log("cache is empty or expired");
+        console.log(accessToken);
+        process.exit(404);
+    }
+    
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         // Switch to false if you need to login interactively
@@ -136,6 +153,8 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
                 };
             }
         );
+
+        tokenCache.Write(session.AccessToken);
 
         console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
