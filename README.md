@@ -1,5 +1,7 @@
 # Destreamer
 
+![Node CI](https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg)
+
 ![](logo.png)
 
 ## Saves Microsoft Stream videos for offline enjoyment.
