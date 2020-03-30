@@ -229,13 +229,17 @@ async function getVideoInfo(videoID: string, session: any) {
             if (argv.verbose) {
                 console.log(JSON.stringify(data, undefined, 2));
             }
-            for (const item of data["playbackUrls"]) {
-                if (item["mimeType"] == "application/vnd.apple.mpegurl") {
-                    return item["playbackUrl"];
-                }
+            let playbackUrl = null;
+            try {
+                playbackUrl = data["playbackUrls"].filter(
+                    (item: { [x: string]: string; }) => item["mimeType"] == "application/vnd.apple.mpegurl")[0]["playbackUrl"];
             }
-            console.error("Error fetching hlsUrl");
-            process.exit(27);
+            catch (e) {
+                console.error(`Error fetching hlsUrl: ${e}`);
+                process.exit(27);
+            }
+
+            return playbackUrl;
         })
 
     return [title, hlsUrl];
