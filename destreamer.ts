@@ -16,9 +16,14 @@ import axios from 'axios';
  */
 
 const argv = yargs.options({
-    videoUrls: { type: 'array', alias: 'u', demandOption: true },
     username: { type: 'string', demandOption: false },
     outputDirectory: { type: 'string', alias: 'o', default: 'videos' },
+    videoUrls: {
+        alias: "u",
+        describe: `List of video urls or path to txt file containing the urls`,
+        type: 'array',
+        demandOption: true
+    },
     format: {
         alias:"f",
         describe: `Expose youtube-dl --format option, for details see\n
@@ -95,7 +100,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     // This breaks on slow connections, needs more reliable logic
     await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
     await page.waitForSelector('input[type="email"]');
-    
+
     if (username) {
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
@@ -127,7 +132,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         let sessionInfo: any;
         let session = await page.evaluate(
             () => {
-                return { 
+                return {
                     AccessToken: sessionInfo.AccessToken,
                     ApiGatewayUri: sessionInfo.ApiGatewayUri,
                     ApiGatewayVersion: sessionInfo.ApiGatewayVersion
@@ -141,8 +146,8 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         console.log("Fetching title and HLS URL...");
         var [title, hlsUrl] = await getVideoInfo(videoID, session);
 
-        title = (sanitize(title) == "") ? 
-            `Video${videoUrls.indexOf(videoUrl)}` : 
+        title = (sanitize(title) == "") ?
+            `Video${videoUrls.indexOf(videoUrl)}` :
             sanitize(title);
 
         term.blue("Video title is: ");
@@ -250,6 +255,19 @@ async function getVideoInfo(videoID: string, session: any) {
     return [title, hlsUrl];
 }
 
+function getVideoUrls() {
+    if (argv.videoUrls.length === 0)
+        return argv.videoUrls;
+
+    const t = argv.videoUrls[0] as string;
+    const isPath = t.substring(t.length-4) === '.txt';
+
+    if (isPath)
+        return fs.readFileSync(t).toString('utf-8').split('\n');
+
+    return argv.videoUrls;
+}
+
 // We should probably use Mocha or something
 const args: string[] = process.argv.slice(2);
 if (args[0] === 'test')
@@ -259,5 +277,5 @@ if (args[0] === 'test')
 
 else {
     sanityChecks();
-    rentVideoForLater(argv.videoUrls as string[], argv.outputDirectory, argv.username);
+    rentVideoForLater(getVideoUrls() as string[], argv.outputDirectory, argv.username);
 }
