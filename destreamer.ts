@@ -18,7 +18,6 @@ import axios from 'axios';
 
 const ApiVersion = "1.3-private"
 const args: string[] = process.argv.slice(2); // TODO: Remove this
-let isMsTenant: boolean = false;
 
 const argv = yargs.options({
     videoUrls: { type: 'array', demandOption: true },
@@ -109,12 +108,8 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
     await page.click('input[type="submit"]');
 
     await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
-    process.stdout.write('We are logged in. ');
+    console.log('We are logged in.');
     await sleep(1500);
-
-    if (videoUrls[0].includes('msit.microsoftstream.com')) {
-        isMsTenant = true;
-    }
 
     for (let videoUrl of videoUrls) {
         let videoID = videoUrl.split('/').pop() ?? (console.error("Couldn't split the videoID, wrong url"), process.exit(25))
@@ -133,19 +128,26 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         console.log("Accessing API...");
 
         let sessionInfo: any;
-        var accesToken = await page.evaluate(
+        let session = await page.evaluate(
             () => {
-                return sessionInfo.AccessToken;
+                return { 
+                    AccessToken: sessionInfo.AccessToken,
+                    ApiGatewayUri: sessionInfo.ApiGatewayUri,
+                    ApiGatewayVersion: sessionInfo.ApiGatewayVersion
+                }
             }
         );
 
+        console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
+        console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
+
         console.log("Fetching title and HLS URL...")
-        var [title, hlsUrl] = await getVideoInfo(videoID, accesToken)
+        var [title, hlsUrl] = await getVideoInfo(videoID, session);
 
         title = (sanitize(title) == "") ? `Video${videoUrls.indexOf(videoUrl)}` : sanitize(title)
 
-        term.blue("Video title is: ")
-        console.log(`${title} \n`)
+        term.blue("Video title is: ");
+        console.log(`${title} \n`);
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
 
@@ -191,27 +193,24 @@ async function exfiltrateCookie(page: puppeteer.Page) {
 }
 
 
-async function getVideoInfo(videoID: string, accesToken: string) {
+async function getVideoInfo(videoID: string, session: any) {
     let title: string;
     let hlsUrl: string;
 
-    let apiEndpoint = isMsTenant ?
-        'https://use2-2.api.microsoftstream.com' : 
-        'https://api.microsoftstream.com';
-
     let content = axios.get(
-        `${apiEndpoint}/api/videos/${videoID}` +
-        `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${ApiVersion}`,
+        `${session.ApiGatewayUri}videos/${videoID}` +
+        `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${session.ApiGatewayVersion}`,
         {
             headers: {
-                Authorization: `Bearer ${accesToken}`
+                Authorization: `Bearer ${session.AccessToken}`
             }
         })
         .then(function (response) {
             return response.data;
         })
         .catch(function (error) {
-            term.red("Error when calling Microsoft Stream API:")
+            term.red('Error when calling Microsoft Stream API: ' +
+                `${error.response.status} ${error.response.reason}`);
             console.error(error.response.status);
             console.error(error.response.data);
             console.error("Exiting...");
