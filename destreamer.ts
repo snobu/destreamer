@@ -16,9 +16,9 @@ import axios from 'axios';
  */
 
 const argv = yargs.options({
-    videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
+    videoUrls: { type: 'array', alias: 'u', demandOption: true },
     username: { type: 'string', demandOption: false },
-    outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
+    outputDirectory: { type: 'string', alias: 'o', default: 'videos' },
     format: {
         alias:"f",
         describe: `Expose youtube-dl --format option, for details see\n
