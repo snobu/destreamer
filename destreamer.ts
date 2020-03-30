@@ -16,10 +16,10 @@ import axios from 'axios';
  */
 
 const argv = yargs.options({
-    username: { type: 'string', demandOption: false },
+    username: { alias: "u", type: 'string', demandOption: false },
     outputDirectory: { type: 'string', alias: 'o', default: 'videos' },
     videoUrls: {
-        alias: "u",
+        alias: "V",
         describe: `List of video urls or path to txt file containing the urls`,
         type: 'array',
         demandOption: true
@@ -273,12 +273,9 @@ async function getVideoInfo(videoID: string, session: any) {
 }
 
 function getVideoUrls() {
-    if (argv.videoUrls.length === 0)
-        return argv.videoUrls;
-
     const t = argv.videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
-    let urls;
+    let urls: string[];
 
     if (isPath)
         urls = fs.readFileSync(t).toString('utf-8').split('\n');
@@ -308,5 +305,5 @@ if (args[0] === 'test')
 
 else {
     sanityChecks();
-    rentVideoForLater(getVideoUrls() as string[], argv.outputDirectory, argv.username);
+    rentVideoForLater(getVideoUrls(), argv.outputDirectory, argv.username);
 }

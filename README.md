@@ -47,9 +47,9 @@ $ node ./destreamer.js
 Options:
   --help             Show help                                         [boolean]
   --version          Show version number                               [boolean]
-  --videoUrls, -u    List of video urls or path to txt file containing the urls
-                                                              [array] [required]
-  --username                                                            [string]
+  --videoUrls, -V    List of video urls or path to txt file containing the urls
+                                                               [array] [required]
+  --username, -u                                                       [string]
   --outputDirectory, -o                             [string] [default: "videos"]
   --format, -f       Expose youtube-dl --format option, for details see
 
