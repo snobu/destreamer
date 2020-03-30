@@ -103,6 +103,8 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
 
     await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
     console.log('We are logged in.');
+    // We may or may not need to sleep here.
+    // Who am i to deny a perfectly good nap?
     await sleep(1500);
 
     for (let videoUrl of videoUrls) {
@@ -119,7 +121,7 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         console.log('Got cookie. Consuming cookie...');
 
         await sleep(4000);
-        console.log("Accessing API...");
+        console.log("Calling Microsoft Stream API...");
 
         let sessionInfo: any;
         let session = await page.evaluate(
@@ -138,7 +140,9 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         console.log("Fetching title and HLS URL...")
         var [title, hlsUrl] = await getVideoInfo(videoID, session);
 
-        title = (sanitize(title) == "") ? `Video${videoUrls.indexOf(videoUrl)}` : sanitize(title)
+        title = (sanitize(title) == "") ? 
+            `Video${videoUrls.indexOf(videoUrl)}` : 
+            sanitize(title)
 
         term.blue("Video title is: ");
         console.log(`${title} \n`);
@@ -154,7 +158,9 @@ async function rentVideoForLater(videoUrls: string[], username: string, outputDi
         if (argv.simulate)
             youtubedlCmd = youtubedlCmd + " -s"
 
-        // console.log(`\n\n[DEBUG] Invoking youtube-dl: ${youtubedlCmd}\n\n`);
+        if (argv.verbose) {
+            console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
+        }
         var result = execSync(youtubedlCmd, { stdio: 'inherit' });
     }
 
@@ -208,10 +214,10 @@ async function getVideoInfo(videoID: string, session: any) {
             console.error(error.response.status);
             console.error(error.response.data);
             console.error("Exiting...");
-            if (argv.verbose)
-                console.error(error)
-
-            process.exit(29)
+            if (argv.verbose) {
+                console.error(`[VERBOSE] ${error}`);
+            }
+            process.exit(29);
         })
 
 
@@ -220,15 +226,16 @@ async function getVideoInfo(videoID: string, session: any) {
         })
 
         hlsUrl = await content.then(data => {
-            if (argv.verbose)
-                console.log(JSON.stringify(data, undefined, 2))
-
-            for (const item of data["playbackUrls"]) {
-                if (item["mimeType"] == "application/vnd.apple.mpegurl")
-                    return item["playbackUrl"]
+            if (argv.verbose) {
+                console.log(JSON.stringify(data, undefined, 2));
             }
-            console.error("Error fetching hlsUrl")
-            process.exit(27)
+            for (const item of data["playbackUrls"]) {
+                if (item["mimeType"] == "application/vnd.apple.mpegurl") {
+                    return item["playbackUrl"];
+                }
+            }
+            console.error("Error fetching hlsUrl");
+            process.exit(27);
         })
 
     return [title, hlsUrl];
