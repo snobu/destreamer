@@ -76,6 +76,11 @@ If you do not pass this parameter then `youtube-dl` will download the best avail
 ## IMPORTANT NOTE
 For now you need to keep the puppeteer browser window open (the one that pops up for logging in) if you download more than one video in one go.
 
+Also, just ignore this error, we already have what we need to start the download, no time to deal with collaterals -
+
+![image](https://user-images.githubusercontent.com/6472374/77905069-4c585000-728e-11ea-914e-26f1ce5e595b.png)
+
+
 ## EXPECTED OUTPUT
 
 ```
