@@ -144,11 +144,20 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
         console.log("Fetching title and HLS URL...");
-        var [title, hlsUrl] = await getVideoInfo(videoID, session);
+        var [title, date, hlsUrl] = await getVideoInfo(videoID, session);
+        const sanitized = sanitize(title);
 
-        title = (sanitize(title) == "") ?
+        title = (sanitized == "") ?
             `Video${videoUrls.indexOf(videoUrl)}` :
-            sanitize(title);
+            sanitized;
+
+        // Add date
+        title += ' - '+date;
+
+        // Add random index to prevent unwanted file overwrite!
+        let k = 0;
+        while (fs.existsSync(outputDirectory+"/"+title+".mp4"))
+            title += ' - '+(++k).toString();
 
         term.blue("Video title is: ");
         console.log(`${title} \n`);
@@ -202,6 +211,7 @@ async function exfiltrateCookie(page: puppeteer.Page) {
 
 async function getVideoInfo(videoID: string, session: any) {
     let title: string;
+    let date: string;
     let hlsUrl: string;
 
     let content = axios.get(
@@ -227,9 +237,16 @@ async function getVideoInfo(videoID: string, session: any) {
             process.exit(29);
         });
 
-
         title = await content.then(data => {
             return data["name"];
+        });
+
+        date = await content.then(data => {
+            const dateJs = new Date(data["publishedDate"]);
+            const day = dateJs.getDate().toString().padStart(2, '0');
+            const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
+
+            return day+'-'+month+'-'+dateJs.getFullYear();
         });
 
         hlsUrl = await content.then(data => {
@@ -252,7 +269,7 @@ async function getVideoInfo(videoID: string, session: any) {
             return playbackUrl;
         });
 
-    return [title, hlsUrl];
+    return [title, date, hlsUrl];
 }
 
 function getVideoUrls() {
