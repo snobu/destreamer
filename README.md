@@ -44,7 +44,7 @@ Options:
   --help             Show help                                         [boolean]
   --version          Show version number                               [boolean]
   --videoUrls                                                 [array] [required]
-  --username                                                 [string] [required]
+  --username                                                            [string]
   --outputDirectory                                 [string] [default: "videos"]
   --format, -f       Expose youtube-dl --format option, for details see
 
@@ -64,6 +64,8 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
+Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
+
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
 Your video URLs **must** include the URL schema (the leading `https://`).
