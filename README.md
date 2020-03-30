@@ -6,7 +6,7 @@
 
 ![](logo.png)
 
-## Saves Microsoft Stream videos for offline enjoyment.
+## Saves Microsoft Stream videos for offline enjoyment
 
 Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 
@@ -16,7 +16,7 @@ It's slow (e.g. a 60-min video takes 20-30 minutes to download). Not much i can 
 <img src="https://www.whitesourcesoftware.com/wp-content/uploads/2018/02/10-github-to-follow.jpg" width=400 />
 
 Roadmap -
-- [ ] Token cache (so you don't have to log in every time you run destreamer)
+- [ ] Token cache (so you don't have to log in every time you run destreamer) **Work in progress on the tokencache branch**
 - [ ] Download closed captions if available
 - [ ] Performance improvements (via aria2c maybe?)
 - [ ] Single static binary (for each major OS)
@@ -34,7 +34,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 * **youtube-dl**: https://ytdl-org.github.io/youtube-dl/download.html, you'll need a fairly recent version that understands encrypted HLS streams. This needs to be in your $PATH. Destreamer calls `youtube-dl` with a bunch of arguments.
 * **ffmpeg**: a recent version (year 2019 or above), in `$PATH`.
 
-Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, results may vary, feel free to open an issue if trouble arise.
+Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows and macOS, results may vary, feel free to open an issue if trouble arise.
 
 ## USAGE
 
