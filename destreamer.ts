@@ -4,10 +4,9 @@ import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
 import { BrowserTests } from './BrowserTests';
-import yargs from 'yargs'
-import sanitize from 'sanitize-filename'
+import yargs from 'yargs';
+import sanitize from 'sanitize-filename';
 import axios from 'axios';
-
 
 /**
  * exitCode 25 = cannot split videoID from videUrl
@@ -48,14 +47,12 @@ const argv = yargs.options({
 if (argv.simulate){
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
-    term.blue("There will be no video downloaded, it's only a simulation \n")
-    console.log("\n")
+    term.blue("There will be no video downloaded, it's only a simulation\n");
 } else {
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
     console.info('Output Directory: %s', argv.outputDirectory);
     console.info('Video/Audio Quality: %s', argv.format);
-    console.log("\n")
 }
 
 
@@ -111,7 +108,8 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     await sleep(1500);
 
     for (let videoUrl of videoUrls) {
-        let videoID = videoUrl.split('/').pop() ?? (console.error("Couldn't split the videoID, wrong url"), process.exit(25))
+        let videoID = videoUrl.split('/').pop() ??
+            (console.error("Couldn't split the videoID, wrong url"), process.exit(25));
 
         // changed waitUntil value to load (page completly loaded)
         await page.goto(videoUrl, { waitUntil: 'load' });
@@ -133,38 +131,39 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
                     AccessToken: sessionInfo.AccessToken,
                     ApiGatewayUri: sessionInfo.ApiGatewayUri,
                     ApiGatewayVersion: sessionInfo.ApiGatewayVersion
-                }
+                };
             }
         );
 
         console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
-        console.log("Fetching title and HLS URL...")
+        console.log("Fetching title and HLS URL...");
         var [title, hlsUrl] = await getVideoInfo(videoID, session);
 
         title = (sanitize(title) == "") ? 
             `Video${videoUrls.indexOf(videoUrl)}` : 
-            sanitize(title)
+            sanitize(title);
 
         term.blue("Video title is: ");
         console.log(`${title} \n`);
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
 
-        const format = argv.format ? `-f "${argv.format}"` : ""
+        const format = argv.format ? `-f "${argv.format}"` : "";
 
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
                 ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
-                `Cookie:"${cookie}" "${hlsUrl}"`
+                `Cookie:"${cookie}" "${hlsUrl}"`;
 
-        if (argv.simulate)
-            youtubedlCmd = youtubedlCmd + " -s"
+        if (argv.simulate) {
+            youtubedlCmd = youtubedlCmd + " -s";
+        }
 
         if (argv.verbose) {
             console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
         }
-        var result = execSync(youtubedlCmd, { stdio: 'inherit' });
+        execSync(youtubedlCmd, { stdio: 'inherit' });
     }
 
     console.log("At this point Chrome's job is done, shutting it down...");
@@ -221,12 +220,12 @@ async function getVideoInfo(videoID: string, session: any) {
                 console.error(`[VERBOSE] ${error}`);
             }
             process.exit(29);
-        })
+        });
 
 
         title = await content.then(data => {
             return data["name"];
-        })
+        });
 
         hlsUrl = await content.then(data => {
             if (argv.verbose) {
@@ -238,7 +237,7 @@ async function getVideoInfo(videoID: string, session: any) {
                     .filter((item: { [x: string]: string; }) =>
                         item["mimeType"] == "application/vnd.apple.mpegurl")
                     .map((item: { [x: string]: string }) =>
-                        { return item["playbackUrl"] })[0];
+                        { return item["playbackUrl"]; })[0];
             }
             catch (e) {
                 console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
@@ -246,7 +245,7 @@ async function getVideoInfo(videoID: string, session: any) {
             }
 
             return playbackUrl;
-        })
+        });
 
     return [title, hlsUrl];
 }
