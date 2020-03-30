@@ -1,9 +1,11 @@
+import { BrowserTests } from './BrowserTests';
+import { TokenCache } from './TokenCache';
+
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
 import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
-import { BrowserTests } from './BrowserTests';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import axios from 'axios';

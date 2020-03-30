@@ -1,3 +1,4 @@
+.token_cache
 *.txt
 *.log
 *.js
