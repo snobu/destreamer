@@ -83,9 +83,6 @@ function sanityChecks() {
             process.cwd() + path.sep + argv.outputDirectory);
         fs.mkdirSync(argv.outputDirectory);
     }
-
-    /* Removed check on the first argoumenti not being null or
-    longer than 10 since we use yargs now */
 }
 
 async function rentVideoForLater(videoUrls: string[], username: string, outputDirectory: string) {
