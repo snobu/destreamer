@@ -80,8 +80,6 @@ Passing `--username` is optional. It's there to make logging in faster (the user
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
-Your video URLs **must** include the URL schema (the leading `https://`).
-
 To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
 If you do not pass this parameter then `youtube-dl` will download the best available quality for each video.
 

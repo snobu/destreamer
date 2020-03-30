@@ -261,11 +261,19 @@ function getVideoUrls() {
 
     const t = argv.videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
+    let urls;
 
     if (isPath)
-        return fs.readFileSync(t).toString('utf-8').split('\n');
+        urls = fs.readFileSync(t).toString('utf-8').split('\n');
+    else
+        urls = argv.videoUrls as string[];
 
-    return argv.videoUrls;
+    for (let i=0, l=urls.length; i<l; ++i) {
+        if (urls[i].substring(0, 8) !== 'https://')
+            urls[i] = 'https://'+urls[i];
+    }
+
+    return urls;
 }
 
 // We should probably use Mocha or something
