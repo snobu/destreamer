@@ -234,11 +234,14 @@ async function getVideoInfo(videoID: string, session: any) {
             }
             let playbackUrl = null;
             try {
-                playbackUrl = data["playbackUrls"].filter(
-                    (item: { [x: string]: string; }) => item["mimeType"] == "application/vnd.apple.mpegurl")[0]["playbackUrl"];
+                playbackUrl = data["playbackUrls"]
+                    .filter((item: { [x: string]: string; }) =>
+                        item["mimeType"] == "application/vnd.apple.mpegurl")
+                    .map((item: { [x: string]: string }) =>
+                        { return item["playbackUrl"] })[0];
             }
             catch (e) {
-                console.error(`Error fetching hlsUrl: ${e}`);
+                console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
                 process.exit(27);
             }
 
