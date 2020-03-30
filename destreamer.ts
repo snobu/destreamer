@@ -293,6 +293,12 @@ function getVideoUrls() {
     return urls;
 }
 
+// FIXME
+process.on('unhandledRejection', (reason, promise) => {
+    term.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n");
+    throw new Error("Killing process..\n");
+});
+
 // We should probably use Mocha or something
 const args: string[] = process.argv.slice(2);
 if (args[0] === 'test')
