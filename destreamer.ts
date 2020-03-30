@@ -16,9 +16,6 @@ import axios from 'axios';
  * exitCode 88 = error extracting cookies
  */
 
-const ApiVersion = "1.3-private"
-const args: string[] = process.argv.slice(2); // TODO: Remove this
-
 const argv = yargs.options({
     videoUrls: { type: 'array', demandOption: true },
     username: { type: 'string', demandOption: true },
@@ -241,6 +238,7 @@ async function getVideoInfo(videoID: string, session: any) {
 }
 
 // We should probably use Mocha or something
+const args: string[] = process.argv.slice(2);
 if (args[0] === 'test')
 {
     BrowserTests();
