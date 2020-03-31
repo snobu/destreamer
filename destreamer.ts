@@ -86,33 +86,18 @@ function sanityChecks() {
     }
 }
 
-async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
-    
-    let accessToken = null;
 
-    try {
-        accessToken = tokenCache.Read();
-        console.log(`Read returned: ${accessToken}`);
-        process.exit(200);
-    }
-    catch (e)
-    {
-        console.log("cache is empty or expired");
-        console.log(accessToken);
-        process.exit(404);
-    }
-    
+async function DoInteractiveLogin(username?: string) {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
-        // Switch to false if you need to login interactively
         headless: false,
         args: ['--disable-dev-shm-usage']
     });
     const page = (await browser.pages())[0];
-    console.log('Navigating to STS login page...');
+    console.log('Navigating to microsoftonline.com login page...');
 
     // This breaks on slow connections, needs more reliable logic
-    await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
+    await page.goto('https://web.microsoftstream.com', { waitUntil: "networkidle2" });
     await page.waitForSelector('input[type="email"]');
     
     if (username) {
@@ -126,74 +111,101 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     // Who am i to deny a perfectly good nap?
     await sleep(1500);
 
-    for (let videoUrl of videoUrls) {
-        let videoID = videoUrl.split('/').pop() ??
-            (console.error("Couldn't split the videoID, wrong url"), process.exit(25));
+    console.log('Got cookie. Consuming cookie...');
+    
+    await sleep(4000);
+    console.log("Calling Microsoft Stream API...");
+    
+    let cookie = await exfiltrateCookie(page);
 
-        // changed waitUntil value to load (page completly loaded)
-        await page.goto(videoUrl, { waitUntil: 'load' });
-
-        await sleep(2000);
-        // try this instead of hardcoding sleep
-        // https://github.com/GoogleChrome/puppeteer/issues/3649
-
-        const cookie = await exfiltrateCookie(page);
-        console.log('Got cookie. Consuming cookie...');
-
-        await sleep(4000);
-        console.log("Calling Microsoft Stream API...");
-
-        let sessionInfo: any;
-        let session = await page.evaluate(
-            () => {
-                return { 
-                    AccessToken: sessionInfo.AccessToken,
-                    ApiGatewayUri: sessionInfo.ApiGatewayUri,
-                    ApiGatewayVersion: sessionInfo.ApiGatewayVersion
-                };
-            }
-        );
-
-        tokenCache.Write(session.AccessToken);
-
-        console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
-        console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
-
-        console.log("Fetching title and HLS URL...");
-        var [title, hlsUrl] = await getVideoInfo(videoID, session);
-
-        title = (sanitize(title) == "") ? 
-            `Video${videoUrls.indexOf(videoUrl)}` : 
-            sanitize(title);
-
-        term.blue("Video title is: ");
-        console.log(`${title} \n`);
-
-        console.log('Spawning youtube-dl with cookie and HLS URL...');
-
-        const format = argv.format ? `-f "${argv.format}"` : "";
-
-        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-                ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
-                `Cookie:"${cookie}" "${hlsUrl}"`;
-
-        if (argv.simulate) {
-            youtubedlCmd = youtubedlCmd + " -s";
+    let sessionInfo: any;
+    let session = await page.evaluate(
+        () => {
+            return { 
+                AccessToken: sessionInfo.AccessToken,
+                ApiGatewayUri: sessionInfo.ApiGatewayUri,
+                ApiGatewayVersion: sessionInfo.ApiGatewayVersion,
+                Cookie: cookie
+            };
         }
+    );
+        
+    tokenCache.Write(session.AccessToken);
+    console.log("Wrote access token to token cache.");
 
-        if (argv.verbose) {
-            console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
+    console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
+    console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
+
+    console.log("At this point Chromium's job is done, shutting it down...");
+    await browser.close();
+
+    return session;
+}
+
+
+function extractVideoGuid(videoUrls: string[]): string[] {
+    let videoGuids: string[] = [];
+    let guid: string = "";
+    for (let url of videoUrls) {
+        try {
+            let guid = url.split('/').pop();
         }
-        execSync(youtubedlCmd, { stdio: 'inherit' });
+        catch (e)
+        {
+            console.error(`Could not split the video GUID from URL: ${e.message}`);
+            process.exit(25);
+        }
+        videoGuids.push(guid);
+    }
+    
+    return videoGuids;
+}
+
+
+async function rentVideoForLater(videoUrls: string[], outputDirectory: string, session: object) {
+    const videoGuids = extractVideoGuid(videoUrls);
+    let accessToken = null;
+    try {
+        accessToken = tokenCache.Read();
+    }
+    catch (e)
+    {
+        console.log("Cache is empty or expired, performing interactive log on...");
     }
 
-    console.log("At this point Chrome's job is done, shutting it down...");
-    await browser.close();
+    console.log("Fetching title and HLS URL...");
+    var [title, hlsUrl] = await getVideoMetadata(videoGuids, session);
+
+    title = (sanitize(title) == "") ? 
+        `Video${videoUrls.indexOf(videoUrl)}` : 
+        sanitize(title);
+
+    term.blue("Video title is: ");
+    console.log(`${title} \n`);
+
+    console.log('Spawning youtube-dl with cookie and HLS URL...');
+
+    const format = argv.format ? `-f "${argv.format}"` : "";
+
+    var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+            ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
+            `Cookie:"${session.AccessToken}" "${hlsUrl}"`;
+
+    if (argv.simulate) {
+        youtubedlCmd = youtubedlCmd + " -s";
+    }
+
+    if (argv.verbose) {
+        console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
+    }
+    execSync(youtubedlCmd, { stdio: 'inherit' });
 }
+
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 
 async function exfiltrateCookie(page: puppeteer.Page) {
     var jar = await page.cookies("https://.api.microsoftstream.com");
@@ -215,60 +227,66 @@ async function exfiltrateCookie(page: puppeteer.Page) {
     return `Authorization=${authzCookie.value}; Signature=${sigCookie.value}`;
 }
 
+class Metadata {
+    title!: string;
+    hlsUrl!: string;
+    playbackUrl!: string;
+}
 
-async function getVideoInfo(videoID: string, session: any) {
+async function getVideoMetadata(videoGuids: string[], session: any) {
     let title: string;
     let hlsUrl: string;
+    let metadata = new Metadata();
+    videoGuids.forEach(guid => {
+        let content = axios.get(
+            `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${session.AccessToken}`
+                }
+            })
+            .then(function (response) {
+                return response.data;
+            })
+            .catch(function (error) {
+                term.red('Error when calling Microsoft Stream API: ' +
+                    `${error.response.status} ${error.response.reason}`);
+                console.error(error.response.status);
+                console.error(error.response.data);
+                console.error("Exiting...");
+                if (argv.verbose) {
+                    console.error(`[VERBOSE] ${error}`);
+                }
+                process.exit(29);
+            });
 
-    let content = axios.get(
-        `${session.ApiGatewayUri}videos/${videoID}` +
-        `?$expand=creator,tokens,status,liveEvent,extensions&api-version=${session.ApiGatewayVersion}`,
-        {
-            headers: {
-                Authorization: `Bearer ${session.AccessToken}`
-            }
-        })
-        .then(function (response) {
-            return response.data;
-        })
-        .catch(function (error) {
-            term.red('Error when calling Microsoft Stream API: ' +
-                `${error.response.status} ${error.response.reason}`);
-            console.error(error.response.status);
-            console.error(error.response.data);
-            console.error("Exiting...");
-            if (argv.verbose) {
-                console.error(`[VERBOSE] ${error}`);
-            }
-            process.exit(29);
-        });
 
+            title = await content.then(data => {
+                return data["name"];
+            });
 
-        title = await content.then(data => {
-            return data["name"];
-        });
+            hlsUrl = await content.then(data => {
+                if (argv.verbose) {
+                    console.log(JSON.stringify(data, undefined, 2));
+                }
+                let playbackUrl = null;
+                try {
+                    playbackUrl = data["playbackUrls"]
+                        .filter((item: { [x: string]: string; }) =>
+                            item["mimeType"] == "application/vnd.apple.mpegurl")
+                        .map((item: { [x: string]: string }) =>
+                            { return item["playbackUrl"]; })[0];
+                }
+                catch (e) {
+                    console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
+                    process.exit(27);
+                }
 
-        hlsUrl = await content.then(data => {
-            if (argv.verbose) {
-                console.log(JSON.stringify(data, undefined, 2));
-            }
-            let playbackUrl = null;
-            try {
-                playbackUrl = data["playbackUrls"]
-                    .filter((item: { [x: string]: string; }) =>
-                        item["mimeType"] == "application/vnd.apple.mpegurl")
-                    .map((item: { [x: string]: string }) =>
-                        { return item["playbackUrl"]; })[0];
-            }
-            catch (e) {
-                console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
-                process.exit(27);
-            }
+                return playbackUrl;
+            });
 
-            return playbackUrl;
-        });
-
-    return [title, hlsUrl];
+        return [title, hlsUrl];
+    });
 }
 
 // We should probably use Mocha or something
