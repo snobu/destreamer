@@ -64,17 +64,22 @@ Options:
                                                       [boolean] [default: false]
 
 
+# Make sure you use the right escape char for your shell if using line breaks (as this example shows).
+# For PowerShell your escape char is the backtick (`) instead of backslash (\), for cmd.exe use caret (^).
+
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
 
-You can create a txt file containing your video urls, separated by `new line`, and run destreamer as follow:
+You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension. Run destreamer as follows:
 ```
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
-    --videoUrls myUrlsFile.txt
+    --videoUrls list.txt
 ```
+
+**DO NOT RUN IN AN ELEVATED SHELL ON WINDOWS**, not going to work, Chromium will keep crashing.
 
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
