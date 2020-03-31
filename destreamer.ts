@@ -1,5 +1,6 @@
 import { BrowserTests } from './BrowserTests';
 import { TokenCache } from './TokenCache';
+import { Metadata, getVideoMetadata } from './Metadata';
 
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
@@ -8,7 +9,6 @@ import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
-import axios from 'axios';
 
 /**
  * exitCode 25 = cannot split videoID from videUrl
@@ -174,31 +174,27 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, s
     }
 
     console.log("Fetching title and HLS URL...");
-    var [title, hlsUrl] = await getVideoMetadata(videoGuids, session);
+    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
 
-    title = (sanitize(title) == "") ? 
-        `Video${videoUrls.indexOf(videoUrl)}` : 
-        sanitize(title);
+    metadata.forEach(video => {
+        video.title = sanitize(video.title);
+        term.blue(`Video Title: ${video.title}`);
 
-    term.blue("Video title is: ");
-    console.log(`${title} \n`);
+        console.log('Spawning youtube-dl with cookie and HLS URL...');
+        const format = argv.format ? `-f "${argv.format}"` : "";
+        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+                ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
+                `Cookie:"${session.AccessToken}" "${video.playbackUrl}"`;
 
-    console.log('Spawning youtube-dl with cookie and HLS URL...');
+        if (argv.simulate) {
+            youtubedlCmd = youtubedlCmd + " -s";
+        }
 
-    const format = argv.format ? `-f "${argv.format}"` : "";
-
-    var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-            ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
-            `Cookie:"${session.AccessToken}" "${hlsUrl}"`;
-
-    if (argv.simulate) {
-        youtubedlCmd = youtubedlCmd + " -s";
+        if (argv.verbose) {
+            console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
+        }
+        execSync(youtubedlCmd, { stdio: 'inherit' });
     }
-
-    if (argv.verbose) {
-        console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
-    }
-    execSync(youtubedlCmd, { stdio: 'inherit' });
 }
 
 
@@ -227,67 +223,6 @@ async function exfiltrateCookie(page: puppeteer.Page) {
     return `Authorization=${authzCookie.value}; Signature=${sigCookie.value}`;
 }
 
-class Metadata {
-    title!: string;
-    hlsUrl!: string;
-    playbackUrl!: string;
-}
-
-async function getVideoMetadata(videoGuids: string[], session: any) {
-    let title: string;
-    let hlsUrl: string;
-    let metadata = new Metadata();
-    videoGuids.forEach(guid => {
-        let content = axios.get(
-            `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${session.AccessToken}`
-                }
-            })
-            .then(function (response) {
-                return response.data;
-            })
-            .catch(function (error) {
-                term.red('Error when calling Microsoft Stream API: ' +
-                    `${error.response.status} ${error.response.reason}`);
-                console.error(error.response.status);
-                console.error(error.response.data);
-                console.error("Exiting...");
-                if (argv.verbose) {
-                    console.error(`[VERBOSE] ${error}`);
-                }
-                process.exit(29);
-            });
-
-
-            title = await content.then(data => {
-                return data["name"];
-            });
-
-            hlsUrl = await content.then(data => {
-                if (argv.verbose) {
-                    console.log(JSON.stringify(data, undefined, 2));
-                }
-                let playbackUrl = null;
-                try {
-                    playbackUrl = data["playbackUrls"]
-                        .filter((item: { [x: string]: string; }) =>
-                            item["mimeType"] == "application/vnd.apple.mpegurl")
-                        .map((item: { [x: string]: string }) =>
-                            { return item["playbackUrl"]; })[0];
-                }
-                catch (e) {
-                    console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
-                    process.exit(27);
-                }
-
-                return playbackUrl;
-            });
-
-        return [title, hlsUrl];
-    });
-}
 
 // We should probably use Mocha or something
 const args: string[] = process.argv.slice(2);
