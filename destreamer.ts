@@ -296,6 +296,7 @@ function getVideoUrls() {
 // FIXME
 process.on('unhandledRejection', (reason, promise) => {
     term.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n");
+    term.red(reason);
     throw new Error("Killing process..\n");
 });
 
