@@ -156,8 +156,11 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
 
         // Add random index to prevent unwanted file overwrite!
         let k = 0;
-        while (fs.existsSync(outputDirectory+"/"+title+".mp4"))
-            title += ' - '+(++k).toString();
+        let ntitle = title;
+        while (fs.existsSync(outputDirectory+"/"+ntitle+".mp4"))
+            ntitle = title+' - '+(++k).toString();
+
+        title = ntitle;
 
         term.blue("Video title is: ");
         console.log(`${title} \n`);
