@@ -34,7 +34,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 * **youtube-dl**: https://ytdl-org.github.io/youtube-dl/download.html, you'll need a fairly recent version that understands encrypted HLS streams. This needs to be in your $PATH. Destreamer calls `youtube-dl` with a bunch of arguments.
 * **ffmpeg**: a recent version (year 2019 or above), in `$PATH`.
 
-Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows and macOS, results may vary, feel free to open an issue if trouble arise.
+Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, macOS and Linux, results may vary, feel free to open an issue if trouble arise.
 
 ## USAGE
 
@@ -47,9 +47,10 @@ $ node ./destreamer.js
 Options:
   --help             Show help                                         [boolean]
   --version          Show version number                               [boolean]
-  --videoUrls                                                 [array] [required]
-  --username                                                            [string]
-  --outputDirectory                                 [string] [default: "videos"]
+  --videoUrls, -V    List of video urls or path to txt file containing the urls
+                                                               [array] [required]
+  --username, -u                                                       [string]
+  --outputDirectory, -o                             [string] [default: "videos"]
   --format, -f       Expose youtube-dl --format option, for details see
 
                      https://github.com/ytdl-org/youtube-dl/blob/master/README.m
@@ -68,11 +69,16 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
+
+You can create a txt file containing your video urls, separated by `new line`, and run destreamer as follow:
+```
+$ node destreamer.js --username username@example.com --outputDirectory "videos" \
+    --videoUrls myUrlsFile.txt
+```
+
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
-
-Your video URLs **must** include the URL schema (the leading `https://`).
 
 To choose preferred video format and quality you can use the `-f` (`--format`) option. It exposes a native [`youtube-dl` parameter][4].
 If you do not pass this parameter then `youtube-dl` will download the best available quality for each video.
@@ -105,7 +111,7 @@ Spawning youtube-dl with cookie and HLSv3 URL...
 [download] Destination: Mondays with IGD 11th March-2019.mp4
 ffmpeg version 4.0.2 Copyright (c) 2000-2018 the FFmpeg developers
   built with gcc 7.3.1 (GCC) 20180722
-  configuration: --enable-gpl --enable-version3 --enable-sdl2 --enable-bzlib 
+  configuration: --enable-gpl --enable-version3 --enable-sdl2 --enable-bzlib
 
 [...]
 

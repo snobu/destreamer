@@ -16,9 +16,14 @@ import axios from 'axios';
  */
 
 const argv = yargs.options({
-    videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
-    username: { type: 'string', demandOption: false },
-    outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
+    username: { alias: "u", type: 'string', demandOption: false },
+    outputDirectory: { type: 'string', alias: 'o', default: 'videos' },
+    videoUrls: {
+        alias: "V",
+        describe: `List of video urls or path to txt file containing the urls`,
+        type: 'array',
+        demandOption: true
+    },
     format: {
         alias:"f",
         describe: `Expose youtube-dl --format option, for details see\n
@@ -95,7 +100,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     // This breaks on slow connections, needs more reliable logic
     await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
     await page.waitForSelector('input[type="email"]');
-    
+
     if (username) {
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
@@ -127,7 +132,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         let sessionInfo: any;
         let session = await page.evaluate(
             () => {
-                return { 
+                return {
                     AccessToken: sessionInfo.AccessToken,
                     ApiGatewayUri: sessionInfo.ApiGatewayUri,
                     ApiGatewayVersion: sessionInfo.ApiGatewayVersion
@@ -139,11 +144,20 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
         console.log("Fetching title and HLS URL...");
-        var [title, hlsUrl] = await getVideoInfo(videoID, session);
+        var [title, date, hlsUrl] = await getVideoInfo(videoID, session);
+        const sanitized = sanitize(title);
 
-        title = (sanitize(title) == "") ? 
-            `Video${videoUrls.indexOf(videoUrl)}` : 
-            sanitize(title);
+        title = (sanitized == "") ?
+            `Video${videoUrls.indexOf(videoUrl)}` :
+            sanitized;
+
+        // Add date
+        title += ' - '+date;
+
+        // Add random index to prevent unwanted file overwrite!
+        let k = 0;
+        while (fs.existsSync(outputDirectory+"/"+title+".mp4"))
+            title += ' - '+(++k).toString();
 
         term.blue("Video title is: ");
         console.log(`${title} \n`);
@@ -197,6 +211,7 @@ async function exfiltrateCookie(page: puppeteer.Page) {
 
 async function getVideoInfo(videoID: string, session: any) {
     let title: string;
+    let date: string;
     let hlsUrl: string;
 
     let content = axios.get(
@@ -222,9 +237,16 @@ async function getVideoInfo(videoID: string, session: any) {
             process.exit(29);
         });
 
-
         title = await content.then(data => {
             return data["name"];
+        });
+
+        date = await content.then(data => {
+            const dateJs = new Date(data["publishedDate"]);
+            const day = dateJs.getDate().toString().padStart(2, '0');
+            const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
+
+            return day+'-'+month+'-'+dateJs.getFullYear();
         });
 
         hlsUrl = await content.then(data => {
@@ -247,8 +269,32 @@ async function getVideoInfo(videoID: string, session: any) {
             return playbackUrl;
         });
 
-    return [title, hlsUrl];
+    return [title, date, hlsUrl];
 }
+
+function getVideoUrls() {
+    const t = argv.videoUrls[0] as string;
+    const isPath = t.substring(t.length-4) === '.txt';
+    let urls: string[];
+
+    if (isPath)
+        urls = fs.readFileSync(t).toString('utf-8').split('\n');
+    else
+        urls = argv.videoUrls as string[];
+
+    for (let i=0, l=urls.length; i<l; ++i) {
+        if (urls[i].substring(0, 8) !== 'https://')
+            urls[i] = 'https://'+urls[i];
+    }
+
+    return urls;
+}
+
+// FIXME
+process.on('unhandledRejection', (reason, promise) => {
+    term.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n");
+    throw new Error("Killing process..\n");
+});
 
 // We should probably use Mocha or something
 const args: string[] = process.argv.slice(2);
@@ -259,5 +305,5 @@ if (args[0] === 'test')
 
 else {
     sanityChecks();
-    rentVideoForLater(argv.videoUrls as string[], argv.outputDirectory, argv.username);
+    rentVideoForLater(getVideoUrls(), argv.outputDirectory, argv.username);
 }
