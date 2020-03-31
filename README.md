@@ -79,6 +79,8 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
     --videoUrls list.txt
 ```
 
+**DO NOT RUN IN AN ELEVATED SHELL ON WINDOWS**, not going to work, Chromium will keep crashing.
+
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
