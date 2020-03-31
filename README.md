@@ -73,10 +73,10 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
 
-You can create a `.txt` file containing your video URLs, one video per line, and run destreamer as follows:
+You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension. Run destreamer as follows:
 ```
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
-    --videoUrls myUrlsFile.txt
+    --videoUrls list.txt
 ```
 
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
