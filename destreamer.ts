@@ -123,8 +123,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         // try this instead of hardcoding sleep
         // https://github.com/GoogleChrome/puppeteer/issues/3649
 
-        const cookie = await exfiltrateCookie(page);
-        console.log('Got cookie. Consuming cookie...');
+        console.log("Page loaded")
 
         await sleep(4000);
         console.log("Calling Microsoft Stream API...");
@@ -139,6 +138,11 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
                 };
             }
         );
+
+        if (argv.verbose) {
+            console.log(`\n\n[VERBOSE] ApiGatewayUri: ${session.ApiGatewayUri}\n
+            ApiGatewayVersion: ${session.ApiGatewayVersion}\n\n`);
+        }
 
         console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
@@ -171,7 +175,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
 
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
                 ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
-                `Cookie:"${cookie}" "${hlsUrl}"`;
+                `"Authorization: Bearer ${session.AccessToken}" "${hlsUrl}"`;
 
         if (argv.simulate) {
             youtubedlCmd = youtubedlCmd + " -s";
@@ -187,28 +191,9 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     await browser.close();
 }
 
+
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function exfiltrateCookie(page: puppeteer.Page) {
-    var jar = await page.cookies("https://.api.microsoftstream.com");
-    var authzCookie = jar.filter(c => c.name === 'Authorization_Api')[0];
-    var sigCookie = jar.filter(c => c.name === 'Signature_Api')[0];
-
-    if (authzCookie == null || sigCookie == null) {
-        await sleep(5000);
-        var jar = await page.cookies("https://.api.microsoftstream.com");
-        var authzCookie = jar.filter(c => c.name === 'Authorization_Api')[0];
-        var sigCookie = jar.filter(c => c.name === 'Signature_Api')[0];
-    }
-
-    if (authzCookie == null || sigCookie == null) {
-        console.error('Unable to read cookies. Try launching one more time, this is not an exact science.');
-        process.exit(88);
-    }
-
-    return `Authorization=${authzCookie.value}; Signature=${sigCookie.value}`;
 }
 
 
