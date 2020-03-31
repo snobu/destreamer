@@ -64,6 +64,8 @@ Options:
                                                       [boolean] [default: false]
 
 
+# Make sure you use the right escape char for your shell if using line breaks (as this example shows).
+# For PowerShell your escape char is the backtick (`) instead of backslash (\).
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
                 "https://web.microsoftstream.com/video/VIDEO-2" \
