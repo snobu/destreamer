@@ -88,6 +88,11 @@ function sanityChecks() {
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
+    if (argv.verbose) {
+        console.log('[VERBOSE] URL List:');
+        console.log(videoUrls);
+    }
+
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         // Switch to false if you need to login interactively
@@ -263,17 +268,34 @@ async function getVideoInfo(videoID: string, session: any) {
 function getVideoUrls() {
     const t = argv.videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
+    const regex = /(?:https:\/\/)?web.microsoftstream.com\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}/;
+    let skip: number[] = [];
     let urls: string[];
 
     if (isPath)
-        urls = fs.readFileSync(t).toString('utf-8').split('\n');
+        urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
     else
         urls = argv.videoUrls as string[];
 
     for (let i=0, l=urls.length; i<l; ++i) {
+        const isEmptyLine: boolean = urls[i] === '';
+
+        if (!regex.test(urls[i]) || isEmptyLine) {
+            if (!isEmptyLine)
+                term.yellow("Invalid URL at line "+(i+1)+", skip..\n");
+
+            skip.push(i);
+            continue;
+        }
+
         if (urls[i].substring(0, 8) !== 'https://')
             urls[i] = 'https://'+urls[i];
     }
+
+    // remove invalid URLs and empty lines
+    skip.reverse().forEach(idx => {
+        urls.splice(idx, 1);
+    });
 
     return urls;
 }
