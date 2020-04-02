@@ -220,7 +220,8 @@ async function getVideoInfo(videoID: string, session: any) {
             console.error(error.response.data);
             console.error("Exiting...");
             if (argv.verbose) {
-                console.error(`[VERBOSE] ${error}`);
+                term.red("[VERBOSE]");
+                console.error(error)
             }
             process.exit(29);
         });
