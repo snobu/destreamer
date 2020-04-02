@@ -267,7 +267,7 @@ function getVideoUrls() {
     let urls: string[];
 
     if (isPath)
-        urls = fs.readFileSync(t).toString('utf-8').split('\n');
+        urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
     else
         urls = argv.videoUrls as string[];
 
