@@ -88,6 +88,11 @@ function sanityChecks() {
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
+    if (argv.verbose) {
+        console.log('[VERBOSE] URL List:');
+        console.log(videoUrls);
+    }
+
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         // Switch to false if you need to login interactively
@@ -261,6 +266,31 @@ async function getVideoInfo(videoID: string, session: any) {
     return [title, date, hlsUrl];
 }
 
+function sanitizeUrls(urls: string[]) {
+    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
+    const sanitized: string[] = [];
+
+    for (let i=0, l=urls.length; i<l; ++i) {
+        const urlAr = urls[i].split('?');
+        const query = urlAr.length === 2 && urlAr[1] !== '' ? '?'+urlAr[1] : '';
+        let url = urlAr[0];
+
+        if (!rex.test(url)) {
+            if (url !== '')
+                term.yellow("Invalid URL at line "+(i+1)+", skip..\n");
+
+            continue;
+        }
+
+        if (url.substring(0, 8) !== 'https://')
+            url = 'https://'+url;
+
+        sanitized.push(url+query);
+    }
+
+    return sanitized;
+}
+
 function getVideoUrls() {
     const t = argv.videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
@@ -271,12 +301,8 @@ function getVideoUrls() {
     else
         urls = argv.videoUrls as string[];
 
-    for (let i=0, l=urls.length; i<l; ++i) {
-        if (urls[i].substring(0, 8) !== 'https://')
-            urls[i] = 'https://'+urls[i];
-    }
+    return sanitizeUrls(urls);
 
-    return urls;
 }
 
 // FIXME
