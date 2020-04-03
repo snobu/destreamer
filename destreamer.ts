@@ -10,6 +10,7 @@ import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 
+
 /**
  * exitCode 25 = cannot split videoID from videUrl
  * exitCode 27 = no hlsUrl in the API response
@@ -38,14 +39,6 @@ const argv = yargs.options({
         default: false,
         demandOption: false
     },
-    verbose: {
-        alias: "v",
-        describe: `Print additional information to the console
-        (use this before opening an issue on GitHub)`,
-        type: "boolean",
-        default: false,
-        demandOption: false
-    }
 }).argv;
 
 if (argv.simulate){
@@ -124,8 +117,7 @@ async function DoInteractiveLogin(username?: string) {
             return { 
                 AccessToken: sessionInfo.AccessToken,
                 ApiGatewayUri: sessionInfo.ApiGatewayUri,
-                ApiGatewayVersion: sessionInfo.ApiGatewayVersion,
-                Cookie: cookie
+                ApiGatewayVersion: sessionInfo.ApiGatewayVersion
             };
         }
     );
@@ -174,7 +166,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, s
     }
 
     console.log("Fetching title and HLS URL...");
-    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session: Session);
 
     metadata.forEach(video => {
         video.title = sanitize(video.title);
@@ -190,9 +182,6 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, s
             youtubedlCmd = youtubedlCmd + " -s";
         }
 
-        if (argv.verbose) {
-            console.log(`\n\n[VERBOSE] Invoking youtube-dl:\n${youtubedlCmd}\n\n`);
-        }
         execSync(youtubedlCmd, { stdio: 'inherit' });
     }
 }

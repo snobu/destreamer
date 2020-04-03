@@ -1,11 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { terminal as term } from 'terminal-kit';
+import { Metadata } from './Types';
 
-
-export interface Metadata {
-    title: string;
-    playbackUrl: string;
-}
 
 export async function getVideoMetadata(videoGuids: string[], session: any): Promise<Metadata[]> {
     let metadata: Metadata[];
@@ -17,18 +13,13 @@ export async function getVideoMetadata(videoGuids: string[], session: any): Prom
                     Authorization: `Bearer ${session.AccessToken}`
                 }
             })
-            .then(function (response) {
+            .then(response => {
                 return response.data;
             })
-            .catch(function (error) {
+            .catch((error: AxiosError) => {
                 term.red('Error when calling Microsoft Stream API: ' +
-                    `${error.response.status} ${error.response.reason}`);
-                console.error(error.response.status);
-                console.error(error.response.data);
-                console.error("Exiting...");
-                if (argv.verbose) {
-                    console.error(`[VERBOSE] ${error}`);
-                }
+                    `${error.response?.status} ${error.response?.statusText}`);
+                term.red("This is an unrecoverable error. Exiting...");
                 process.exit(29);
             });
 
@@ -38,9 +29,9 @@ export async function getVideoMetadata(videoGuids: string[], session: any): Prom
             });
 
             let playbackUrl = await content.then(data => {
-                if (argv.verbose) {
-                    console.log(JSON.stringify(data, undefined, 2));
-                }
+                // if (verbose) {
+                //     console.log(JSON.stringify(data, undefined, 2));
+                // }
                 let playbackUrl = null;
                 try {
                     playbackUrl = data["playbackUrls"]
@@ -63,6 +54,6 @@ export async function getVideoMetadata(videoGuids: string[], session: any): Prom
             });
 
         });
-    
-    return metadata;
+
+        return metadata;
 }
