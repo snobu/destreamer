@@ -1,9 +1,9 @@
+import { sleep, getVideoUrls } from './utils';
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
 import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
 import path from 'path';
-import { BrowserTests } from './BrowserTests';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import axios from 'axios';
@@ -196,12 +196,6 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     await browser.close();
 }
 
-
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
 async function getVideoInfo(videoID: string, session: any) {
     let title: string;
     let date: string;
@@ -266,45 +260,6 @@ async function getVideoInfo(videoID: string, session: any) {
     return [title, date, hlsUrl];
 }
 
-function sanitizeUrls(urls: string[]) {
-    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
-    const sanitized: string[] = [];
-
-    for (let i=0, l=urls.length; i<l; ++i) {
-        const urlAr = urls[i].split('?');
-        const query = urlAr.length === 2 && urlAr[1] !== '' ? '?'+urlAr[1] : '';
-        let url = urlAr[0];
-
-        if (!rex.test(url)) {
-            if (url !== '')
-                term.yellow("Invalid URL at line "+(i+1)+", skip..\n");
-
-            continue;
-        }
-
-        if (url.substring(0, 8) !== 'https://')
-            url = 'https://'+url;
-
-        sanitized.push(url+query);
-    }
-
-    return sanitized;
-}
-
-function getVideoUrls() {
-    const t = argv.videoUrls[0] as string;
-    const isPath = t.substring(t.length-4) === '.txt';
-    let urls: string[];
-
-    if (isPath)
-        urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
-    else
-        urls = argv.videoUrls as string[];
-
-    return sanitizeUrls(urls);
-
-}
-
 // FIXME
 process.on('unhandledRejection', (reason, promise) => {
     term.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n");
@@ -312,14 +267,6 @@ process.on('unhandledRejection', (reason, promise) => {
     throw new Error("Killing process..\n");
 });
 
-// We should probably use Mocha or something
-const args: string[] = process.argv.slice(2);
-if (args[0] === 'test')
-{
-    BrowserTests();
-}
-
-else {
-    sanityChecks();
-    rentVideoForLater(getVideoUrls(), argv.outputDirectory, argv.username);
-}
+// run
+sanityChecks();
+rentVideoForLater(getVideoUrls(argv.videoUrls), argv.outputDirectory, argv.username);
