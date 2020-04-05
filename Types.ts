@@ -1,10 +1,10 @@
-export interface Session {
+export type Session = {
     AccessToken: string;
     ApiGatewayUri: string;
     ApiGatewayVersion: string;
 }
 
-export interface Metadata {
+export type Metadata = {
     title: string;
     playbackUrl: string;
 }

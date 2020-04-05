@@ -1,6 +1,7 @@
-import { BrowserTests } from './BrowserTests';
+import { BrowserTests } from './Tests';
 import { TokenCache } from './TokenCache';
-import { Metadata, getVideoMetadata } from './Metadata';
+import { getVideoMetadata } from './Metadata';
+import { Metadata, Session } from './Types';
 
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
@@ -80,7 +81,7 @@ function sanityChecks() {
 }
 
 
-async function DoInteractiveLogin(username?: string) {
+async function DoInteractiveLogin(username?: string): Promise<Session> {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         headless: false,
@@ -108,8 +109,6 @@ async function DoInteractiveLogin(username?: string) {
     
     await sleep(4000);
     console.log("Calling Microsoft Stream API...");
-    
-    let cookie = await exfiltrateCookie(page);
 
     let sessionInfo: any;
     let session = await page.evaluate(
@@ -122,7 +121,7 @@ async function DoInteractiveLogin(username?: string) {
         }
     );
         
-    tokenCache.Write(session.AccessToken);
+    tokenCache.Write(session);
     console.log("Wrote access token to token cache.");
 
     console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
@@ -136,42 +135,59 @@ async function DoInteractiveLogin(username?: string) {
 
 
 function extractVideoGuid(videoUrls: string[]): string[] {
+    const first = videoUrls[0] as string;
+    const isPath = first.substring(first.length - 4) === '.txt';
+    let urls: string[];
+
+    if (isPath)
+        urls = fs.readFileSync(first).toString('utf-8').split(/[\r\n]/);
+    else
+        urls = videoUrls as string[];
     let videoGuids: string[] = [];
-    let guid: string = "";
-    for (let url of videoUrls) {
+    let guid: string | undefined = "";
+    for (let url of urls) {
+        console.log(url);
         try {
-            let guid = url.split('/').pop();
+            guid = url.split('/').pop();
         }
         catch (e)
         {
             console.error(`Could not split the video GUID from URL: ${e.message}`);
             process.exit(25);
         }
-        videoGuids.push(guid);
+        if (guid) {
+            videoGuids.push(guid);
+        }
     }
     
+    console.log(videoGuids);
     return videoGuids;
 }
 
 
-async function rentVideoForLater(videoUrls: string[], outputDirectory: string, session: object) {
+async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
+    console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
+    console.log('EXTRACTED videoGuids:');
+    console.log(videoGuids);
     let accessToken = null;
+    
     try {
-        accessToken = tokenCache.Read();
+        let tc = tokenCache.Read();
+        accessToken = tc?.AccessToken;
     }
     catch (e)
     {
         console.log("Cache is empty or expired, performing interactive log on...");
     }
-
+    
     console.log("Fetching title and HLS URL...");
-    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session: Session);
-
+    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    console.log('metadata:');
+    console.log(metadata)
     metadata.forEach(video => {
         video.title = sanitize(video.title);
         term.blue(`Video Title: ${video.title}`);
-
         console.log('Spawning youtube-dl with cookie and HLS URL...');
         const format = argv.format ? `-f "${argv.format}"` : "";
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
@@ -183,7 +199,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, s
         }
 
         execSync(youtubedlCmd, { stdio: 'inherit' });
-    }
+    });
 }
 
 
@@ -192,35 +208,10 @@ function sleep(ms: number) {
 }
 
 
-async function exfiltrateCookie(page: puppeteer.Page) {
-    var jar = await page.cookies("https://.api.microsoftstream.com");
-    var authzCookie = jar.filter(c => c.name === 'Authorization_Api')[0];
-    var sigCookie = jar.filter(c => c.name === 'Signature_Api')[0];
-
-    if (authzCookie == null || sigCookie == null) {
-        await sleep(5000);
-        var jar = await page.cookies("https://.api.microsoftstream.com");
-        var authzCookie = jar.filter(c => c.name === 'Authorization_Api')[0];
-        var sigCookie = jar.filter(c => c.name === 'Signature_Api')[0];
-    }
-
-    if (authzCookie == null || sigCookie == null) {
-        console.error('Unable to read cookies. Try launching one more time, this is not an exact science.');
-        process.exit(88);
-    }
-
-    return `Authorization=${authzCookie.value}; Signature=${sigCookie.value}`;
-}
-
-
-// We should probably use Mocha or something
-const args: string[] = process.argv.slice(2);
-if (args[0] === 'test')
-{
-    BrowserTests();
-}
-
-else {
+async function main() {
     sanityChecks();
-    rentVideoForLater(argv.videoUrls as string[], argv.outputDirectory, argv.username);
+    let session = await DoInteractiveLogin(argv.username);
+    downloadVideo(argv.videoUrls as string[], argv.outputDirectory, session);
 }
+
+main();
