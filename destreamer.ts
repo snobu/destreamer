@@ -1,8 +1,10 @@
 import { sleep, getVideoUrls } from './utils';
 import { execSync } from 'child_process';
+import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import { terminal as term } from 'terminal-kit';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
@@ -267,6 +269,19 @@ process.on('unhandledRejection', (reason, promise) => {
     throw new Error("Killing process..\n");
 });
 
+async function main() {
+    const isValidUser = !(await isElevated());
+
+    if (!isValidUser) {
+        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+
+        term.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n');
+        process.exit(-1);
+    }
+
+    sanityChecks();
+    rentVideoForLater(getVideoUrls(argv.videoUrls), argv.outputDirectory, argv.username);
+}
+
 // run
-sanityChecks();
-rentVideoForLater(getVideoUrls(argv.videoUrls), argv.outputDirectory, argv.username);
+main();

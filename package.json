@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/mocha": "^7.0.2",
-    "@types/puppeteer": "^1.20.0",
+    "@types/puppeteer": "^1.20.4",
     "@types/terminal-kit": "^1.28.1",
     "@types/tmp": "^0.1.0",
     "@types/yargs": "^15.0.3",
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "is-elevated": "^3.0.0",
     "puppeteer": "^2.1.1",
     "sanitize-filename": "^1.6.3",
     "terminal-kit": "^1.35.2",
