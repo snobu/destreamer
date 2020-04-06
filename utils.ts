@@ -42,3 +42,13 @@ export function getVideoUrls(videoUrls: any) {
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function makeUniqueTitle(filenamesList: string[], title: string) {
+    let ntitle = title;
+    let k = 0;
+
+    while (filenamesList.includes(ntitle))
+        ntitle = title+' - '+(++k).toString();
+
+    return ntitle;
+}
