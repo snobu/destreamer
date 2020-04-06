@@ -28,11 +28,15 @@ export class TokenCache {
 
         let timeLeftInMinutes = Math.floor(timeLeft / 60);
         console.log("\n");
-        term.bgBrightGreen.black(`Access token still good for ${timeLeftInMinutes} minutes.`);
         console.log("\n");
         if (timeLeft < 120) {
+            term.bgBrightYellow.black("Access token is expired.").bgDefaultColor("\n");
+
             return null;
         }
+
+        term.bgBrightGreen.black(`Access token still good for ${timeLeftInMinutes} minutes.`)
+            .bgDefaultColor("\n");
 
         let session: Session = {
             AccessToken: j.AccessToken,
