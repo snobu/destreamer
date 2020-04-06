@@ -1,20 +1,20 @@
 import * as fs from 'fs';
 import { Session } from './Types';
+import { terminal as term } from 'terminal-kit';
 const jwtDecode = require('jwt-decode');
+const tokenCacheFile = '.token_cache';
 
 export class TokenCache {
 
     public Read(): Session | null {
         let j = null;
-        try {
-            let f = fs.readFileSync(".token_cache", "utf8");
-            j = JSON.parse(f);
-        }
-        catch (e) {
-            console.error(e);
-            
+        if(!fs.existsSync(tokenCacheFile)) {
+            term.yellow(`${tokenCacheFile} not found.\n`);
+
             return null;
         }
+        let f = fs.readFileSync(tokenCacheFile, "utf8");
+        j = JSON.parse(f);
 
         interface Jwt {
             [key: string]: any
@@ -26,6 +26,10 @@ export class TokenCache {
         let exp = decodedJwt["exp"];
         let timeLeft = exp - now;
 
+        let timeLeftInMinutes = Math.floor(timeLeft / 60);
+        console.log("\n");
+        term.bgBrightGreen.black(`Access token still good for ${timeLeftInMinutes} minutes.`);
+        console.log("\n");
         if (timeLeft < 120) {
             return null;
         }
