@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { terminal as term } from 'terminal-kit';
 import { Metadata, Session } from './Types';
+import fs from 'fs';
 
 
 export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
@@ -18,12 +19,35 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
                 }
             });
 
-        title = await response.data["name"];
-        playbackUrl = await response.data["playbackUrls"]
+        title = response.data["name"];
+        playbackUrl = response.data["playbackUrls"]
             .filter((item: { [x: string]: string; }) =>
                 item["mimeType"] == "application/vnd.apple.mpegurl")
             .map((item: { [x: string]: string }) => { return item["playbackUrl"]; })[0];
 
+        let posterImageUrl = response.data["posterImage"]["medium"]["url"];
+
+        let a = async () => {
+            response = await axios.get(posterImageUrl, {
+                headers: {
+                    Authorization: `Bearer ${session.AccessToken}`
+                },
+                responseType: 'stream'
+            });
+            
+            const writer = fs.createWriteStream('.thumbnail.png');
+            response.data.pipe(writer);
+
+            return new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+            
+        };
+
+        await a();
+
+        term.drawImage('.thumbnail.png', { shrink: { width: 50, height: 50 } });
 
         term.brightMagenta(`\n     title = ${title}\n     playbackUrl = ${playbackUrl}\n`);
 
