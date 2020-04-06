@@ -275,7 +275,7 @@ async function main() {
     if (!isValidUser) {
         const usrName = os.platform() === 'win32' ? 'Admin':'root';
 
-        term.red('\nERROR: Destream does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n');
+        term.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n');
         process.exit(-1);
     }
 
