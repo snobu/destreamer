@@ -4,13 +4,15 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/destreamer.js",
             "args": [
-                "https://msit.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc"
+                "--videoUrls",
+                "https://web.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc"
             ]
         }
     ]

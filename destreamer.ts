@@ -168,32 +168,18 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
-    console.log('EXTRACTED videoGuids:');
-    console.log(videoGuids);
-    let accessToken = null;
-    
-    try {
-        let tc = tokenCache.Read();
-        accessToken = tc?.AccessToken;
-    }
-    catch (e)
-    {
-        console.log("Cache is empty or expired, performing interactive log on...");
-    }
     
     console.log("Fetching title and HLS URL...");
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
-    console.log('metadata:');
-    console.log(metadata)
     metadata.forEach(video => {
         video.title = sanitize(video.title);
-        term.blue(`Video Title: ${video.title}`);
+        term.blue(`\nDownloading Video: ${video.title}\n`);
         console.log('Spawning youtube-dl with cookie and HLS URL...');
         const format = argv.format ? `-f "${argv.format}"` : "";
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-                ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
-                `Cookie:"${session.AccessToken}" "${video.playbackUrl}"`;
-
+        ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
+        `Authorization:"Bearer ${session.AccessToken}" "${video.playbackUrl}"`;
+        
         if (argv.simulate) {
             youtubedlCmd = youtubedlCmd + " -s";
         }
@@ -210,7 +196,12 @@ function sleep(ms: number) {
 
 async function main() {
     sanityChecks();
-    let session = await DoInteractiveLogin(argv.username);
+    let session = tokenCache.Read();
+    if (session == null)
+    {
+        session = await DoInteractiveLogin(argv.username);
+    }
+
     downloadVideo(argv.videoUrls as string[], argv.outputDirectory, session);
 }
 

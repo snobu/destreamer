@@ -20,7 +20,7 @@ export class TokenCache {
             [key: string]: any
         }
 
-        const decodedJwt: Jwt = jwtDecode(j.accessToken);
+        const decodedJwt: Jwt = jwtDecode(j.AccessToken);
 
         let now = Math.floor(Date.now() / 1000);
         let exp = decodedJwt["exp"];
@@ -31,10 +31,10 @@ export class TokenCache {
         }
 
         let session: Session = {
-            AccessToken: j.accessToken,
-            ApiGatewayUri: j.apiGatewayUri,
-            ApiGatewayVersion: j.apiGatewayVersion
-        }
+            AccessToken: j.AccessToken,
+            ApiGatewayUri: j.ApiGatewayUri,
+            ApiGatewayVersion: j.ApiGatewayVersion
+        };
 
         return session;
     }
