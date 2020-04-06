@@ -62,11 +62,13 @@ Options:
   --verbose, -v      Print additional information to the console
                      (use this before opening an issue on GitHub)
                                                       [boolean] [default: false]
+```
 
+Make sure you use the right escape char for your shell if using line breaks (as this example shows).
 
-# Make sure you use the right escape char for your shell if using line breaks (as this example shows).
-# For PowerShell your escape char is the backtick (`) instead of backslash (\), for cmd.exe use caret (^).
+For PowerShell your escape char is the backtick (`) instead of backslash (\\), for cmd.exe use caret (^).
 
+```
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
                 "https://web.microsoftstream.com/video/VIDEO-2" \
@@ -78,8 +80,6 @@ You can create a `.txt` file containing your video URLs, one video per line. The
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
     --videoUrls list.txt
 ```
-
-**DO NOT RUN IN AN ELEVATED SHELL ON WINDOWS**, not going to work, Chromium will keep crashing.
 
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
