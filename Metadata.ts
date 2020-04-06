@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { terminal as term } from 'terminal-kit';
 import { Metadata, Session } from './Types';
 
