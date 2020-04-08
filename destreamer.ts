@@ -21,6 +21,7 @@ import sanitize from 'sanitize-filename';
  */
 
 let tokenCache = new TokenCache();
+const loginUrl = "https://web.microsoftstream.com/";
 
 const argv = yargs.options({
     videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
@@ -91,37 +92,32 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     const page = (await browser.pages())[0];
     console.log('Navigating to microsoftonline.com login page...');
 
-    // This breaks on slow connections, needs more reliable logic
-    await page.goto('https://web.microsoftstream.com', { waitUntil: "networkidle2" });
+    await page.goto(loginUrl, { waitUntil: "load" });
     await page.waitForSelector('input[type="email"]');
-    
-    if (username) {
+    if (username){
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
     }
 
-    await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
-    console.log('We are logged in.');
-    // We may or may not need to sleep here.
-    // Who am i to deny a perfectly good nap?
-    await sleep(1500);
+    // Going trough "remember me" pagin (choosing NO)
+    await page.waitForSelector('input[type="button"]', {timeout: 120000});
+    await page.click('input[type="button"]');
 
-    console.log('Got cookie. Consuming cookie...');
-    
-    await sleep(4000);
-    console.log("Calling Microsoft Stream API...");
+    await browser.waitForTarget(target => target.url() == "https://web.microsoftstream.com/")
+
+    console.log('We are logged in.');
 
     let sessionInfo: any;
     let session = await page.evaluate(
         () => {
-            return { 
+            return {
                 AccessToken: sessionInfo.AccessToken,
                 ApiGatewayUri: sessionInfo.ApiGatewayUri,
                 ApiGatewayVersion: sessionInfo.ApiGatewayVersion
             };
         }
     );
-        
+
     tokenCache.Write(session);
     console.log("Wrote access token to token cache.");
 
@@ -160,7 +156,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
             videoGuids.push(guid);
         }
     }
-    
+
     console.log(videoGuids);
     return videoGuids;
 }
@@ -169,7 +165,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
-    
+
     console.log("Fetching title and HLS URL...");
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
     await Promise.all(metadata.map(async video => {
@@ -184,7 +180,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
         ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
         `Authorization:"Bearer ${session.AccessToken}" "${video.playbackUrl}"`;
-        
+
         if (argv.simulate) {
             youtubedlCmd = youtubedlCmd + " -s";
         }
