@@ -1,27 +1,16 @@
-import os from 'os';
 import { terminal as term } from 'terminal-kit';
+import { execSync } from 'child_process';
 
 
-if (os.platform() !== "win32") {
-    term.brightWhite("Platform is not Windows, let's draw some thumbnails!\n");
-    let a = async () => {
-        response = await axios.get(posterImageUrl, {
-            headers: {
-                Authorization: `Bearer ${session.AccessToken}`
-            },
-            responseType: 'stream'
-        });
-        
-        const writer = fs.createWriteStream('.thumbnail.png');
-        response.data.pipe(writer);
-
-        return new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-        });
-        
-    };
-    await a();
+export function drawThumbnail(posterImage: string, accessToken: string): void {
+    let fetchCmd = `ffmpeg -hide_banner -loglevel warning ` +
+        `-headers "Authorization: Bearer ${accessToken}\r\n" ` +
+        `-i "${posterImage}" -y .thumbnail.png`;
+    execSync(fetchCmd, { stdio: 'inherit' });
+    try {
+        term.drawImage('.thumbnail.png', { shrink: { width: 50, height: 50 } });
+    }
+    catch (e) {
+        console.error(e);
+    }
 }
-
-term.drawImage('.thumbnail.png', { shrink: { width: 50, height: 50 } });

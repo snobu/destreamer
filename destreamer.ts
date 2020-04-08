@@ -2,6 +2,7 @@ import { BrowserTests } from './Tests';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
+import { drawThumbnail } from './Thumbnail';
 
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
@@ -171,9 +172,13 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     
     console.log("Fetching title and HLS URL...");
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
-    metadata.forEach(video => {
+    await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
         term.blue(`\nDownloading Video: ${video.title}\n`);
+
+        drawThumbnail(video.posterImage, session.AccessToken);
+        await sleep(100); // there's something wrong with drawThumbnail we should not need this
+
         console.log('Spawning youtube-dl with cookie and HLS URL...');
         const format = argv.format ? `-f "${argv.format}"` : "";
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
@@ -185,7 +190,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         }
 
         execSync(youtubedlCmd, { stdio: 'inherit' });
-    });
+    }));
 }
 
 

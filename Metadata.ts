@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { terminal as term } from 'terminal-kit';
 import { Metadata, Session } from './Types';
-import fs from 'fs';
-import os from 'os';
+import { drawThumbnail } from './Thumbnail';
 
 
 export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
@@ -28,7 +27,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
             .map((item: { [x: string]: string }) => { return item["playbackUrl"]; })[0];
 
         posterImage = response.data["posterImage"]["medium"]["url"];
-
+        
         term.brightMagenta(`\n     title = ${title}\n     playbackUrl = ${playbackUrl}\n`);
 
         metadata.push({
