@@ -99,11 +99,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
         await page.click('input[type="submit"]');
     }
 
-    // Going trough "remember me" pagin (choosing NO)
-    await page.waitForSelector('input[type="button"]', {timeout: 120000});
-    await page.click('input[type="button"]');
-
-    await browser.waitForTarget(target => target.url() == "https://web.microsoftstream.com/")
+    await browser.waitForTarget(target => target.url() == "https://web.microsoftstream.com/", {timeout: 150000});
 
     console.log('We are logged in.');
 
