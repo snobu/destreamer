@@ -1,4 +1,4 @@
-import { sleep, getVideoUrls } from './utils';
+import { sleep, getVideoUrls, checkRequirements } from './utils';
 import { execSync } from 'child_process';
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
@@ -11,6 +11,8 @@ import sanitize from 'sanitize-filename';
 import axios from 'axios';
 
 /**
+ * exitCode 22 = youtube-dl not found in $PATH
+ * exitCode 23 = ffmpeg not found in $PATH
  * exitCode 25 = cannot split videoID from videUrl
  * exitCode 27 = no hlsUrl in the API response
  * exitCode 29 = invalid response from API
@@ -51,42 +53,23 @@ const argv = yargs.options({
     }
 }).argv;
 
-if (argv.simulate){
-    console.info('Video URLs: %s', argv.videoUrls);
-    console.info('Username: %s', argv.username);
-    term.blue("There will be no video downloaded, it's only a simulation\n");
-} else {
-    console.info('Video URLs: %s', argv.videoUrls);
-    console.info('Username: %s', argv.username);
-    console.info('Output Directory: %s', argv.outputDirectory);
-    console.info('Video/Audio Quality: %s', argv.format);
-}
-
-
-function sanityChecks() {
-    try {
-        const ytdlVer = execSync('youtube-dl --version');
-        term.green(`Using youtube-dl version ${ytdlVer}`);
-    }
-    catch (e) {
-        console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
-        process.exit(22);
-    }
-
-    try {
-        const ffmpegVer = execSync('ffmpeg -version')
-            .toString().split('\n')[0];
-        term.green(`Using ${ffmpegVer}\n`);
-    }
-    catch (e) {
-        console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
-    }
-
+function init() {
+    // create output directory
     if (!fs.existsSync(argv.outputDirectory)){
         console.log('Creating output directory: ' +
             process.cwd() + path.sep + argv.outputDirectory);
         fs.mkdirSync(argv.outputDirectory);
     }
+
+    console.info('Video URLs: %s', argv.videoUrls);
+    console.info('Username: %s', argv.username);
+    console.info('Output Directory: %s', argv.outputDirectory);
+
+    if (argv.simulate)
+        term.blue("There will be no video downloaded, it's only a simulation\n");
+
+    if (argv.format)
+        console.info('Video/Audio Quality: %s', argv.format);
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
@@ -279,7 +262,8 @@ async function main() {
         process.exit(-1);
     }
 
-    sanityChecks();
+    checkRequirements();
+    init();
     rentVideoForLater(getVideoUrls(argv.videoUrls), argv.outputDirectory, argv.username);
 }
 
