@@ -7,4 +7,5 @@ export type Session = {
 export type Metadata = {
     title: string;
     playbackUrl: string;
+    posterImage: string;
 }
