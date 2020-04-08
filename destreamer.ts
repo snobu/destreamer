@@ -254,6 +254,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function main() {
     const isValidUser = !(await isElevated());
+    let videoUrls: string[];
 
     if (!isValidUser) {
         const usrName = os.platform() === 'win32' ? 'Admin':'root';
@@ -262,9 +263,15 @@ async function main() {
         process.exit(-1);
     }
 
+    videoUrls = getVideoUrls(argv.videoUrls);
+    if (videoUrls.length === 0) {
+        term.red('\nERROR: No valid URL has been found!\n');
+        process.exit(-1);
+    }
+
     checkRequirements();
     init();
-    rentVideoForLater(getVideoUrls(argv.videoUrls), argv.outputDirectory, argv.username);
+    rentVideoForLater(videoUrls, argv.outputDirectory, argv.username);
 }
 
 // run
