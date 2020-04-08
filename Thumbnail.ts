@@ -1,16 +1,15 @@
 import { terminal as term } from 'terminal-kit';
 import { execSync } from 'child_process';
+import terminalImage from 'terminal-image';
+import axios from 'axios';
 
-
-export function drawThumbnail(posterImage: string, accessToken: string): void {
-    let fetchCmd = `ffmpeg -hide_banner -loglevel warning \
-        -headers "Authorization: Bearer ${accessToken}" \
-        -i "${posterImage}" -y .thumbnail.png`;
-    execSync(fetchCmd, { stdio: 'inherit' });
-    try {
-        term.drawImage('.thumbnail.png', { shrink: { width: 50, height: 50 } });
-    }
-    catch (e) {
-        console.error(e);
-    }
+export async function drawThumbnail(posterImage: string, accessToken: string) {
+    let thumbnail = await axios.get(posterImage,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            responseType: 'arraybuffer'
+        });
+    console.log(await terminalImage.buffer(thumbnail.data));
 }

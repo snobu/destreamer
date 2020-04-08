@@ -27,7 +27,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
             .map((item: { [x: string]: string }) => { return item["playbackUrl"]; })[0];
 
         posterImage = response.data["posterImage"]["medium"]["url"];
-        
+
         term.brightMagenta(`\n     title = ${title}\n     playbackUrl = ${playbackUrl}\n`);
 
         metadata.push({
