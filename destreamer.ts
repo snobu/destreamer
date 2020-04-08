@@ -175,10 +175,10 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
         term.blue(`\nDownloading Video: ${video.title}\n`);
-
-        drawThumbnail(video.posterImage, session.AccessToken);
-        await sleep(100); // there's something wrong with drawThumbnail we should not need this
-
+        
+        // Very experimental inline thumbnail rendering
+        await drawThumbnail(video.posterImage, session.AccessToken);
+        
         console.log('Spawning youtube-dl with cookie and HLS URL...');
         const format = argv.format ? `-f "${argv.format}"` : "";
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
