@@ -26,17 +26,17 @@ const argv = yargs.options({
     username: { type: 'string', demandOption: false },
     outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
     format: {
-        alias:"f",
+        alias: 'f',
         describe: `Expose youtube-dl --format option, for details see\n
         https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection`,
-        type:'string',
+        type: 'string',
         demandOption: false
     },
     simulate: {
-        alias: "s",
+        alias: 's',
         describe: `If this is set to true no video will be downloaded and the script
         will log the video info (default: false)`,
-        type: "boolean",
+        type: 'boolean',
         default: false,
         demandOption: false
     },
@@ -91,7 +91,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     console.log('Navigating to microsoftonline.com login page...');
 
     // This breaks on slow connections, needs more reliable logic
-    await page.goto('https://web.microsoftstream.com', { waitUntil: "networkidle2" });
+    await page.goto('https://web.microsoftstream.com', { waitUntil: 'networkidle2' });
     await page.waitForSelector('input[type="email"]');
     
     if (username) {
@@ -108,7 +108,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     console.info('Got cookie. Consuming cookie...');
     
     await sleep(4000);
-    console.info("Calling Microsoft Stream API...");
+    console.info('Calling Microsoft Stream API...');
 
     let sessionInfo: any;
     let session = await page.evaluate(
@@ -122,7 +122,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     );
         
     tokenCache.Write(session);
-    console.info("Wrote access token to token cache.");
+    console.info('Wrote access token to token cache.');
 
     console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
     console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
@@ -144,7 +144,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     else
         urls = videoUrls as string[];
     let videoGuids: string[] = [];
-    let guid: string | undefined = "";
+    let guid: string | undefined = '';
     for (let url of urls) {
         console.log(url);
         try {
@@ -169,7 +169,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
     
-    console.log("Fetching title and HLS URL...");
+    console.log('Fetching title and HLS URL...');
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
     await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
@@ -179,13 +179,13 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         await drawThumbnail(video.posterImage, session.AccessToken);
         
         console.log('Spawning youtube-dl with cookie and HLS URL...');
-        const format = argv.format ? `-f "${argv.format}"` : "";
+        const format = argv.format ? `-f "${argv.format}"` : '';
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
         ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
         `Authorization:"Bearer ${session.AccessToken}" "${video.playbackUrl}"`;
         
         if (argv.simulate) {
-            youtubedlCmd = youtubedlCmd + " -s";
+            youtubedlCmd = youtubedlCmd + ' -s';
         }
 
         execSync(youtubedlCmd, { stdio: 'inherit' });
