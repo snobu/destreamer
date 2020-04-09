@@ -183,10 +183,10 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         ffmpeg()
           .input(video.playbackUrl)
           .inputOption([
-            '-headers', `"Authorization:Bearer ${session.AccessToken}"`,
+            '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
           ])
           .format('mp4')
-          .saveToFile(`"${outputDirectory}/${video.title}.mp4"`)
+          .saveToFile(`${outputDirectory}${path.sep}${video.title}.mp4`)
           .on('start', cmd => {
             console.log(`Spawned Ffmpeg with command: ${cmd}`);
           })
