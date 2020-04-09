@@ -89,7 +89,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
         args: ['--disable-dev-shm-usage']
     });
     const page = (await browser.pages())[0];
-    console.log('Navigating to microsoftonline.com login page...');
+    console.log('Navigating to microsoftonline.com for login procedure...');
 
     await page.goto(loginUrl, { waitUntil: "load" });
     await page.waitForSelector('input[type="email"]');
@@ -98,8 +98,12 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
         await page.click('input[type="submit"]');
     }
 
-    await browser.waitForTarget(target => target.url() == "https://web.microsoftstream.com/", {timeout: 150000});
-
+    // Im leaving this so taht we can find out when the user finishes the login procedure
+    // so that we don't try and evaluate the session for 2 and a half minutes
+    await browser.waitForTarget(target => (
+        target.url().includes("microsoftstream.com") &&
+        target.url().endsWith("/")
+    ), {timeout: 150000});
     console.log('We are logged in.');
 
     let sessionInfo: any;
