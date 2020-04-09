@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
+import ffmpeg from 'fluent-ffmpeg';
 
 
 /**
@@ -173,18 +174,32 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
+        
+        console.info('Spawning ffmpeg with access token and HLS URL...');
 
-        console.log('Spawning youtube-dl with cookie and HLS URL...');
-        const format = argv.format ? `-f "${argv.format}"` : '';
-        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
-        ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
-        `Authorization:"Bearer ${session.AccessToken}" "${video.playbackUrl}"`;
+        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
 
-        if (argv.simulate) {
-            youtubedlCmd = youtubedlCmd + ' -s';
-        }
+        ffmpeg()
+          .input(video.playbackUrl)
+          .inputOption([
+            '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
+          ])
+          .format('mp4')
+          .saveToFile(outputPath)
+          .on('codecData', data => {
+            console.log(`Input is ${data.video} with ${data.audio} audio.`);
+          })
+          .on('progress', progress => {
+            console.log(progress);
+          })
+          .on('error', err => {
+            console.log(`ffmpeg returned an error: ${err.message}`);
+          })
+          .on('end', () => {
+            console.log(`Download finished: ${outputPath}`);
+          });
 
-        execSync(youtubedlCmd, { stdio: 'inherit' });
+
     }));
 }
 
