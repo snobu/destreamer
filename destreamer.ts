@@ -21,7 +21,6 @@ import ffmpeg from 'fluent-ffmpeg';
  */
 
 let tokenCache = new TokenCache();
-const loginUrl = "https://web.microsoftstream.com/";
 
 const argv = yargs.options({
     videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
@@ -83,7 +82,9 @@ function sanityChecks() {
 }
 
 
-async function DoInteractiveLogin(username?: string): Promise<Session> {
+async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
+    let videoID = url.split("/").pop() ?? process.exit(25)
+
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         headless: false,
@@ -92,7 +93,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     const page = (await browser.pages())[0];
     console.log('Navigating to microsoftonline.com for login procedure...');
 
-    await page.goto(loginUrl, { waitUntil: "load" });
+    await page.goto(url, { waitUntil: "load" });
     await page.waitForSelector('input[type="email"]');
     if (username){
         await page.keyboard.type(username);
@@ -101,10 +102,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
 
     // Im leaving this so taht we can find out when the user finishes the login procedure
     // so that we don't try and evaluate the session for 2 and a half minutes
-    await browser.waitForTarget(target => (
-        target.url().includes("microsoftstream.com") &&
-        target.url().endsWith("/")
-    ), {timeout: 150000});
+    await browser.waitForTarget(target => target.url().includes(videoID), {timeout: 150000});
     console.log('We are logged in.');
 
     let sessionInfo: any;
@@ -174,7 +172,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
-        
+
         console.info('Spawning ffmpeg with access token and HLS URL...');
 
         const outputPath = outputDirectory + path.sep + video.title + '.mp4';
@@ -214,7 +212,7 @@ async function main() {
     let session = tokenCache.Read();
     if (session == null)
     {
-        session = await DoInteractiveLogin(argv.username);
+        session = await DoInteractiveLogin(argv.videoUrls[0] as string, argv.username);
     }
 
     downloadVideo(argv.videoUrls as string[], argv.outputDirectory, session);
