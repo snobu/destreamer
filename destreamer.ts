@@ -1,4 +1,3 @@
-import { BrowserTests } from './Tests';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';

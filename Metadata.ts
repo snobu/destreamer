@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { terminal as term } from 'terminal-kit';
 import { Metadata, Session } from './Types';
-import { drawThumbnail } from './Thumbnail';
 
 
 export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
