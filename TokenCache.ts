@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import { Session } from './Types';
-import { terminal as term } from 'terminal-kit';
+import { bgGreen, bgYellow, green } from 'colors';
 const jwtDecode = require('jwt-decode');
+
+
 const tokenCacheFile = '.token_cache';
 
 export class TokenCache {
@@ -9,7 +11,7 @@ export class TokenCache {
     public Read(): Session | null {
         let j = null;
         if(!fs.existsSync(tokenCacheFile)) {
-            term.yellow(`${tokenCacheFile} not found.\n`);
+            console.warn(bgYellow.black(`${tokenCacheFile} not found.\n`));
 
             return null;
         }
@@ -27,16 +29,13 @@ export class TokenCache {
         let timeLeft = exp - now;
 
         let timeLeftInMinutes = Math.floor(timeLeft / 60);
-        console.log("\n");
-        console.log("\n");
         if (timeLeft < 120) {
-            term.bgBrightYellow.black("Access token is expired.").bgDefaultColor("\n");
+            console.warn(bgYellow.black('\nAccess token has expired.'));
 
             return null;
         }
 
-        term.bgBrightGreen.black(`Access token still good for ${timeLeftInMinutes} minutes.`)
-            .bgDefaultColor("\n");
+        console.info(bgGreen.black(`\nAccess token still good for ${timeLeftInMinutes} minutes.\n`));
 
         let session: Session = {
             AccessToken: j.AccessToken,
@@ -53,7 +52,7 @@ export class TokenCache {
             if (err) {
                 return console.error(err);
             }
-            console.log("Fresh access token dropped into .token_cache");
+            console.info(green('Fresh access token dropped into .token_cache'));
         });
     }
 }

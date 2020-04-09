@@ -5,7 +5,7 @@ import { drawThumbnail } from './Thumbnail';
 
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
-import { terminal as term } from 'terminal-kit';
+import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
@@ -45,7 +45,7 @@ const argv = yargs.options({
 if (argv.simulate){
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
-    term.blue("There will be no video downloaded, it's only a simulation\n");
+    console.info(colors.green('There will be no video downloaded, it\'s only a simulation\n'));
 } else {
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
@@ -57,7 +57,7 @@ if (argv.simulate){
 function sanityChecks() {
     try {
         const ytdlVer = execSync('youtube-dl --version');
-        term.green(`Using youtube-dl version ${ytdlVer}`);
+        console.info(colors.green(`Using youtube-dl version ${ytdlVer}`));
     }
     catch (e) {
         console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
@@ -67,7 +67,7 @@ function sanityChecks() {
     try {
         const ffmpegVer = execSync('ffmpeg -version')
             .toString().split('\n')[0];
-        term.green(`Using ${ffmpegVer}\n`);
+        console.info(colors.green(`Using ${ffmpegVer}\n`));
     }
     catch (e) {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
@@ -100,15 +100,15 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     }
 
     await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
-    console.log('We are logged in.');
+    console.info('We are logged in.');
     // We may or may not need to sleep here.
     // Who am i to deny a perfectly good nap?
     await sleep(1500);
 
-    console.log('Got cookie. Consuming cookie...');
+    console.info('Got cookie. Consuming cookie...');
     
     await sleep(4000);
-    console.log("Calling Microsoft Stream API...");
+    console.info("Calling Microsoft Stream API...");
 
     let sessionInfo: any;
     let session = await page.evaluate(
@@ -122,12 +122,12 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     );
         
     tokenCache.Write(session);
-    console.log("Wrote access token to token cache.");
+    console.info("Wrote access token to token cache.");
 
     console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
     console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
-    console.log("At this point Chromium's job is done, shutting it down...");
+    console.info("At this point Chromium's job is done, shutting it down...");
     await browser.close();
 
     return session;
@@ -173,7 +173,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
     await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
-        term.blue(`\nDownloading Video: ${video.title}\n`);
+        console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
         
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
