@@ -180,30 +180,27 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         await drawThumbnail(video.posterImage, session.AccessToken);
         
         console.info('Spawning ffmpeg with access token and HLS URL...');
+
+        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+
         ffmpeg()
           .input(video.playbackUrl)
           .inputOption([
             '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
           ])
           .format('mp4')
-          .saveToFile(`${outputDirectory}${path.sep}${video.title}.mp4`)
-          .on('start', cmd => {
-            console.log(`Spawned Ffmpeg with command: ${cmd}`);
-          })
+          .saveToFile(outputPath)
           .on('codecData', data => {
             console.log(`Input is ${data.video} with ${data.audio} audio.`);
           })
           .on('progress', progress => {
-            console.log(`Processing: ${progress.percent} % done`);
-          })
-          .on('stderr', stderr => {
-            console.log(`Stderr output: ${stderr}`);
+            console.log(progress);
           })
           .on('error', err => {
-            console.log(`An error occurred: ${err.message}`);
+            console.log(`ffmpeg returned an error: ${err.message}`);
           })
-          .on('end', info => {
-            console.log(`Processing finished: ${info}`);
+          .on('end', () => {
+            console.log(`Download finished: ${outputPath}`);
           });
 
     }));
