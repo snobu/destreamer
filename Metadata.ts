@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { terminal as term } from 'terminal-kit';
 import { Metadata, Session } from './Types';
-import { drawThumbnail } from './Thumbnail';
 
 
 export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
@@ -20,15 +18,13 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
                 }
             });
 
-        title = response.data["name"];
-        playbackUrl = response.data["playbackUrls"]
+        title = response.data['name'];
+        playbackUrl = response.data['playbackUrls']
             .filter((item: { [x: string]: string; }) =>
-                item["mimeType"] == "application/vnd.apple.mpegurl")
-            .map((item: { [x: string]: string }) => { return item["playbackUrl"]; })[0];
+                item['mimeType'] == 'application/vnd.apple.mpegurl')
+            .map((item: { [x: string]: string }) => { return item['playbackUrl']; })[0];
 
-        posterImage = response.data["posterImage"]["medium"]["url"];
-
-        term.brightMagenta(`\n     title = ${title}\n     playbackUrl = ${playbackUrl}\n`);
+        posterImage = response.data['posterImage']['medium']['url'];
 
         metadata.push({
             title: title,

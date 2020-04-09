@@ -1,4 +1,3 @@
-import { BrowserTests } from './Tests';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -6,7 +5,7 @@ import { drawThumbnail } from './Thumbnail';
 
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer';
-import { terminal as term } from 'terminal-kit';
+import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
@@ -28,17 +27,17 @@ const argv = yargs.options({
     username: { type: 'string', demandOption: false },
     outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
     format: {
-        alias:"f",
+        alias: 'f',
         describe: `Expose youtube-dl --format option, for details see\n
         https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection`,
-        type:'string',
+        type: 'string',
         demandOption: false
     },
     simulate: {
-        alias: "s",
+        alias: 's',
         describe: `If this is set to true no video will be downloaded and the script
         will log the video info (default: false)`,
-        type: "boolean",
+        type: 'boolean',
         default: false,
         demandOption: false
     },
@@ -47,7 +46,7 @@ const argv = yargs.options({
 if (argv.simulate){
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
-    term.blue("There will be no video downloaded, it's only a simulation\n");
+    console.info(colors.green('There will be no video downloaded, it\'s only a simulation\n'));
 } else {
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
@@ -59,7 +58,7 @@ if (argv.simulate){
 function sanityChecks() {
     try {
         const ytdlVer = execSync('youtube-dl --version');
-        term.green(`Using youtube-dl version ${ytdlVer}`);
+        console.info(colors.green(`Using youtube-dl version ${ytdlVer}`));
     }
     catch (e) {
         console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
@@ -69,7 +68,7 @@ function sanityChecks() {
     try {
         const ffmpegVer = execSync('ffmpeg -version')
             .toString().split('\n')[0];
-        term.green(`Using ${ffmpegVer}\n`);
+        console.info(colors.green(`Using ${ffmpegVer}\n`));
     }
     catch (e) {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
@@ -115,12 +114,12 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     );
 
     tokenCache.Write(session);
-    console.log("Wrote access token to token cache.");
+    console.info('Wrote access token to token cache.');
 
     console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
     console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
-    console.log("At this point Chromium's job is done, shutting it down...");
+    console.info("At this point Chromium's job is done, shutting it down...");
     await browser.close();
 
     return session;
@@ -137,7 +136,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     else
         urls = videoUrls as string[];
     let videoGuids: string[] = [];
-    let guid: string | undefined = "";
+    let guid: string | undefined = '';
     for (let url of urls) {
         console.log(url);
         try {
@@ -166,19 +165,19 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
     await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
-        term.blue(`\nDownloading Video: ${video.title}\n`);
-        
+        console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
+
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
-        
+
         console.log('Spawning youtube-dl with cookie and HLS URL...');
-        const format = argv.format ? `-f "${argv.format}"` : "";
+        const format = argv.format ? `-f "${argv.format}"` : '';
         var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
         ` --output "${outputDirectory}/${video.title}.mp4" --add-header ` +
         `Authorization:"Bearer ${session.AccessToken}" "${video.playbackUrl}"`;
 
         if (argv.simulate) {
-            youtubedlCmd = youtubedlCmd + " -s";
+            youtubedlCmd = youtubedlCmd + ' -s';
         }
 
         execSync(youtubedlCmd, { stdio: 'inherit' });
