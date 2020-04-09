@@ -17,6 +17,7 @@
   "author": "snobu",
   "license": "MIT",
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.14",
     "@types/jwt-decode": "^2.2.1",
     "@types/puppeteer": "^1.20.0",
     "@types/yargs": "^15.0.3",
@@ -27,6 +28,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "colors": "^1.4.0",
+    "fluent-ffmpeg": "^2.1.2",
     "jwt-decode": "^2.2.0",
     "puppeteer": "^2.1.1",
     "sanitize-filename": "^1.6.3",
