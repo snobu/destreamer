@@ -6,7 +6,7 @@
 
 ![](logo.png)
 
-## Saves Microsoft Stream videos for offline enjoyment.
+## Saves Microsoft Stream videos for offline enjoyment
 
 Alpha-quality, don't expect much. It does work though, so that's a neat feature.
 
@@ -36,7 +36,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 * **Node.js**: anything above v8.0 seems to work. A GitHub Action runs tests on all major Node versions on every commit.
 * **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as `destreamer.ts`.
 
-Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, results may vary, feel free to open an issue if trouble arise.
+Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, macOS and Linux, results may vary, feel free to open an issue if trouble arise.
 
 ## USAGE
 
@@ -49,27 +49,39 @@ $ node ./destreamer.js
 Options:
   --help             Show help                                         [boolean]
   --version          Show version number                               [boolean]
-  --videoUrls                                                 [array] [required]
-  --username                                                            [string]
-  --outputDirectory                                 [string] [default: "videos"]
+  --videoUrls, -V    List of video urls or path to txt file containing the urls
+                                                               [array] [required]
+  --username, -u                                                       [string]
+  --outputDirectory, -o                             [string] [default: "videos"]
   --verbose, -v      Print additional information to the console
                      (use this before opening an issue on GitHub)
                                                       [boolean] [default: false]
+```
 
+Make sure you use the right escape char for your shell if using line breaks (as this example shows).
 
+For PowerShell your escape char is the backtick (`) instead of backslash (\\), for cmd.exe use caret (^).
+
+```
 $ node destreamer.js --username username@example.com --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
 ```
+
+You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension. Run destreamer as follows:
+```
+$ node destreamer.js --username username@example.com --outputDirectory "videos" \
+    --videoUrls list.txt
+```
+
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
-Your video URLs **must** include the URL schema (the leading `https://`).
-
 ## RANDOM NOTE
 
+## IMPORTANT NOTE
 Just ignore this error, we already have what we need to start the download, no time to deal with collaterals -
 
 ![image](https://user-images.githubusercontent.com/6472374/77905069-4c585000-728e-11ea-914e-26f1ce5e595b.png)
@@ -81,4 +93,4 @@ Just ignore this error, we already have what we need to start the download, no t
 <<<< OUTPUT >>>>
 ```
 
-The video is now saved under `videos/`, or the path from `--outputDirectory`.
+The video is now saved under `videos/`, or whatever the `outputDirectory` const points to.

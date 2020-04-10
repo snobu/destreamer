@@ -1,19 +1,21 @@
+import { sleep, getVideoUrls, checkRequirements } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 
-import { execSync } from 'child_process';
+import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import ffmpeg from 'fluent-ffmpeg';
 
-
 /**
+ * exitCode 22 = ffmpeg not found in $PATH
  * exitCode 25 = cannot split videoID from videUrl
  * exitCode 27 = no hlsUrl in the API response
  * exitCode 29 = invalid response from API
@@ -23,9 +25,23 @@ import ffmpeg from 'fluent-ffmpeg';
 let tokenCache = new TokenCache();
 
 const argv = yargs.options({
-    videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
-    username: { type: 'string', demandOption: false },
-    outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
+    username: {
+        alias: 'u',
+        type: 'string',
+        demandOption: false
+    },
+    outputDirectory: {
+        alias: 'o',
+        type: 'string',
+        default: 'videos',
+        demandOption: false
+    },
+    videoUrls: {
+        alias: 'V',
+        describe: 'List of video urls or path to txt file containing the urls',
+        type: 'array',
+        demandOption: true
+    },
     simulate: {
         alias: 's',
         describe: `If this is set to true no video will be downloaded and the script
@@ -34,37 +50,31 @@ const argv = yargs.options({
         default: false,
         demandOption: false
     },
+    verbose: {
+        alias: 'v',
+        describe: `Print additional information to the console
+        (use this before opening an issue on GitHub)`,
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    }
 }).argv;
 
-if (argv.simulate) {
-    console.info('Video URLs: %s', argv.videoUrls);
-    console.info('Username: %s', argv.username);
-    console.info(colors.green('There will be no video downloaded, it\'s only a simulation\n'));
-} else {
-    console.info('Video URLs: %s', argv.videoUrls);
-    console.info('Username: %s', argv.username);
-    console.info('Output Directory: %s', argv.outputDirectory);
-    console.info('Video/Audio Quality: %s', argv.format);
-}
-
-
-function sanityChecks() {
-    try {
-        const ffmpegVer = execSync('ffmpeg -version')
-            .toString().split('\n')[0];
-        console.info(colors.green(`Using ${ffmpegVer}\n`));
-    }
-    catch (e) {
-        console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
-    }
-
+function init() {
+    // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
         console.log('Creating output directory: ' +
             process.cwd() + path.sep + argv.outputDirectory);
         fs.mkdirSync(argv.outputDirectory);
     }
-}
 
+    console.info('Video URLs: %s', argv.videoUrls);
+    console.info('Username: %s', argv.username);
+    console.info('Output Directory: %s', argv.outputDirectory);
+
+    if (argv.simulate)
+        console.info(colors.blue("There will be no video downloaded, it's only a simulation\n"));
+}
 
 async function DoInteractiveLogin(username?: string): Promise<Session> {
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
@@ -118,7 +128,6 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     return session;
 }
 
-
 function extractVideoGuid(videoUrls: string[]): string[] {
     const first = videoUrls[0] as string;
     const isPath = first.substring(first.length - 4) === '.txt';
@@ -134,8 +143,8 @@ function extractVideoGuid(videoUrls: string[]): string[] {
         console.log(url);
         try {
             guid = url.split('/').pop();
-        }
-        catch (e) {
+
+        } catch (e) {
             console.error(`Could not split the video GUID from URL: ${e.message}`);
             process.exit(25);
         }
@@ -147,7 +156,6 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     console.log(videoGuids);
     return videoGuids;
 }
-
 
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     console.log(videoUrls);
@@ -173,39 +181,59 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
                 // pick up the header correctly
                 // eslint-disable-next-line no-useless-escape
                 '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
-            ])
-            .format('mp4')
-            .saveToFile(outputPath)
-            .on('codecData', data => {
-                console.log(`Input is ${data.video} with ${data.audio} audio.`);
-            })
-            .on('progress', progress => {
-                console.log(progress);
-            })
-            .on('error', err => {
-                console.log(`ffmpeg returned an error: ${err.message}`);
-            })
-            .on('end', () => {
-                console.log(`Download finished: ${outputPath}`);
-            });
-
+                ])
+                    .format('mp4')
+                    .saveToFile(outputPath)
+                    .on('codecData', data => {
+                    console.log(`Input is ${data.video} with ${data.audio} audio.`);
+                })
+                    .on('progress', progress => {
+                    console.log(progress);
+                })
+                    .on('error', err => {
+                    console.log(`ffmpeg returned an error: ${err.message}`);
+                })
+                    .on('end', () => {
+                    console.log(`Download finished: ${outputPath}`);
+                });
     }));
 }
 
-
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
+// FIXME
+process.on('unhandledRejection', (reason) => {
+    console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
+    console.error(colors.red(reason as string));
+    throw new Error('Killing process..\n');
+});
 
 async function main() {
-    sanityChecks();
+    const isValidUser = !(await isElevated());
+    let videoUrls: string[];
+
+    if (!isValidUser) {
+        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+
+        console.error(colors.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'));
+        process.exit(-1);
+    }
+
+    videoUrls = getVideoUrls(argv.videoUrls);
+    if (videoUrls.length === 0) {
+        console.error(colors.red('\nERROR: No valid URL has been found!\n'));
+        process.exit(-1);
+    }
+
+    checkRequirements();
+
     let session = tokenCache.Read();
     if (session == null) {
         session = await DoInteractiveLogin(argv.username);
     }
 
-    downloadVideo(argv.videoUrls as string[], argv.outputDirectory, session);
+
+    init();
+    downloadVideo(videoUrls, argv.outputDirectory, session);
 }
 
+// run
 main();
