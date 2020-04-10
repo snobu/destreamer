@@ -1,4 +1,4 @@
-import { sleep, parseVideoUrls, checkRequirements } from './utils';
+import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -9,7 +9,6 @@ import puppeteer from 'puppeteer';
 import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
@@ -45,23 +44,39 @@ const argv = yargs.options({
     },
     simulate: {
         alias: 's',
-        describe: `If this is set to true no video will be downloaded and the script
-        will log the video info (default: false)`,
+        describe: `Disable video download and print metadata information to the console`,
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
+    noThumbnails: {
+        alias: 'nthumb',
+        describe: `Do not display video thumbnails`,
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
         alias: 'v',
-        describe: `Print additional information to the console
-        (use this before opening an issue on GitHub)`,
+        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
         type: 'boolean',
         default: false,
         demandOption: false
     }
 }).argv;
 
-function init() {
+async function init() {
+    const isValidUser = !(await isElevated());
+
+    if (!isValidUser) {
+        const usrName = process.platform === 'win32' ? 'Admin':'root';
+
+        console.error(colors.red(
+            '\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'
+        ));
+        process.exit(-1);
+    }
+
     // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
         console.log('Creating output directory: ' +
@@ -69,12 +84,18 @@ function init() {
         fs.mkdirSync(argv.outputDirectory);
     }
 
-    console.info('Video URLs: %s', argv.videoUrls);
-    console.info('Username: %s', argv.username);
     console.info('Output Directory: %s', argv.outputDirectory);
 
+    if (argv.username)
+        console.info('Username: %s', argv.username);
+
     if (argv.simulate)
-        console.info(colors.blue("There will be no video downloaded, it's only a simulation\n"));
+        console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
+
+    if (argv.verbose) {
+        console.info('Video URLs:');
+        console.info(argv.videoUrls);
+    }
 }
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
@@ -123,18 +144,10 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 function extractVideoGuid(videoUrls: string[]): string[] {
-    const first = videoUrls[0] as string;
-    const isPath = first.substring(first.length - 4) === '.txt';
-    let urls: string[];
-
-    if (isPath)
-        urls = fs.readFileSync(first).toString('utf-8').split(/[\r\n]/);
-    else
-        urls = videoUrls as string[];
     let videoGuids: string[] = [];
     let guid: string | undefined = '';
-    for (let url of urls) {
-        console.log(url);
+
+    for (const url of videoUrls) {
         try {
             guid = url.split('/').pop();
 
@@ -142,27 +155,46 @@ function extractVideoGuid(videoUrls: string[]): string[] {
             console.error(`Could not split the video GUID from URL: ${e.message}`);
             process.exit(25);
         }
-        if (guid) {
+
+        if (guid)
             videoGuids.push(guid);
-        }
     }
 
-    console.log(videoGuids);
+    if (argv.verbose) {
+        console.info('Video GUIDs:');
+        console.info(videoGuids);
+    }
+
     return videoGuids;
 }
 
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
-    console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
 
-    console.log('Fetching title and HLS URL...');
-    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    console.log('Fetching metadata...');
+
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+
+    if (argv.simulate) {
+        metadata.forEach(video => {
+            console.log(
+                colors.yellow('\n\nTitle: ') + colors.green(video.title) +
+                colors.yellow('\nPublished Date: ') + colors.green(video.date) +
+                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
+            );
+        });
+
+        return;
+    }
+
     await Promise.all(metadata.map(async video => {
-        video.title = sanitize(video.title);
         console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
 
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
+
         // Very experimental inline thumbnail rendering
-        await drawThumbnail(video.posterImage, session.AccessToken);
+        if (!argv.noThumbnails)
+            await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
@@ -213,31 +245,22 @@ process.on('unhandledRejection', (reason) => {
 });
 
 async function main() {
-    const isValidUser = !(await isElevated());
-    let videoUrls: string[];
+    checkRequirements();
+    await init();
 
-    if (!isValidUser) {
-        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
 
-        console.error(colors.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'));
-        process.exit(-1);
-    }
-
-    videoUrls = parseVideoUrls(argv.videoUrls);
     if (videoUrls.length === 0) {
         console.error(colors.red('\nERROR: No valid URL has been found!\n'));
         process.exit(-1);
     }
 
-    checkRequirements();
-
     let session = tokenCache.Read();
+
     if (session == null) {
         session = await DoInteractiveLogin(videoUrls[0], argv.username);
     }
 
-
-    init();
     downloadVideo(videoUrls, argv.outputDirectory, session);
 }
 

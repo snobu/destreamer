@@ -47,15 +47,20 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 $ node ./destreamer.js
 
 Options:
-  --help             Show help                                         [boolean]
-  --version          Show version number                               [boolean]
-  --videoUrls, -V    List of video urls or path to txt file containing the urls
-                                                               [array] [required]
-  --username, -u                                                       [string]
-  --outputDirectory, -o                             [string] [default: "videos"]
-  --verbose, -v      Print additional information to the console
-                     (use this before opening an issue on GitHub)
-                                                      [boolean] [default: false]
+  --help                    Show help                               [boolean]
+  --version                 Show version number                     [boolean]
+  --username, -u                                                     [string]
+  --outputDirectory, -o                          [string] [default: "videos"]
+  --videoUrls, -V           List of video urls or path to txt file containing the urls
+                                                           [array] [required]
+  --simulate, -s            Disable video download and print metadata
+                            information to the console
+                                                   [boolean] [default: false]
+  --noThumbnails, --nthumb  Do not display video thumbnails
+                                                   [boolean] [default: false]
+  --verbose, -v             Print additional information to the console
+                            (use this before opening an issue on GitHub)
+                                                   [boolean] [default: false]
 ```
 
 Make sure you use the right escape char for your shell if using line breaks (as this example shows).
