@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@types/fluent-ffmpeg": "^2.1.14",
+    "@types/jwt-decode": "^2.2.1",
     "axios": "^0.19.2",
     "colors": "^1.4.0",
     "ffmpeg-progressbar-cli": "^1.5.0",

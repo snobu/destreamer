@@ -1,21 +1,19 @@
 import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
-const jwtDecode = require('jwt-decode');
-
-
-const tokenCacheFile = '.token_cache';
+import jwtDecode from 'jwt-decode';
 
 export class TokenCache {
+    private tokenCacheFile: string = '.token_cache';
 
     public Read(): Session | null {
         let j = null;
-        if(!fs.existsSync(tokenCacheFile)) {
-            console.warn(bgYellow.black(`${tokenCacheFile} not found.\n`));
+        if(!fs.existsSync(this.tokenCacheFile)) {
+            console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
 
             return null;
         }
-        let f = fs.readFileSync(tokenCacheFile, 'utf8');
+        let f = fs.readFileSync(this.tokenCacheFile, 'utf8');
         j = JSON.parse(f);
 
         interface Jwt {
