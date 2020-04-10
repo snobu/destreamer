@@ -148,18 +148,10 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
 }
 
 function extractVideoGuid(videoUrls: string[]): string[] {
-    const first = videoUrls[0] as string;
-    const isPath = first.substring(first.length - 4) === '.txt';
-    let urls: string[];
-
-    if (isPath)
-        urls = fs.readFileSync(first).toString('utf-8').split(/[\r\n]/);
-    else
-        urls = videoUrls as string[];
-
     let videoGuids: string[] = [];
     let guid: string | undefined = '';
-    for (const url of urls) {
+
+    for (const url of videoUrls) {
         try {
             guid = url.split('/').pop();
 
