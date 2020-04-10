@@ -51,6 +51,13 @@ const argv = yargs.options({
         default: false,
         demandOption: false
     },
+    noThumbnails: {
+        alias: 'nthumb',
+        describe: `Do not display video thumbnails`,
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
     verbose: {
         alias: 'v',
         describe: `Print additional information to the console
@@ -182,7 +189,8 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
 
         // Very experimental inline thumbnail rendering
-        await drawThumbnail(video.posterImage, session.AccessToken);
+        if (!argv.noThumbnails)
+            await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
