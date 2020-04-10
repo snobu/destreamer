@@ -9,7 +9,6 @@ import puppeteer from 'puppeteer';
 import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
@@ -72,7 +71,7 @@ async function init() {
     const isValidUser = !(await isElevated());
 
     if (!isValidUser) {
-        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+        const usrName = process.platform === 'win32' ? 'Admin':'root';
 
         console.error(colors.red(
             '\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'
