@@ -1,4 +1,4 @@
-import { sleep, getVideoUrls, checkRequirements } from './utils';
+import { sleep, parseVideoUrls, checkRequirements } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -95,6 +95,7 @@ async function init() {
 }
 
 async function DoInteractiveLogin(username?: string): Promise<Session> {
+
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
         headless: false,
@@ -243,7 +244,7 @@ async function main() {
     checkRequirements();
     await init();
 
-    const videoUrls: string[] = getVideoUrls(argv.videoUrls);
+    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
 
     if (videoUrls.length === 0) {
         console.error(colors.red('\nERROR: No valid URL has been found!\n'));

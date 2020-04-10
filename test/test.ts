@@ -1,4 +1,4 @@
-import { getVideoUrls } from '../utils';
+import { parseVideoUrls } from '../utils';
 import puppeteer from 'puppeteer';
 import assert from 'assert';
 import tmp from 'tmp';
@@ -53,7 +53,7 @@ describe('Destreamer', () => {
 
         fs.writeFileSync(tmpFile.fd, testIn.join('\r\n'));
 
-        testOut = getVideoUrls([tmpFile.name]);
+        testOut = parseVideoUrls([tmpFile.name]);
         if (testOut.length !== expectedOut.length)
             assert.strictEqual(testOut, expectedOut, "URL list not sanitized");
 

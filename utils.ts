@@ -27,7 +27,7 @@ function sanitizeUrls(urls: string[]) {
     return sanitized;
 }
 
-export function getVideoUrls(videoUrls: any) {
+export function parseVideoUrls(videoUrls: any) {
     const t = videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
     let urls: string[];
