@@ -31,6 +31,7 @@
     "@types/fluent-ffmpeg": "^2.1.14",
     "axios": "^0.19.2",
     "colors": "^1.4.0",
+    "ffmpeg-progressbar-cli": "^1.5.0",
     "fluent-ffmpeg": "^2.1.2",
     "is-elevated": "^3.0.0",
     "jwt-decode": "^2.2.0",
