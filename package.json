@@ -11,7 +11,7 @@
     "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
     "run": "node ./destreamer.js",
     "start": "npm run -s build & npm run -s run",
-    "test": "node ./destreamer.js test --videoUrls null --username null"
+    "test": "mocha"
   },
   "keywords": [],
   "author": "snobu",
@@ -26,10 +26,12 @@
     "eslint": "^6.8.0"
   },
   "dependencies": {
+    "@types/mocha": "^7.0.2",
     "axios": "^0.19.2",
     "colors": "^1.4.0",
     "fluent-ffmpeg": "^2.1.2",
     "jwt-decode": "^2.2.0",
+    "mocha": "^7.1.1",
     "puppeteer": "^2.1.1",
     "sanitize-filename": "^1.6.3",
     "terminal-image": "^0.2.0",
