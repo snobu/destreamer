@@ -186,6 +186,9 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         ffmpeg()
           .input(video.playbackUrl)
           .inputOption([
+              // Never remove those "useless" escapes or ffmpeg will not
+              // pick up the header correctly
+              // eslint-disable-next-line no-useless-escape
             '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
           ])
           .format('mp4')
