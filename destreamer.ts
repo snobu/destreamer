@@ -12,7 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
-import ffmpeg from 'fluent-ffmpeg';
+
 
 /**
  * exitCode 22 = ffmpeg not found in $PATH
@@ -199,33 +199,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
         const outputPath = outputDirectory + path.sep + video.title + '.mp4';
-
-        // TODO: Remove this mess and it's fluent-ffmpeg dependency
-        //
-        // ffmpeg()
-        //     .input(video.playbackUrl)
-        //     .inputOption([
-        //         // Never remove those "useless" escapes or ffmpeg will not
-        //         // pick up the header correctly
-        //         // eslint-disable-next-line no-useless-escape
-        //         '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
-        //     ])
-        //     .format('mp4')
-        //     .saveToFile(outputPath)
-        //     .on('codecData', data => {
-        //         console.log(`Input is ${data.video} with ${data.audio} audio.`);
-        //     })
-        //     .on('progress', progress => {
-        //         console.log(progress);
-        //     })
-        //     .on('error', err => {
-        //         console.log(`ffmpeg returned an error: ${err.message}`);
-        //     })
-        //     .on('end', () => {
-        //         console.log(`Download finished: ${outputPath}`);
-        //     });
-
-
+        
         // We probably need a way to be deterministic about
         // how we locate that ffmpeg-bar wrapper, npx maybe?
         // Do not remove those "useless" escapes or ffmpeg will
