@@ -61,7 +61,18 @@ const argv = yargs.options({
     }
 }).argv;
 
-function init() {
+async function init() {
+    const isValidUser = !(await isElevated());
+
+    if (!isValidUser) {
+        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+
+        console.error(colors.red(
+            '\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'
+        ));
+        process.exit(-1);
+    }
+
     // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
         console.log('Creating output directory: ' +
@@ -220,31 +231,20 @@ process.on('unhandledRejection', (reason) => {
 });
 
 async function main() {
-    const isValidUser = !(await isElevated());
-    let videoUrls: string[];
+    checkRequirements();
+    init();
 
-    if (!isValidUser) {
-        const usrName = os.platform() === 'win32' ? 'Admin':'root';
+    const videoUrls: string[] = getVideoUrls(argv.videoUrls);
 
-        console.error(colors.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'));
-        process.exit(-1);
-    }
-
-    videoUrls = getVideoUrls(argv.videoUrls);
     if (videoUrls.length === 0) {
         console.error(colors.red('\nERROR: No valid URL has been found!\n'));
         process.exit(-1);
     }
 
-    checkRequirements();
-
     let session = tokenCache.Read();
-    if (session == null) {
+    if (session == null)
         session = await DoInteractiveLogin(argv.username);
-    }
 
-
-    init();
     downloadVideo(videoUrls, argv.outputDirectory, session);
 }
 
