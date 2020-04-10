@@ -2,7 +2,7 @@ import { sleep, getVideoUrls, checkRequirements } from './utils';
 import { execSync } from 'child_process';
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
-import { terminal as term } from 'terminal-kit';
+import colors from 'colors';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -59,7 +59,7 @@ function init() {
     console.info('Output Directory: %s', argv.outputDirectory);
 
     if (argv.simulate)
-        term.blue("There will be no video downloaded, it's only a simulation\n");
+        console.info(colors.blue("There will be no video downloaded, it's only a simulation\n"));
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
@@ -146,7 +146,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
 
         title = ntitle;
 
-        term.blue("Video title is: ");
+        console.info(colors.blue("Video title is: "));
         console.log(`${title} \n`);
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
@@ -186,13 +186,13 @@ async function getVideoInfo(videoID: string, session: any) {
             return response.data;
         })
         .catch(function (error) {
-            term.red('Error when calling Microsoft Stream API: ' +
-                `${error.response.status} ${error.response.reason}`);
+            console.error(colors.red('Error when calling Microsoft Stream API: ' +
+                `${error.response.status} ${error.response.reason}`));
             console.error(error.response.status);
             console.error(error.response.data);
             console.error("Exiting...");
             if (argv.verbose) {
-                term.red("[VERBOSE]");
+                console.error(colors.red("[VERBOSE]"));
                 console.error(error)
             }
             process.exit(29);
@@ -235,8 +235,8 @@ async function getVideoInfo(videoID: string, session: any) {
 
 // FIXME
 process.on('unhandledRejection', (reason, promise) => {
-    term.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n");
-    term.red(reason);
+    console.error(colors.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n"));
+    console.error(colors.red(reason as string));
     throw new Error("Killing process..\n");
 });
 
@@ -247,13 +247,13 @@ async function main() {
     if (!isValidUser) {
         const usrName = os.platform() === 'win32' ? 'Admin':'root';
 
-        term.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n');
+        console.error(colors.red('\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'));
         process.exit(-1);
     }
 
     videoUrls = getVideoUrls(argv.videoUrls);
     if (videoUrls.length === 0) {
-        term.red('\nERROR: No valid URL has been found!\n');
+        console.error(colors.red('\nERROR: No valid URL has been found!\n'));
         process.exit(-1);
     }
 
