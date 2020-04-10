@@ -162,32 +162,38 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
 
-        console.info('Spawning ffmpeg with access token and HLS URL...');
+        console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
         const outputPath = outputDirectory + path.sep + video.title + '.mp4';
 
-        ffmpeg()
-            .input(video.playbackUrl)
-            .inputOption([
-                // Never remove those "useless" escapes or ffmpeg will not
-                // pick up the header correctly
-                // eslint-disable-next-line no-useless-escape
-                '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
-            ])
-            .format('mp4')
-            .saveToFile(outputPath)
-            .on('codecData', data => {
-                console.log(`Input is ${data.video} with ${data.audio} audio.`);
-            })
-            .on('progress', progress => {
-                console.log(progress);
-            })
-            .on('error', err => {
-                console.log(`ffmpeg returned an error: ${err.message}`);
-            })
-            .on('end', () => {
-                console.log(`Download finished: ${outputPath}`);
-            });
+        // TODO: Remove this mess and it's fluent-ffmpeg dependency
+        //
+        // ffmpeg()
+        //     .input(video.playbackUrl)
+        //     .inputOption([
+        //         // Never remove those "useless" escapes or ffmpeg will not
+        //         // pick up the header correctly
+        //         // eslint-disable-next-line no-useless-escape
+        //         '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
+        //     ])
+        //     .format('mp4')
+        //     .saveToFile(outputPath)
+        //     .on('codecData', data => {
+        //         console.log(`Input is ${data.video} with ${data.audio} audio.`);
+        //     })
+        //     .on('progress', progress => {
+        //         console.log(progress);
+        //     })
+        //     .on('error', err => {
+        //         console.log(`ffmpeg returned an error: ${err.message}`);
+        //     })
+        //     .on('end', () => {
+        //         console.log(`Download finished: ${outputPath}`);
+        //     });
+
+        let cmd = `node_modules/.bin/ffmpeg-bar -headers "Authorization:\ Bearer\ ${session.AccessToken}" -i "${video.playbackUrl}" -y "${outputPath}"`;
+        execSync(cmd, {stdio: 'inherit'});
+        console.info(`Download finished: ${outputPath}`);
 
     }));
 }

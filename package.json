@@ -29,6 +29,7 @@
     "@types/mocha": "^7.0.2",
     "axios": "^0.19.2",
     "colors": "^1.4.0",
+    "ffmpeg-progressbar-cli": "^1.5.0",
     "fluent-ffmpeg": "^2.1.2",
     "jwt-decode": "^2.2.0",
     "mocha": "^7.1.1",
