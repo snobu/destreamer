@@ -79,7 +79,9 @@ function init() {
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
 
-    let videoID = url.split("/").pop() ?? process.exit(25);
+    let videoId = url.split("/").pop() ?? (
+        console.log('Couldn\'t split the video Id from the first videoUrl'), process.exit(25)
+        );
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -97,7 +99,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         await page.click('input[type="submit"]');
     }
 
-    await browser.waitForTarget(target => target.url().includes(videoID), { timeout: 150000 });
+    await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
     console.info('We are logged in.');
 
     let sessionInfo: any;
