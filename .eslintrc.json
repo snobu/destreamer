@@ -20,6 +20,9 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "semi": [2, "always"]
+        "semi": [2, "always"],
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "error",
+        "quotes": [2, "single", { "avoidEscape": true }]
     }
 }

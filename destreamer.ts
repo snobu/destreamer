@@ -20,27 +20,36 @@ import axios from 'axios';
  */
 
 const argv = yargs.options({
-    username: { alias: "u", type: 'string', demandOption: false },
-    outputDirectory: { type: 'string', alias: 'o', default: 'videos' },
+    username: {
+        alias: 'u',
+        type: 'string',
+        demandOption: false
+    },
+    outputDirectory: {
+        alias: 'o',
+        type: 'string',
+        default: 'videos',
+        demandOption: false
+    },
     videoUrls: {
-        alias: "V",
-        describe: `List of video urls or path to txt file containing the urls`,
+        alias: 'V',
+        describe: 'List of video urls or path to txt file containing the urls',
         type: 'array',
         demandOption: true
     },
     simulate: {
-        alias: "s",
+        alias: 's',
         describe: `If this is set to true no video will be downloaded and the script
         will log the video info (default: false)`,
-        type: "boolean",
+        type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
-        alias: "v",
+        alias: 'v',
         describe: `Print additional information to the console
         (use this before opening an issue on GitHub)`,
-        type: "boolean",
+        type: 'boolean',
         default: false,
         demandOption: false
     }
@@ -78,7 +87,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
     console.log('Navigating to STS login page...');
 
     // This breaks on slow connections, needs more reliable logic
-    await page.goto(videoUrls[0], { waitUntil: "networkidle2" });
+    await page.goto(videoUrls[0], { waitUntil: 'networkidle2' });
     await page.waitForSelector('input[type="email"]');
 
     if (username) {
@@ -103,10 +112,10 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         // try this instead of hardcoding sleep
         // https://github.com/GoogleChrome/puppeteer/issues/3649
 
-        console.log("Page loaded")
+        console.log('Page loaded');
 
         await sleep(4000);
-        console.log("Calling Microsoft Stream API...");
+        console.log('Calling Microsoft Stream API...');
 
         let sessionInfo: any;
         let session = await page.evaluate(
@@ -127,11 +136,11 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
         console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
 
-        console.log("Fetching title and HLS URL...");
+        console.log('Fetching title and HLS URL...');
         var [title, date, hlsUrl] = await getVideoInfo(videoID, session);
         const sanitized = sanitize(title);
 
-        title = (sanitized == "") ?
+        title = (sanitized == '') ?
             `Video${videoUrls.indexOf(videoUrl)}` :
             sanitized;
 
@@ -141,12 +150,12 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
         // Add random index to prevent unwanted file overwrite!
         let k = 0;
         let ntitle = title;
-        while (fs.existsSync(outputDirectory+"/"+ntitle+".mp4"))
+        while (fs.existsSync(outputDirectory+'/'+ntitle+'.mp4'))
             ntitle = title+' - '+(++k).toString();
 
         title = ntitle;
 
-        console.info(colors.blue("Video title is: "));
+        console.info(colors.blue('Video title is: '));
         console.log(`${title} \n`);
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
@@ -156,7 +165,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
                 `"Authorization: Bearer ${session.AccessToken}" "${hlsUrl}"`;
 
         if (argv.simulate) {
-            youtubedlCmd = youtubedlCmd + " -s";
+            youtubedlCmd += ' -s';
         }
 
         if (argv.verbose) {
@@ -190,20 +199,20 @@ async function getVideoInfo(videoID: string, session: any) {
                 `${error.response.status} ${error.response.reason}`));
             console.error(error.response.status);
             console.error(error.response.data);
-            console.error("Exiting...");
+            console.error('Exiting...');
             if (argv.verbose) {
-                console.error(colors.red("[VERBOSE]"));
-                console.error(error)
+                console.error(colors.red('[VERBOSE]'));
+                console.error(error);
             }
             process.exit(29);
         });
 
         title = await content.then(data => {
-            return data["name"];
+            return data['name'];
         });
 
         date = await content.then(data => {
-            const dateJs = new Date(data["publishedDate"]);
+            const dateJs = new Date(data['publishedDate']);
             const day = dateJs.getDate().toString().padStart(2, '0');
             const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
 
@@ -216,11 +225,11 @@ async function getVideoInfo(videoID: string, session: any) {
             }
             let playbackUrl = null;
             try {
-                playbackUrl = data["playbackUrls"]
+                playbackUrl = data['playbackUrls']
                     .filter((item: { [x: string]: string; }) =>
-                        item["mimeType"] == "application/vnd.apple.mpegurl")
+                        item['mimeType'] == 'application/vnd.apple.mpegurl')
                     .map((item: { [x: string]: string }) =>
-                        { return item["playbackUrl"]; })[0];
+                        { return item['playbackUrl']; })[0];
             }
             catch (e) {
                 console.error(`Error fetching HLS URL: ${e}.\n playbackUrl is ${playbackUrl}`);
@@ -234,10 +243,10 @@ async function getVideoInfo(videoID: string, session: any) {
 }
 
 // FIXME
-process.on('unhandledRejection', (reason, promise) => {
-    console.error(colors.red("Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n"));
+process.on('unhandledRejection', (reason) => {
+    console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
     console.error(colors.red(reason as string));
-    throw new Error("Killing process..\n");
+    throw new Error('Killing process..\n');
 });
 
 async function main() {
