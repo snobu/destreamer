@@ -77,7 +77,9 @@ function init() {
         console.info(colors.blue("There will be no video downloaded, it's only a simulation\n"));
 }
 
-async function DoInteractiveLogin(username?: string): Promise<Session> {
+async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
+
+    let videoID = url.split("/").pop() ?? process.exit(25);
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -85,10 +87,9 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
         args: ['--disable-dev-shm-usage']
     });
     const page = (await browser.pages())[0];
-    console.log('Navigating to microsoftonline.com login page...');
+    console.log('Navigating to login page...');
 
-    // This breaks on slow connections, needs more reliable logic
-    await page.goto('https://web.microsoftstream.com', { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: 'load' });
     await page.waitForSelector('input[type="email"]');
 
     if (username) {
@@ -96,16 +97,8 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
         await page.click('input[type="submit"]');
     }
 
-    await browser.waitForTarget(target => target.url().includes('microsoftstream.com/'), { timeout: 90000 });
+    await browser.waitForTarget(target => target.url().includes(videoID), { timeout: 150000 });
     console.info('We are logged in.');
-    // We may or may not need to sleep here.
-    // Who am i to deny a perfectly good nap?
-    await sleep(1500);
-
-    console.info('Got cookie. Consuming cookie...');
-
-    await sleep(4000);
-    console.info('Calling Microsoft Stream API...');
 
     let sessionInfo: any;
     let session = await page.evaluate(
@@ -119,12 +112,9 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     );
 
     tokenCache.Write(session);
-    console.info('Wrote access token to token cache.');
+    console.log('Wrote access token to token cache.');
+    console.log("At this point Chromium's job is done, shutting it down...\n");
 
-    console.log(`ApiGatewayUri: ${session.ApiGatewayUri}`);
-    console.log(`ApiGatewayVersion: ${session.ApiGatewayVersion}`);
-
-    console.info("At this point Chromium's job is done, shutting it down...");
     await browser.close();
 
     return session;
@@ -241,7 +231,7 @@ async function main() {
 
     let session = tokenCache.Read();
     if (session == null) {
-        session = await DoInteractiveLogin(argv.username);
+        session = await DoInteractiveLogin(videoUrls[0], argv.username);
     }
 
 
