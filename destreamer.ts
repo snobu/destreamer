@@ -26,13 +26,6 @@ const argv = yargs.options({
     videoUrls: { type: 'array', alias: 'videourls', demandOption: true },
     username: { type: 'string', demandOption: false },
     outputDirectory: { type: 'string', alias: 'outputdirectory', default: 'videos' },
-    format: {
-        alias: 'f',
-        describe: `Expose youtube-dl --format option, for details see\n
-        https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection`,
-        type: 'string',
-        demandOption: false
-    },
     simulate: {
         alias: 's',
         describe: `If this is set to true no video will be downloaded and the script
@@ -56,15 +49,6 @@ if (argv.simulate) {
 
 
 function sanityChecks() {
-    try {
-        const ytdlVer = execSync('youtube-dl --version');
-        console.info(colors.green(`Using youtube-dl version ${ytdlVer}`));
-    }
-    catch (e) {
-        console.error('You need youtube-dl in $PATH for this to work. Make sure it is a relatively recent one, baked after 2019.');
-        process.exit(22);
-    }
-
     try {
         const ffmpegVer = execSync('ffmpeg -version')
             .toString().split('\n')[0];
