@@ -1,4 +1,4 @@
-import { sleep, parseVideoUrls, checkRequirements } from './utils';
+import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -185,8 +185,9 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     console.log('Fetching title and HLS URL...');
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
     await Promise.all(metadata.map(async video => {
-        video.title = sanitize(video.title);
         console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
+
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
 
         // Very experimental inline thumbnail rendering
         if (!argv.noThumbnails)

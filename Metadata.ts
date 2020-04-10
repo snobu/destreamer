@@ -2,10 +2,18 @@ import { Metadata, Session } from './Types';
 
 import axios from 'axios';
 
+function publishedDateToString(date: string) {
+    const dateJs = new Date(date);
+    const day = dateJs.getDate().toString().padStart(2, '0');
+    const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
+
+    return day+'-'+month+'-'+dateJs.getFullYear();
+}
 
 export async function getVideoMetadata(videoGuids: string[], session: Session, verbose: boolean): Promise<Metadata[]> {
     let metadata: Metadata[] = [];
     let title: string;
+    let date: string;
     let playbackUrl: string;
     let posterImage: string;
 
@@ -29,8 +37,10 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
             .map((item: { [x: string]: string }) => { return item['playbackUrl']; })[0];
 
         posterImage = response.data['posterImage']['medium']['url'];
+        date = publishedDateToString(response.data['publishedDate']);
 
         metadata.push({
+            date: date,
             title: title,
             playbackUrl: playbackUrl,
             posterImage: posterImage
