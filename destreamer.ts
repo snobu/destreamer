@@ -232,7 +232,7 @@ process.on('unhandledRejection', (reason) => {
 
 async function main() {
     checkRequirements();
-    init();
+    await init();
 
     const videoUrls: string[] = getVideoUrls(argv.videoUrls);
 
