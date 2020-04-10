@@ -123,16 +123,32 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
     console.info('We are logged in.');
 
-    let sessionInfo: any;
-    let session = await page.evaluate(
-        () => {
-            return {
-                AccessToken: sessionInfo.AccessToken,
-                ApiGatewayUri: sessionInfo.ApiGatewayUri,
-                ApiGatewayVersion: sessionInfo.ApiGatewayVersion
-            };
+    let session = null;
+    let tries: number = 0;
+
+    //TODO: add proper process exit and corrisponding code
+    while (!session) {
+        try {
+            let sessionInfo: any;
+            session = await page.evaluate(
+                () => {
+                    return {
+                        AccessToken: sessionInfo.AccessToken,
+                        ApiGatewayUri: sessionInfo.ApiGatewayUri,
+                        ApiGatewayVersion: sessionInfo.ApiGatewayVersion
+                    };
+                }
+            );
+        } catch (error) {
+            if (tries < 5){
+                session = null;
+                tries++;
+                await sleep(3000);
+            } else {
+                throw(error);
+            }
         }
-    );
+    }
 
     tokenCache.Write(session);
     console.log('Wrote access token to token cache.');
@@ -199,7 +215,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
         const outputPath = outputDirectory + path.sep + video.title + '.mp4';
-        
+
         // We probably need a way to be deterministic about
         // how we locate that ffmpeg-bar wrapper, npx maybe?
         // Do not remove those "useless" escapes or ffmpeg will
