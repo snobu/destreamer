@@ -191,7 +191,12 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         //         console.log(`Download finished: ${outputPath}`);
         //     });
 
-        // We probably need a way to be deterministic about how we locate that ffmpeg-bar wrapper, npx maybe?
+
+        // We probably need a way to be deterministic about
+        // how we locate that ffmpeg-bar wrapper, npx maybe?
+        // Do not remove those "useless" escapes or ffmpeg will
+        // not pick up the header correctly.
+        // eslint-disable-next-line no-useless-escape
         let cmd = `node_modules/.bin/ffmpeg-bar -headers "Authorization:\ Bearer\ ${session.AccessToken}" -i "${video.playbackUrl}" -y "${outputPath}"`;
         execSync(cmd, {stdio: 'inherit'});
         console.info(`Download finished: ${outputPath}`);
