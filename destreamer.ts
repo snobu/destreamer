@@ -28,13 +28,6 @@ const argv = yargs.options({
         type: 'array',
         demandOption: true
     },
-    format: {
-        alias:"f",
-        describe: `Expose youtube-dl --format option, for details see\n
-        https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection`,
-        type:'string',
-        demandOption: false
-    },
     simulate: {
         alias: "s",
         describe: `If this is set to true no video will be downloaded and the script
@@ -67,9 +60,6 @@ function init() {
 
     if (argv.simulate)
         term.blue("There will be no video downloaded, it's only a simulation\n");
-
-    if (argv.format)
-        console.info('Video/Audio Quality: %s', argv.format);
 }
 
 async function rentVideoForLater(videoUrls: string[], outputDirectory: string, username?: string) {
@@ -161,9 +151,7 @@ async function rentVideoForLater(videoUrls: string[], outputDirectory: string, u
 
         console.log('Spawning youtube-dl with cookie and HLS URL...');
 
-        const format = argv.format ? `-f "${argv.format}"` : "";
-
-        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' + format +
+        var youtubedlCmd = 'youtube-dl --no-call-home --no-warnings ' +
                 ` --output "${outputDirectory}/${title}.mp4" --add-header ` +
                 `"Authorization: Bearer ${session.AccessToken}" "${hlsUrl}"`;
 
