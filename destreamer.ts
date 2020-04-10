@@ -43,7 +43,7 @@ const argv = yargs.options({
     },
 }).argv;
 
-if (argv.simulate){
+if (argv.simulate) {
     console.info('Video URLs: %s', argv.videoUrls);
     console.info('Username: %s', argv.username);
     console.info(colors.green('There will be no video downloaded, it\'s only a simulation\n'));
@@ -74,7 +74,7 @@ function sanityChecks() {
         console.error('FFmpeg is missing. You need a fairly recent release of FFmpeg in $PATH.');
     }
 
-    if (!fs.existsSync(argv.outputDirectory)){
+    if (!fs.existsSync(argv.outputDirectory)) {
         console.log('Creating output directory: ' +
             process.cwd() + path.sep + argv.outputDirectory);
         fs.mkdirSync(argv.outputDirectory);
@@ -94,7 +94,7 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     // This breaks on slow connections, needs more reliable logic
     await page.goto('https://web.microsoftstream.com', { waitUntil: 'networkidle2' });
     await page.waitForSelector('input[type="email"]');
-    
+
     if (username) {
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
@@ -107,21 +107,21 @@ async function DoInteractiveLogin(username?: string): Promise<Session> {
     await sleep(1500);
 
     console.info('Got cookie. Consuming cookie...');
-    
+
     await sleep(4000);
     console.info('Calling Microsoft Stream API...');
 
     let sessionInfo: any;
     let session = await page.evaluate(
         () => {
-            return { 
+            return {
                 AccessToken: sessionInfo.AccessToken,
                 ApiGatewayUri: sessionInfo.ApiGatewayUri,
                 ApiGatewayVersion: sessionInfo.ApiGatewayVersion
             };
         }
     );
-        
+
     tokenCache.Write(session);
     console.info('Wrote access token to token cache.');
 
@@ -151,8 +151,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
         try {
             guid = url.split('/').pop();
         }
-        catch (e)
-        {
+        catch (e) {
             console.error(`Could not split the video GUID from URL: ${e.message}`);
             process.exit(25);
         }
@@ -160,7 +159,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
             videoGuids.push(guid);
         }
     }
-    
+
     console.log(videoGuids);
     return videoGuids;
 }
@@ -169,42 +168,42 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     console.log(videoUrls);
     const videoGuids = extractVideoGuid(videoUrls);
-    
+
     console.log('Fetching title and HLS URL...');
     let metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
     await Promise.all(metadata.map(async video => {
         video.title = sanitize(video.title);
         console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
-        
+
         // Very experimental inline thumbnail rendering
         await drawThumbnail(video.posterImage, session.AccessToken);
-        
+
         console.info('Spawning ffmpeg with access token and HLS URL...');
 
         const outputPath = outputDirectory + path.sep + video.title + '.mp4';
 
         ffmpeg()
-          .input(video.playbackUrl)
-          .inputOption([
-              // Never remove those "useless" escapes or ffmpeg will not
-              // pick up the header correctly
-              // eslint-disable-next-line no-useless-escape
-            '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
-          ])
-          .format('mp4')
-          .saveToFile(outputPath)
-          .on('codecData', data => {
-            console.log(`Input is ${data.video} with ${data.audio} audio.`);
-          })
-          .on('progress', progress => {
-            console.log(progress);
-          })
-          .on('error', err => {
-            console.log(`ffmpeg returned an error: ${err.message}`);
-          })
-          .on('end', () => {
-            console.log(`Download finished: ${outputPath}`);
-          });
+            .input(video.playbackUrl)
+            .inputOption([
+                // Never remove those "useless" escapes or ffmpeg will not
+                // pick up the header correctly
+                // eslint-disable-next-line no-useless-escape
+                '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`
+            ])
+            .format('mp4')
+            .saveToFile(outputPath)
+            .on('codecData', data => {
+                console.log(`Input is ${data.video} with ${data.audio} audio.`);
+            })
+            .on('progress', progress => {
+                console.log(progress);
+            })
+            .on('error', err => {
+                console.log(`ffmpeg returned an error: ${err.message}`);
+            })
+            .on('end', () => {
+                console.log(`Download finished: ${outputPath}`);
+            });
 
     }));
 }
@@ -218,8 +217,7 @@ function sleep(ms: number) {
 async function main() {
     sanityChecks();
     let session = tokenCache.Read();
-    if (session == null)
-    {
+    if (session == null) {
         session = await DoInteractiveLogin(argv.username);
     }
 
