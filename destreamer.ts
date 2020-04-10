@@ -44,8 +44,7 @@ const argv = yargs.options({
     },
     simulate: {
         alias: 's',
-        describe: `If this is set to true no video will be downloaded and the script
-        will log the video info (default: false)`,
+        describe: `Disable video download and print metadata information to the console`,
         type: 'boolean',
         default: false,
         demandOption: false
@@ -59,8 +58,7 @@ const argv = yargs.options({
     },
     verbose: {
         alias: 'v',
-        describe: `Print additional information to the console
-        (use this before opening an issue on GitHub)`,
+        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
         type: 'boolean',
         default: false,
         demandOption: false
@@ -92,7 +90,7 @@ async function init() {
         console.info('Username: %s', argv.username);
 
     if (argv.simulate)
-        console.info(colors.blue("There will be no video downloaded, it's only a simulation\n"));
+        console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
 
     if (argv.verbose) {
         console.info('Video URLs:');
@@ -181,8 +179,22 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
 
-    console.log('Fetching title and HLS URL...');
-    let metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+    console.log('Fetching metadata...');
+
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+
+    if (argv.simulate) {
+        metadata.forEach(video => {
+            console.log(
+                colors.yellow('\n\nTitle: ') + colors.green(video.title) +
+                colors.yellow('\nPublished Date: ') + colors.green(video.date) +
+                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
+            );
+        });
+
+        return;
+    }
+
     await Promise.all(metadata.map(async video => {
         console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
 

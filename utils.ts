@@ -14,7 +14,7 @@ function sanitizeUrls(urls: string[]) {
 
         if (!rex.test(url)) {
             if (url !== '')
-                console.warn(colors.yellow('Invalid URL at line ' + (i+1) + ', skip..\n'));
+                console.warn(colors.yellow('Invalid URL at line ' + (i+1) + ', skip..'));
 
             continue;
         }
