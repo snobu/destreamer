@@ -1,7 +1,7 @@
 import { sleep, parseVideoUrls, checkRequirements } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session } from './Types';
+import { Metadata, Session, Errors } from './Types';
 import { drawThumbnail } from './Thumbnail';
 
 import isElevated from 'is-elevated';
@@ -15,13 +15,6 @@ import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import ffmpeg from 'fluent-ffmpeg';
 
-/**
- * exitCode 22 = ffmpeg not found in $PATH
- * exitCode 25 = cannot split videoID from videUrl
- * exitCode 27 = no hlsUrl in the API response
- * exitCode 29 = invalid response from API
- * exitCode 88 = error extracting cookies
- */
 
 let tokenCache = new TokenCache();
 
@@ -205,12 +198,18 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     }));
 }
 
-// FIXME
-process.on('unhandledRejection', (reason) => {
-    console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
-    console.error(colors.red(reason as string));
-    throw new Error('Killing process..\n');
-});
+
+function startup() {
+    process.on('exit', (code) => {
+        console.log(Errors[code])
+    });
+
+    process.on('unhandledRejection', (reason) => {
+        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
+        console.error(reason);
+        console.log(colors.red('\n\n EXITING \n\n'));
+    });
+}
 
 async function main() {
     const isValidUser = !(await isElevated());
@@ -242,4 +241,5 @@ async function main() {
 }
 
 // run
+startup();
 main();
