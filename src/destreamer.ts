@@ -1,7 +1,8 @@
 import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
+import { setProcessEvents } from './destreamerEvents';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session, Errors } from './Types';
+import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 
 import isElevated from 'is-elevated';
@@ -58,22 +59,6 @@ const argv = yargs.options({
 }).argv;
 
 async function init() {
-
-    process.on('unhandledRejection', (reason) => {
-        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
-        console.error(colors.red(reason as string));
-    });
-
-    process.on('exit', (code) => {
-        if (code == 0) {
-            return
-        };
-        if (code in Errors)
-            console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
-        else
-            console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
-    });
-
     if (await isElevated())
         process.exit(55);
 
@@ -99,8 +84,7 @@ async function init() {
 }
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-
-    let videoId = url.split("/").pop() ?? process.exit(33)
+    const videoId = url.split("/").pop() ?? process.exit(33)
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -273,11 +257,11 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 }
 
 async function main() {
+    setProcessEvents();
     checkRequirements() ?? process.exit(22);
     await init();
 
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);
-
     let session = tokenCache.Read();
 
     if (session == null) {
