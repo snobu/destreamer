@@ -65,9 +65,7 @@ async function init() {
     });
 
     process.on('exit', (code) => {
-        if (code === 0)
-            console.log(colors.bgGreen('\n\nDestreamer finished successfully! \n'))
-        else if (code in Errors)
+        if (code in Errors)
             console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
         else
             console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
