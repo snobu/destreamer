@@ -3,6 +3,7 @@ import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 
+
 function sanitizeUrls(urls: string[]) {
     const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
     const sanitized: string[] = [];
@@ -25,8 +26,9 @@ function sanitizeUrls(urls: string[]) {
         sanitized.push(url+query);
     }
 
-    return sanitized;
+    return sanitized.length ? sanitized : null;
 }
+
 
 export function parseVideoUrls(videoUrls: any) {
     const t = videoUrls[0] as string;
@@ -41,9 +43,11 @@ export function parseVideoUrls(videoUrls: any) {
     return sanitizeUrls(urls);
 }
 
+
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 
 export function checkRequirements() {
     try {
@@ -51,13 +55,12 @@ export function checkRequirements() {
         console.info(colors.green(`Using ${ffmpegVer}\n`));
 
     } catch (e) {
-        console.error(colors.red(
-            'FFmpeg is missing.\nDestreamer requires a fairly recent release of FFmpeg to work properly.\n' +
-            'Please install it with your preferred package manager or copy FFmpeg binary in destreamer root directory.\n'
-        ));
-        process.exit(22);
+        return null;
     }
+
+    return true;
 }
+
 
 export function makeUniqueTitle(title: string, outDir: string) {
     let ntitle = title;

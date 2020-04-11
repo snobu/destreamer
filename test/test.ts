@@ -53,7 +53,7 @@ describe('Destreamer', () => {
 
         fs.writeFileSync(tmpFile.fd, testIn.join('\r\n'));
 
-        testOut = parseVideoUrls([tmpFile.name]);
+        testOut = parseVideoUrls([tmpFile.name])!;
         if (testOut.length !== expectedOut.length)
             assert.strictEqual(testOut, expectedOut, "URL list not sanitized");
 

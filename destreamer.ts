@@ -1,7 +1,7 @@
 import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session } from './Types';
+import { Metadata, Session, Errors } from './Types';
 import { drawThumbnail } from './Thumbnail';
 
 import isElevated from 'is-elevated';
@@ -13,14 +13,6 @@ import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 
-
-/**
- * exitCode 22 = ffmpeg not found in $PATH
- * exitCode 25 = cannot split videoID from videUrl
- * exitCode 27 = no hlsUrl in the API response
- * exitCode 29 = invalid response from API
- * exitCode 88 = error extracting cookies
- */
 
 let tokenCache = new TokenCache();
 
@@ -66,16 +58,23 @@ const argv = yargs.options({
 }).argv;
 
 async function init() {
-    const isValidUser = !(await isElevated());
 
-    if (!isValidUser) {
-        const usrName = process.platform === 'win32' ? 'Admin':'root';
+    process.on('unhandledRejection', (reason) => {
+        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
+        console.error(colors.red(reason as string));
+    });
 
-        console.error(colors.red(
-            '\nERROR: Destreamer does not run as '+usrName+'!\nPlease run destreamer with a non-privileged user.\n'
-        ));
-        process.exit(-1);
-    }
+    process.on('exit', (code) => {
+        if (code === 0)
+            console.log(colors.bgGreen('\n\nDestreamer finished successfully! \n'))
+        else if (code in Errors)
+            console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
+        else
+            console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
+    });
+
+    if (await isElevated())
+        process.exit(55);
 
     // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
@@ -100,9 +99,7 @@ async function init() {
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
 
-    let videoId = url.split("/").pop() ?? (
-        console.log('Couldn\'t split the video Id from the first videoUrl'), process.exit(25)
-        );
+    let videoId = url.split("/").pop() ?? process.exit(33)
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -126,7 +123,6 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     let session = null;
     let tries: number = 0;
 
-    //TODO: add proper process exit and corrisponding code
     while (!session) {
         try {
             let sessionInfo: any;
@@ -145,7 +141,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
                 tries++;
                 await sleep(3000);
             } else {
-                throw(error);
+                process.exit(44)
             }
         }
     }
@@ -169,7 +165,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
         } catch (e) {
             console.error(`Could not split the video GUID from URL: ${e.message}`);
-            process.exit(25);
+            process.exit(33);
         }
 
         if (guid)
@@ -227,23 +223,13 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
     }));
 }
 
-// FIXME
-process.on('unhandledRejection', (reason) => {
-    console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
-    console.error(colors.red(reason as string));
-    throw new Error('Killing process..\n');
-});
+
 
 async function main() {
-    checkRequirements();
+    checkRequirements() ?? process.exit(22);
     await init();
 
-    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
-
-    if (videoUrls.length === 0) {
-        console.error(colors.red('\nERROR: No valid URL has been found!\n'));
-        process.exit(-1);
-    }
+    const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);
 
     let session = tokenCache.Read();
 
@@ -254,5 +240,5 @@ async function main() {
     downloadVideo(videoUrls, argv.outputDirectory, session);
 }
 
-// run
+
 main();
