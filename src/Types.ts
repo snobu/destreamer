@@ -26,15 +26,15 @@ export const Errors: Errors = {
         'Destreamer requires a fairly recent release of FFmpeg to download videos.\n' +
         'Please install it in $PATH or copy the ffmpeg binary to the root directory (next to package.json). \n',
 
-    23: 'Input URL list file not found \n',
+    23: 'Input URL list file not found',
 
-    33: "Can't split videoId from videoUrl\n",
+    33: "Can't split videoId from videoUrl",
 
-    44: "Couldn't evaluate sessionInfo on the page\n",
+    44: "Couldn't evaluate sessionInfo on the page",
 
-    55: 'Running in an elevated shell\n',
+    55: 'Running in an elevated shell',
 
-    66: 'No valid URL in the input\n',
+    66: 'No valid URL in the input',
 
     0: "Clean exit with code 0."
 }
