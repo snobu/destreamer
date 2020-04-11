@@ -11,7 +11,7 @@ function publishedDateToString(date: string) {
     return day+'-'+month+'-'+dateJs.getFullYear();
 }
 
-function durationToTotalChuncks(duration: string) {
+function durationToTotalChunks(duration: string) {
     const durationObj = parse(duration);
     const hrs = durationObj['hours'] ?? 0;
     const mins = durationObj['minutes'] ?? 0;
@@ -50,7 +50,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
 
         posterImage = response.data['posterImage']['medium']['url'];
         date = publishedDateToString(response.data['publishedDate']);
-        duration = durationToTotalChuncks(response.data.media['duration']);
+        duration = durationToTotalChunks(response.data.media['duration']);
 
         metadata.push({
             date: date,

@@ -240,9 +240,9 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
                 });
             })
             .on('progress', progress => {
-                const currentChuncks = ffmpegTimemarkToChunk(progress.timemark);
+                const currentChunks = ffmpegTimemarkToChunk(progress.timemark);
 
-                pbar.update(currentChuncks, {
+                pbar.update(currentChunks, {
                     speed: progress.currentKbps
                 });
             })
