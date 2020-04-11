@@ -30,6 +30,8 @@ export const Errors: Errors = {
 
     33: "Can't split videoId from videoUrl",
 
+    34: 'FFmpeg error',
+
     44: "Couldn't evaluate sessionInfo on the page",
 
     55: 'Running in an elevated shell',

@@ -11,9 +11,9 @@ import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
-import ffmpeg from 'fluent-ffmpeg';
 import cliProgress from 'cli-progress';
 
+const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 let tokenCache = new TokenCache();
 
 const argv = yargs.options({
@@ -183,14 +183,6 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
-    const pbar = new cliProgress.SingleBar({
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        format: 'progress [{bar}] {percentage}% {speed}Kbps {eta_formatted}',
-        barsize: Math.floor(process.stdout.columns / 3),
-        stopOnComplete: true,
-        etaBuffer: 20
-    });
 
     console.log('Fetching metadata...');
 
@@ -208,12 +200,21 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         return;
     }
 
-    await Promise.all(metadata.map(async video => {
-        console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
+    for (let i=0, l=metadata.length; i<l; ++i) {
+        const video = metadata[i];
+        let previousChunks = 0;
+        const pbar = new cliProgress.SingleBar({
+            barCompleteChar: '\u2588',
+            barIncompleteChar: '\u2591',
+            format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
+            barsize: Math.floor(process.stdout.columns / 3),
+            stopOnComplete: true,
+            hideCursor: true,
+        });
+
+        console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
-
-        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
 
         // Very experimental inline thumbnail rendering
         if (!argv.noThumbnails)
@@ -221,42 +222,54 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
-        ffmpeg()
-            .input(video.playbackUrl)
-            .inputOption([
-                // Never remove those "useless" escapes or ffmpeg will not
-                // pick up the header correctly
-                // eslint-disable-next-line no-useless-escape
-                '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`,
-            ])
-            .format('mp4')
-            .saveToFile(outputPath)
-            .on('codecData', data => {
-                console.log(`Input is ${data.video} with ${data.audio} audio.\n`);
+        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+        const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
+            ['headers', `Authorization:\ Bearer\ ${session.AccessToken}`]
+        ]));
+        const ffmpegOutput = new FFmpegOutput(outputPath);
+        const ffmpegCmd = new FFmpegCommand();
 
-                pbar.start(video.duration, 0, {
-                    speed: '0'
-                });
+        pbar.start(video.duration, 0, {
+            speed: '0'
+        });
 
-                process.on('SIGINT', () => {
-                    pbar.stop();
-                });
-            })
-            .on('progress', progress => {
-                const currentChunks = ffmpegTimemarkToChunk(progress.timemark);
+        // prepare ffmpeg command line
+        ffmpegCmd.addInput(ffmpegInpt);
+        ffmpegCmd.addOutput(ffmpegOutput);
 
-                pbar.update(currentChunks, {
-                    speed: progress.currentKbps
-                });
-            })
-            .on('error', err => {
-                pbar.stop();
-                console.log(`ffmpeg returned an error: ${err.message}`);
-            })
-            .on('end', () => {
-                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+        // set events
+        ffmpegCmd.on('update', (data: any) => {
+            const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            const incChunk = currentChunks - previousChunks;
+
+            pbar.increment(incChunk, {
+                speed: data.bitrate
             });
-    }));
+
+            previousChunks = currentChunks;
+        });
+
+        ffmpegCmd.on('error', (error: any) => {
+            pbar.stop();
+            console.log(`\nffmpeg returned an error: ${error.message}`);
+            process.exit(34);
+        });
+
+        process.on('SIGINT', () => {
+            pbar.stop();
+        });
+
+        // let the magic begin...
+        await new Promise((resolve: any, reject: any) => {
+            ffmpegCmd.on('success', (data:any) => {
+                pbar.update(video.duration); // overflow, just in case we don't reach 100%
+                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+                resolve();
+            });
+
+            ffmpegCmd.spawn();
+        });
+    }
 }
 
 async function main() {
