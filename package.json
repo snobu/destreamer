@@ -11,7 +11,7 @@
     "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
     "run": "node ./destreamer.js",
     "start": "npm run -s build & npm run -s run",
-    "test": "mocha"
+    "test": "mocha build/test"
   },
   "keywords": [],
   "author": "snobu",
