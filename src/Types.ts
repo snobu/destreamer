@@ -26,6 +26,8 @@ export const Errors: Errors = {
         'Destreamer requires a fairly recent release of FFmpeg to work properly. \n' +
         'Please install it with your preferred package manager or copy FFmpeg binary in destreamer root directory. \n',
 
+    23: 'Input URL list file not found \n',
+
     33: 'cannot split videoID from videUrl \n',
 
     44: 'couldn\'t evaluate sessionInfo in the page \n',

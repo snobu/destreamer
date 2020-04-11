@@ -31,14 +31,23 @@ function sanitizeUrls(urls: string[]) {
 
 
 export function parseVideoUrls(videoUrls: any) {
-    const t = videoUrls[0] as string;
+    let t = videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
     let urls: string[];
 
-    if (isPath)
+    if (isPath) {
+        if (!fs.existsSync(t)) { // uh? could this be a bad OS?
+            if (fs.existsSync(t + '.txt'))
+                t += '.txt';
+            else
+                process.exit(23);
+        }
+
         urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
-    else
+
+    } else {
         urls = videoUrls as string[];
+    }
 
     return sanitizeUrls(urls);
 }
