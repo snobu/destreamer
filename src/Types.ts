@@ -22,15 +22,17 @@ interface Errors {
 // we can't use multiline string for long errors
 // TODO: create better errors descriptions
 export const Errors: Errors = {
-    22: 'FFmpeg is missing. \n' +
-        'Destreamer requires a fairly recent release of FFmpeg to work properly. \n' +
-        'Please install it with your preferred package manager or copy FFmpeg binary in destreamer root directory. \n',
+    22: 'FFmpeg is missing.\n' +
+        'Destreamer requires a fairly recent release of FFmpeg to download videos.\n' +
+        'Please install it in $PATH or copy the ffmpeg binary to the root directory (next to package.json). \n',
 
-    33: 'cannot split videoID from videUrl \n',
+    33: "Can't split videoId from videoUrl\n",
 
-    44: 'couldn\'t evaluate sessionInfo in the page \n',
+    44: "Couldn't evaluate sessionInfo on the page\n",
 
-    55: 'running in an elevated shell \n',
+    55: 'Running in an elevated shell\n',
 
-    66: 'no valid URL in the input \n'
+    66: 'No valid URL in the input\n',
+
+    0: "Clean exit with code 0."
 }
