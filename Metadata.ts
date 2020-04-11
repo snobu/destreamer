@@ -1,5 +1,6 @@
 import { Metadata, Session } from './Types';
 
+import { parse } from 'iso8601-duration';
 import axios from 'axios';
 
 function publishedDateToString(date: string) {
@@ -10,10 +11,21 @@ function publishedDateToString(date: string) {
     return day+'-'+month+'-'+dateJs.getFullYear();
 }
 
+function durationToTotalChuncks(duration: string) {
+    const durationObj = parse(duration);
+    const hrs = durationObj['hours'] ?? 0;
+    const mins = durationObj['minutes'] ?? 0;
+    const secs = Math.ceil(durationObj['seconds'] ?? 0);
+
+    return hrs * 1000 + mins * 100 + secs;
+}
+
+
 export async function getVideoMetadata(videoGuids: string[], session: Session, verbose: boolean): Promise<Metadata[]> {
     let metadata: Metadata[] = [];
     let title: string;
     let date: string;
+    let duration: number;
     let playbackUrl: string;
     let posterImage: string;
 
@@ -38,9 +50,11 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
 
         posterImage = response.data['posterImage']['medium']['url'];
         date = publishedDateToString(response.data['publishedDate']);
+        duration = durationToTotalChuncks(response.data.media['duration']);
 
         metadata.push({
             date: date,
+            duration: duration,
             title: title,
             playbackUrl: playbackUrl,
             posterImage: posterImage
