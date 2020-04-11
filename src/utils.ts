@@ -71,3 +71,13 @@ export function makeUniqueTitle(title: string, outDir: string) {
 
     return ntitle;
 }
+
+
+export function ffmpegTimemarkToChunk(timemark: string) {
+    const timeVals: string[] = timemark.split(':');
+    const hrs = parseInt(timeVals[0]);
+    const mins = parseInt(timeVals[1]);
+    const secs = parseInt(timeVals[2]);
+
+    return hrs * 1000 + mins * 100 + secs;
+}

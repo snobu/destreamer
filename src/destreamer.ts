@@ -1,4 +1,4 @@
-import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle } from './utils';
+import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session, Errors } from './Types';
@@ -6,13 +6,13 @@ import { drawThumbnail } from './Thumbnail';
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
-import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
-
+import ffmpeg from 'fluent-ffmpeg';
+import cliProgress from 'cli-progress';
 
 let tokenCache = new TokenCache();
 
@@ -65,9 +65,7 @@ async function init() {
     });
 
     process.on('exit', (code) => {
-        if (code === 0)
-            console.log(colors.bgGreen('\n\nDestreamer finished successfully! \n'))
-        else if (code in Errors)
+        if (code in Errors)
             console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
         else
             console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
@@ -182,6 +180,14 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
+    const pbar = new cliProgress.SingleBar({
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
+        format: 'progress [{bar}] {percentage}% {speed}Kbps {eta_formatted}',
+        barsize: Math.floor(process.stdout.columns / 3),
+        stopOnComplete: true,
+        etaBuffer: 20
+    });
 
     console.log('Fetching metadata...');
 
@@ -204,26 +210,51 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
 
+        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+
         // Very experimental inline thumbnail rendering
         if (!argv.noThumbnails)
             await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
-        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+        ffmpeg()
+            .input(video.playbackUrl)
+            .inputOption([
+                // Never remove those "useless" escapes or ffmpeg will not
+                // pick up the header correctly
+                // eslint-disable-next-line no-useless-escape
+                '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`,
+            ])
+            .format('mp4')
+            .saveToFile(outputPath)
+            .on('codecData', data => {
+                console.log(`Input is ${data.video} with ${data.audio} audio.\n`);
 
-        // We probably need a way to be deterministic about
-        // how we locate that ffmpeg-bar wrapper, npx maybe?
-        // Do not remove those "useless" escapes or ffmpeg will
-        // not pick up the header correctly.
-        // eslint-disable-next-line no-useless-escape
-        let cmd = `node_modules/.bin/ffmpeg-bar -headers "Authorization:\ Bearer\ ${session.AccessToken}" -i "${video.playbackUrl}" -y "${outputPath}"`;
-        execSync(cmd, {stdio: 'inherit'});
-        console.info(`Download finished: ${outputPath}`);
+                pbar.start(video.duration, 0, {
+                    speed: '0'
+                });
+
+                process.on('SIGINT', () => {
+                    pbar.stop();
+                });
+            })
+            .on('progress', progress => {
+                const currentChuncks = ffmpegTimemarkToChunk(progress.timemark);
+
+                pbar.update(currentChuncks, {
+                    speed: progress.currentKbps
+                });
+            })
+            .on('error', err => {
+                pbar.stop();
+                console.log(`ffmpeg returned an error: ${err.message}`);
+            })
+            .on('end', () => {
+                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+            });
     }));
 }
-
-
 
 async function main() {
     checkRequirements() ?? process.exit(22);
