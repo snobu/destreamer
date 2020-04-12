@@ -3,6 +3,7 @@ import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
 import axios from 'axios';
+import colors from 'colors';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
@@ -72,7 +73,7 @@ export class TokenCache {
             let freshCookie = cookie.split(',Authorization_Api=')[0];
         }
         catch (e) {
-            console.error("Error when calling /refreshtoken: Missing or unexpected set-cookie header.");
+            console.error(colors.yellow("Error when calling /refreshtoken: Missing or unexpected set-cookie header."));
         }
 
         return freshCookie;
