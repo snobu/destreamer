@@ -1,6 +1,6 @@
 import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
-import { setProcessEvents } from './destreamerEvents';
+import { setProcessEvents } from './Events';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -60,8 +60,12 @@ const argv = yargs.options({
 }).argv;
 
 async function init() {
+    setProcessEvents(); // must be first!
+
     if (await isElevated())
         process.exit(55);
+
+    checkRequirements();
 
     // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
@@ -215,7 +219,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
 
-        pbar.start(video.duration, 0, {
+        pbar.start(video.totalChunks, 0, {
             speed: '0'
         });
 
@@ -248,7 +252,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         // let the magic begin...
         await new Promise((resolve: any, reject: any) => {
             ffmpegCmd.on('success', (data:any) => {
-                pbar.update(video.duration); // overflow, just in case we don't reach 100%
+                pbar.update(video.totalChunks); // set progress bar to 100%
                 console.log(colors.green(`\nDownload finished: ${outputPath}`));
                 resolve();
             });
@@ -259,8 +263,6 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 }
 
 async function main() {
-    setProcessEvents();
-    checkRequirements() ?? process.exit(22);
     await init();
 
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);

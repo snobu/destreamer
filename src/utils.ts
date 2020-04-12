@@ -64,10 +64,8 @@ export function checkRequirements() {
         console.info(colors.green(`Using ${ffmpegVer}\n`));
 
     } catch (e) {
-        return null;
+        process.exit(22);
     }
-
-    return true;
 }
 
 

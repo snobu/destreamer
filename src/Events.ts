@@ -11,7 +11,7 @@ import colors from 'colors';
  */
 export function setProcessEvents() {
     process.on('unhandledRejection', (reason) => {
-        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
+        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads directory and try again.\n'));
         console.error(colors.red(reason as string));
     });
 

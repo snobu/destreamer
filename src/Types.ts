@@ -7,7 +7,7 @@ export type Session = {
 
 export type Metadata = {
     date: string;
-    duration: number;
+    totalChunks: number; // Abstraction of FFmpeg timemark
     title: string;
     playbackUrl: string;
     posterImage: string;

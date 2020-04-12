@@ -25,7 +25,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
     let metadata: Metadata[] = [];
     let title: string;
     let date: string;
-    let duration: number;
+    let totalChunks: number;
     let playbackUrl: string;
     let posterImage: string;
 
@@ -50,11 +50,11 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
 
         posterImage = response.data['posterImage']['medium']['url'];
         date = publishedDateToString(response.data['publishedDate']);
-        duration = durationToTotalChunks(response.data.media['duration']);
+        totalChunks = durationToTotalChunks(response.data.media['duration']);
 
         metadata.push({
             date: date,
-            duration: duration,
+            totalChunks: totalChunks,
             title: title,
             playbackUrl: playbackUrl,
             posterImage: posterImage
