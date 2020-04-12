@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
+import axios from 'axios';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
@@ -52,5 +53,28 @@ export class TokenCache {
             }
             console.info(green('Fresh access token dropped into .token_cache'));
         });
+    }
+
+    public async RefreshToken(session: Session) {
+        let endpoint = `${session.ApiGatewayUri}refreshtoken?api-version=${session.ApiGatewayVersion}`;
+
+        let response = await axios.get(endpoint,
+            {
+                headers: {
+                    Authorization: `Bearer ${session.AccessToken}`
+                }
+            });
+
+        let freshCookie: string | null = null;
+        
+        try {
+            let cookie: string = response.headers["set-cookie"].toString();
+            let freshCookie = cookie.split(',Authorization_Api=')[0];
+        }
+        catch (e) {
+            console.error("Error when calling /refreshtoken: Missing or unexpected set-cookie header.");
+        }
+
+        return freshCookie;
     }
 }

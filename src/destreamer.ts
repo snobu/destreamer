@@ -254,6 +254,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
                 console.log(`ffmpeg returned an error: ${err.message}`);
             })
             .on('end', () => {
+                //pbar.update(100);
                 console.log(colors.green(`\nDownload finished: ${outputPath}`));
             });
     }));
