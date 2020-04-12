@@ -24,7 +24,7 @@ interface Errors {
 export const Errors: Errors = {
     22: 'FFmpeg is missing.\n' +
         'Destreamer requires a fairly recent release of FFmpeg to download videos.\n' +
-        'Please install it in $PATH or copy the ffmpeg binary to the root directory (next to package.json). \n',
+        'Please install it in $PATH or copy the ffmpeg binary to the root directory (next to package.json).',
 
     33: "Can't split videoId from videoUrl\n",
 
