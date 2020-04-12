@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
@@ -46,19 +45,6 @@ export function parseVideoUrls(videoUrls: any) {
 
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-export function checkRequirements() {
-    try {
-        const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];
-        console.info(colors.green(`Using ${ffmpegVer}\n`));
-
-    } catch (e) {
-        return null;
-    }
-
-    return true;
 }
 
 

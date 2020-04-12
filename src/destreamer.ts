@@ -1,88 +1,31 @@
-import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './Utils';
-import { TokenCache } from './TokenCache';
+import { checkRequirements, createVideoDir, handleSetup, parseArgs } from './Init';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session, Errors } from './Types';
 import { drawThumbnail } from './Thumbnail';
+import { TokenCache } from './TokenCache';
+import { Metadata, Session } from './Types';
+import { sleep, parseVideoUrls, makeUniqueTitle, ffmpegTimemarkToChunk } from './Utils';
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
-import fs from 'fs';
+
 import path from 'path';
-import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import ffmpeg from 'fluent-ffmpeg';
 import cliProgress from 'cli-progress';
 
-let tokenCache = new TokenCache();
-
-const argv = yargs.options({
-    username: {
-        alias: 'u',
-        type: 'string',
-        demandOption: false
-    },
-    outputDirectory: {
-        alias: 'o',
-        type: 'string',
-        default: 'videos',
-        demandOption: false
-    },
-    videoUrls: {
-        alias: 'V',
-        describe: 'List of video urls or path to txt file containing the urls',
-        type: 'array',
-        demandOption: true
-    },
-    simulate: {
-        alias: 's',
-        describe: `Disable video download and print metadata information to the console`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    noThumbnails: {
-        alias: 'nthumb',
-        describe: `Do not display video thumbnails`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    verbose: {
-        alias: 'v',
-        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    }
-}).argv;
 
 async function init() {
-
-    process.on('unhandledRejection', (reason) => {
-        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
-        console.error(colors.red(reason as string));
-    });
-
-    process.on('exit', (code) => {
-        if (code == 0) {
-            return
-        };
-        if (code in Errors)
-            console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
-        else
-            console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
-    });
+    // setup process.on handles
+    handleSetup();
+    // check ffmpeg
+    checkRequirements();
 
     if (await isElevated())
         process.exit(55);
 
     // create output directory
-    if (!fs.existsSync(argv.outputDirectory)) {
-        console.log('Creating output directory: ' +
-            process.cwd() + path.sep + argv.outputDirectory);
-        fs.mkdirSync(argv.outputDirectory);
-    }
+    createVideoDir(argv.outputDirectory);
 
     console.info('Output Directory: %s', argv.outputDirectory);
 
@@ -260,8 +203,9 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 }
 
 async function main() {
-    checkRequirements() ?? process.exit(22);
     await init();
+
+    console.log(colors.green(checkRequirements() ?? process.exit(22)));
 
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);
 
@@ -274,5 +218,6 @@ async function main() {
     downloadVideo(videoUrls, argv.outputDirectory, session);
 }
 
-
+var tokenCache = new TokenCache();
+const argv = parseArgs()
 main();
