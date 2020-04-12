@@ -6,10 +6,11 @@
   },
   "version": "1.0.0",
   "description": "Save Microsoft Stream videos for offline enjoyment.",
-  "main": "destreamer.js",
+  "main": "build/src/destreamer.js",
+  "bin": "build/src/destreamer.js",
   "scripts": {
     "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
-    "run": "node ./destreamer.js",
+    "run": "node ./build/src/destreamer.js",
     "start": "npm run -s build & npm run -s run",
     "test": "mocha build/test"
   },

@@ -23,7 +23,7 @@ Roadmap -
 - [X] Token cache (so you don't have to log in every time you run destreamer)
 - [ ] Download closed captions if available
 - [ ] Performance improvements (via aria2c maybe?) // _This is under consideration, we're not sure if this borders on abusing the streaming endpoints or not._
-- [ ] Single static binary (for each major OS)
+- [x] Single static binary (for each major OS)
 
 Send a quality PR first and i'll add you as a contributor to the repository.
 
@@ -38,11 +38,66 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on, tested on Windows, macOS and Linux, results may vary, feel free to open an issue if trouble arise.
 
+## HOW TO BUILD FOR RELEASE
+Destreamer builder supports the following environments:
+* Linux
+* WLS (Windows Linux Subsystem)
+* MacOS
+
+Requirements
+* [pkg](https://www.npmjs.com/package/pkg)
+* wget
+
+`Install pkg to your system with the command:`
+```
+npm i -g pkg
+```
+
+You will find your release package in destreamer root directory.
+
+To build a release package, run the following commands:
+* `$ npm install`
+* `$ chmod +x make_release.sh`
+* `$ ./make_release.sh`
+
+```
+Usage: ./make_realse.sh [option]
+
+ help  - Show usage
+ linux - Build for Linux x64
+ win   - Build for Windows x64
+ macos - Build for MacOS x64
+ all   - Build all
+
+ default: all
+```
+
+## HOW TO BUILD FOR DEVELOPMENT
+You can build destreamer for development on any OS.
+
+You will find destreamer.js in `build/src` folder.
+
+To build destreamer.js run the following commands:
+* `npm install`
+* `npm run -s build`
+
 ## USAGE
 
-* `npm install` to restore packages
-* `npm run -s build` to transpile TypeScript to JavaScript
+* Unpack destreamer and chromium into the same folder
+* Open a new terminal and navigate to that folder
+* Run destreamer executable
 
+Linux / MacOS
+```
+$ ./destreamer
+```
+
+Windows
+```
+destreamer.exe
+```
+
+## Options
 ```
 $ node ./destreamer.js
 

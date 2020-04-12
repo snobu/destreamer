@@ -1,4 +1,5 @@
 import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './destreamerEvents';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
@@ -88,6 +89,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
+        executablePath: getPuppeteerChromiumPath(),
         headless: false,
         args: ['--disable-dev-shm-usage']
     });
