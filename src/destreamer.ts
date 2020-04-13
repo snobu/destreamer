@@ -5,59 +5,18 @@ import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
+import { argv } from './CommandLineParser';
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
-import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 let tokenCache = new TokenCache();
-
-const argv = yargs.options({
-    username: {
-        alias: 'u',
-        type: 'string',
-        demandOption: false
-    },
-    outputDirectory: {
-        alias: 'o',
-        type: 'string',
-        default: 'videos',
-        demandOption: false
-    },
-    videoUrls: {
-        alias: 'V',
-        describe: 'List of video urls or path to txt file containing the urls',
-        type: 'array',
-        demandOption: true
-    },
-    simulate: {
-        alias: 's',
-        describe: `Disable video download and print metadata information to the console`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    noThumbnails: {
-        alias: 'nthumb',
-        describe: `Do not display video thumbnails`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    verbose: {
-        alias: 'v',
-        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    }
-}).argv;
 
 async function init() {
     setProcessEvents(); // must be first!

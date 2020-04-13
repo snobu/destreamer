@@ -3,7 +3,6 @@ import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 
-
 function sanitizeUrls(urls: string[]) {
     const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
     const sanitized: string[] = [];
@@ -35,19 +34,10 @@ export function parseVideoUrls(videoUrls: any) {
     const isPath = t.substring(t.length-4) === '.txt';
     let urls: string[];
 
-    if (isPath) {
-        if (!fs.existsSync(t)) { // uh? could this be a bad OS?
-            if (fs.existsSync(t + '.txt'))
-                t += '.txt';
-            else
-                process.exit(23);
-        }
-
+    if (isPath)
         urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
-
-    } else {
+    else
         urls = videoUrls as string[];
-    }
 
     return sanitizeUrls(urls);
 }
