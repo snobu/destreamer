@@ -1,4 +1,4 @@
-import { Errors } from './Types';
+import { Error, ERROR_CODE } from './Errors';
 
 import colors from 'colors';
 
@@ -10,17 +10,18 @@ import colors from 'colors';
  * @note function is required for non-packaged destreamer, so we can't do better
  */
 export function setProcessEvents() {
-    process.on('unhandledRejection', (reason) => {
-        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads directory and try again.\n'));
-        console.error(colors.red(reason as string));
-    });
-
+    // set exit event first so that we can always print cute errors
     process.on('exit', (code) => {
         if (code == 0)
             return;
-        else if (code in Errors)
-            console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`));
-        else
-            console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`));
+
+        const msg = code in Error ? `\n\n${Error[code]} \n` : `\n\nUnknown error: exit code ${code} \n`;
+
+        console.error(colors.bgRed(msg));
+    });
+
+    process.on('unhandledRejection', (reason) => {
+        console.error(colors.red(reason as string));
+        process.exit(ERROR_CODE.UNHANDLED_ERROR);
     });
 }

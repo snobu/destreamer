@@ -1,6 +1,7 @@
 import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
+import { ERROR_CODE } from './Errors';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
@@ -22,7 +23,7 @@ async function init() {
     setProcessEvents(); // must be first!
 
     if (await isElevated())
-        process.exit(55);
+        process.exit(ERROR_CODE.ELEVATED_SHELL);
 
     checkRequirements();
 
@@ -48,7 +49,7 @@ async function init() {
 }
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId = url.split("/").pop() ?? process.exit(33)
+    const videoId = url.split("/").pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID)
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -71,7 +72,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.info('We are logged in.');
 
     let session = null;
-    let tries: number = 0;
+    let tries: number = 1;
 
     while (!session) {
         try {
@@ -86,13 +87,12 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
                 }
             );
         } catch (error) {
-            if (tries < 5){
-                session = null;
-                tries++;
-                await sleep(3000);
-            } else {
-                process.exit(44)
-            }
+            if (tries > 5)
+                process.exit(ERROR_CODE.NO_SESSION_INFO);
+
+            session = null;
+            tries++;
+            await sleep(3000);
         }
     }
 
@@ -114,8 +114,8 @@ function extractVideoGuid(videoUrls: string[]): string[] {
             guid = url.split('/').pop();
 
         } catch (e) {
-            console.error(`Could not split the video GUID from URL: ${e.message}`);
-            process.exit(33);
+            console.error(`${e.message}`);
+            process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
         if (guid)
@@ -201,7 +201,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         ffmpegCmd.on('error', (error: any) => {
             pbar.stop();
             console.log(`\nffmpeg returned an error: ${error.message}`);
-            process.exit(34);
+            process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
 
         process.on('SIGINT', () => {
@@ -222,9 +222,9 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 }
 
 async function main() {
-    await init();
+    await init(); // must be first
 
-    const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);
+    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
     let session = tokenCache.Read();
 
     if (session == null) {

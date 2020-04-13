@@ -1,3 +1,5 @@
+import { ERROR_CODE } from './Errors';
+
 import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
@@ -25,7 +27,10 @@ function sanitizeUrls(urls: string[]) {
         sanitized.push(url+query);
     }
 
-    return sanitized.length ? sanitized : null;
+    if (!sanitized.length)
+        process.exit(ERROR_CODE.INVALID_INPUT_URLS);
+
+    return sanitized;
 }
 
 
@@ -54,7 +59,7 @@ export function checkRequirements() {
         console.info(colors.green(`Using ${ffmpegVer}\n`));
 
     } catch (e) {
-        process.exit(22);
+        process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
 }
 

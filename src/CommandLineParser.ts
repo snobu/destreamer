@@ -1,3 +1,5 @@
+import { CLI_ERROR } from './Errors';
+
 import yargs from 'yargs';
 import colors from 'colors';
 import fs from 'fs';
@@ -60,23 +62,6 @@ export const argv = yargs.options({
 .check(argv => windowsFileExtensionBadBehaviorFix(argv))
 .check(argv => mergeVideoUrlsArguments(argv))
 .argv;
-
-
-const enum CLI_ERROR {
-    GRACEFULLY_STOP           = ' ', // gracefully stop execution, yargs way
-
-    MISSING_REQUIRED_ARG      = 'You must specify a URLs source.\n' +
-                                'Valid options are --videoUrls or --videoUrlsFile.',
-
-    VIDEOURLS_ARG_CONFLICT    = 'Too many URLs sources specified!\n' +
-                                'Please specify a single URLs source with either --videoUrls or --videoUrlsFile.',
-
-    FILE_INPUT_VIDEOURLS_ARG  = 'Wrong input for option --videoUrls.\n' +
-                                'To read URLs from file, use --videoUrlsFile option.',
-
-    INPUT_URLS_FILE_NOT_FOUND = 'Input URL list file not found.'
-}
-
 
 function hasNoArgs() {
     return process.argv.length === 2;
