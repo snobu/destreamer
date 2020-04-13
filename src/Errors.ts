@@ -7,6 +7,7 @@ export const enum ERROR_CODE {
     UNHANDLED_ERROR,
     MISSING_FFMPEG,
     ELEVATED_SHELL,
+    INVALID_OUTPUT_DIR,
     INVALID_INPUT_URLS,
     INVALID_VIDEO_ID,
     INVALID_VIDEO_GUID,
@@ -22,6 +23,8 @@ export const Error: IError = {
                                      'Timeout or fatal error, please check your downloads directory and try again',
 
     [ERROR_CODE.ELEVATED_SHELL]:     'Running in an elevated shell',
+
+    [ERROR_CODE.INVALID_OUTPUT_DIR]: 'Unable to create output directory',
 
     [ERROR_CODE.MISSING_FFMPEG]:     'FFmpeg is missing!\n' +
                                      'Destreamer requires a fairly recent release of FFmpeg to download videos',

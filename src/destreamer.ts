@@ -27,14 +27,19 @@ async function init() {
 
     checkRequirements();
 
+    console.info('Output Directory: %s', colors.green(argv.outputDirectory));
+
     // create output directory
     if (!fs.existsSync(argv.outputDirectory)) {
-        console.log('Creating output directory: ' +
-            process.cwd() + path.sep + argv.outputDirectory);
-        fs.mkdirSync(argv.outputDirectory);
-    }
+        console.info(colors.yellow('Creating output directory...'));
 
-    console.info('Output Directory: %s', argv.outputDirectory);
+        try {
+            fs.mkdirSync(argv.outputDirectory, { recursive: true });
+
+        } catch(e) {
+            process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+        }
+    }
 
     if (argv.username)
         console.info('Username: %s', argv.username);
