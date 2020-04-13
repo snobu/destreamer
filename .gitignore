@@ -1,4 +1,4 @@
-.token_cache
+.*
 *.txt
 *.log
 *.js
@@ -8,5 +8,3 @@ videos
 release
 swagger.json
 cc.json
-
-.thumbnail.png
