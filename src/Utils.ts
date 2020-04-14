@@ -50,7 +50,7 @@ function readFileToArray(path: string) {
 
 
 export function parseVideoUrls(videoUrls: any) {
-    let t = videoUrls[0] as string;
+    const t = videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
     let urls: string[];
 

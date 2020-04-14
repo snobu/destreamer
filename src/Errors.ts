@@ -18,7 +18,7 @@ export const enum ERROR_CODE {
 
 // TODO: create better errors descriptions
 export const Error: IError = {
-    [ERROR_CODE.NO_ERROR]:           'Clean exit with code 0',
+    [ERROR_CODE.NO_ERROR]:              'Clean exit with code 0',
 
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
                                         'Timeout or fatal error, please check your downloads directory and try again',
