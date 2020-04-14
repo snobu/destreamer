@@ -1,4 +1,7 @@
-import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
+import {
+    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle,
+    ffmpegTimemarkToChunk, makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
+} from './utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
@@ -17,7 +20,7 @@ import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
-let tokenCache = new TokenCache();
+const tokenCache = new TokenCache();
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -26,20 +29,6 @@ async function init() {
         process.exit(ERROR_CODE.ELEVATED_SHELL);
 
     checkRequirements();
-
-    console.info('Output Directory: %s', colors.green(argv.outputDirectory));
-
-    // create output directory
-    if (!fs.existsSync(argv.outputDirectory)) {
-        console.info(colors.yellow('Creating output directory...'));
-
-        try {
-            fs.mkdirSync(argv.outputDirectory, { recursive: true });
-
-        } catch(e) {
-            process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
-        }
-    }
 
     if (argv.username)
         console.info('Username: %s', argv.username);
@@ -111,7 +100,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 function extractVideoGuid(videoUrls: string[]): string[] {
-    let videoGuids: string[] = [];
+    const videoGuids: string[] = [];
     let guid: string | undefined = '';
 
     for (const url of videoUrls) {
@@ -135,7 +124,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     return videoGuids;
 }
 
-async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
+async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
 
     console.log('Fetching metadata...');
@@ -154,7 +143,8 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         return;
     }
 
-    for (let i=0, l=metadata.length; i<l; ++i) {
+    const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+    for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
         let previousChunks = 0;
         const pbar = new cliProgress.SingleBar({
@@ -168,7 +158,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
 
         // Very experimental inline thumbnail rendering
         if (!argv.noThumbnails)
@@ -176,7 +166,7 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
-        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+        const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', `Authorization:\ Bearer\ ${session.AccessToken}`]
         ]));
@@ -229,14 +219,16 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 async function main() {
     await init(); // must be first
 
+    const outDirs: string[] = getOutputDirectoriesList(argv.outputDirectory as string);
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
-    let session = tokenCache.Read();
+    let session: Session;
 
-    if (session == null) {
-        session = await DoInteractiveLogin(videoUrls[0], argv.username);
-    }
+    checkOutDirsUrlsMismatch(outDirs, videoUrls);
+    makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
 
-    downloadVideo(videoUrls, argv.outputDirectory, session);
+    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
+
+    downloadVideo(videoUrls, outDirs, session);
 }
 
 

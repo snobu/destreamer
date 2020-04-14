@@ -1,4 +1,5 @@
 import { ERROR_CODE } from './Errors';
+import { argv } from './CommandLineParser';
 
 import { execSync } from 'child_process';
 import colors from 'colors';
@@ -33,6 +34,21 @@ function sanitizeUrls(urls: string[]) {
     return sanitized;
 }
 
+function sanitizeOutDirsList(dirsList: string[]) {
+    const sanitized: string[] = [];
+
+    dirsList.forEach(dir => {
+        if (dir !== '')
+            sanitized.push(dir);
+    });
+
+    return sanitized;
+}
+
+function readFileToArray(path: string) {
+    return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
+}
+
 
 export function parseVideoUrls(videoUrls: any) {
     let t = videoUrls[0] as string;
@@ -40,11 +56,55 @@ export function parseVideoUrls(videoUrls: any) {
     let urls: string[];
 
     if (isPath)
-        urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
+        urls = readFileToArray(t);
     else
         urls = videoUrls as string[];
 
     return sanitizeUrls(urls);
+}
+
+
+export function getOutputDirectoriesList(outDirArg: string) {
+    const isList = outDirArg.substring(outDirArg.length-4) === '.txt';
+    let dirsList: string[];
+
+    if (isList)
+        dirsList = sanitizeOutDirsList(readFileToArray(outDirArg));
+    else
+        dirsList = [outDirArg];
+
+    if (argv.verbose)
+        console.log(dirsList);
+
+    return dirsList;
+}
+
+
+export function makeOutputDirectories(dirsList: string[]) {
+    dirsList.forEach(dir => {
+        if (!fs.existsSync(dir)) {
+            console.info(colors.yellow('Creating output directory:'));
+            console.info(colors.green(dir)+'\n');
+
+            try {
+                fs.mkdirSync(dir, { recursive: true });
+
+            } catch(e) {
+                process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+            }
+        }
+    });
+}
+
+
+export function checkOutDirsUrlsMismatch(dirsList: string[], urlsList: string[]) {
+    const dirsListL = dirsList.length;
+    const urlsListL = urlsList.length;
+
+    if (dirsListL == 1) // one out dir, treat this as the chosen one for all
+        return;
+    else if (dirsListL != urlsListL)
+        process.exit(ERROR_CODE.OUTDIRS_URLS_MISMATCH);
 }
 
 

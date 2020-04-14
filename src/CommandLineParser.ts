@@ -24,8 +24,14 @@ export const argv = yargs.options({
     },
     outputDirectory: {
         alias: 'o',
+        describe: 'The directory where destreamer will save your downloads [default: videos]',
         type: 'string',
-        default: 'videos',
+        demandOption: false
+    },
+    outputDirectories: {
+        alias: 'O',
+        describe: 'Path to a txt file containing one output directory per video',
+        type: 'string',
         demandOption: false
     },
     noThumbnails: {
@@ -58,9 +64,11 @@ export const argv = yargs.options({
 .check(() => isShowHelpRequest())
 .check(argv => checkRequiredArgument(argv))
 .check(argv => checkVideoUrlsArgConflict(argv))
+.check(argv => checkOutputDirArgConflict(argv))
 .check(argv => checkVideoUrlsInput(argv))
 .check(argv => windowsFileExtensionBadBehaviorFix(argv))
 .check(argv => mergeVideoUrlsArguments(argv))
+.check(argv => mergeOutputDirArguments(argv))
 .argv;
 
 function hasNoArgs() {
@@ -90,6 +98,16 @@ function checkVideoUrlsArgConflict(argv: any) {
 
     if (argv.videoUrls && argv.videoUrlsFile)
         throw new Error(colors.red(CLI_ERROR.VIDEOURLS_ARG_CONFLICT));
+
+    return true;
+}
+
+function checkOutputDirArgConflict(argv: any) {
+    if (hasNoArgs())
+        return true;
+
+    if (argv.outputDirectory && argv.outputDirectories)
+        throw new Error(colors.red(CLI_ERROR.OUTPUTDIR_ARG_CONFLICT));
 
     return true;
 }
@@ -127,9 +145,33 @@ function mergeVideoUrlsArguments(argv: any) {
     return true;
 }
 
+/**
+ * Users see 2 separate options, but we don't really care
+ * cause both options have no difference in code.
+ *
+ * Optimize and make this transparent to destreamer
+ */
+function mergeOutputDirArguments(argv: any) {
+    if (!argv.outputDirectories && argv.outputDirectory)
+        return true;
+
+    if (!argv.outputDirectory && !argv.outputDirectories)
+        argv.outputDirectory = 'videos'; // default out dir
+    else if (argv.outputDirectories)
+        argv.outputDirectory = argv.outputDirectories;
+
+    if (argv.outputDirectories) {
+        // these are not valid anymore
+        delete argv.outputDirectories;
+        delete argv.O;
+    }
+
+    return true;
+}
+
 // yeah this is for windows, but lets check everyone, who knows...
 function windowsFileExtensionBadBehaviorFix(argv: any) {
-    if (hasNoArgs() || !argv.videoUrlsFile)
+    if (hasNoArgs() || !argv.videoUrlsFile || !argv.outputDirectories)
         return true;
 
     if (!fs.existsSync(argv.videoUrlsFile)) {
