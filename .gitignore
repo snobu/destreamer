@@ -1,11 +1,10 @@
-.token_cache
+.*
 *.txt
 *.log
 *.js
+*.zip
 node_modules
 videos
-
+release
 swagger.json
 cc.json
-
-.thumbnail.png

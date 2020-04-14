@@ -1,8 +1,9 @@
+import { ERROR_CODE } from './Errors';
+
 import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
-
 
 function sanitizeUrls(urls: string[]) {
     const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
@@ -26,21 +27,80 @@ function sanitizeUrls(urls: string[]) {
         sanitized.push(url+query);
     }
 
-    return sanitized.length ? sanitized : null;
+    if (!sanitized.length)
+        process.exit(ERROR_CODE.INVALID_INPUT_URLS);
+
+    return sanitized;
+}
+
+function sanitizeOutDirsList(dirsList: string[]) {
+    const sanitized: string[] = [];
+
+    dirsList.forEach(dir => {
+        if (dir !== '')
+            sanitized.push(dir);
+    });
+
+    return sanitized;
+}
+
+function readFileToArray(path: string) {
+    return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
 }
 
 
 export function parseVideoUrls(videoUrls: any) {
-    const t = videoUrls[0] as string;
+    let t = videoUrls[0] as string;
     const isPath = t.substring(t.length-4) === '.txt';
     let urls: string[];
 
     if (isPath)
-        urls = fs.readFileSync(t).toString('utf-8').split(/[\r\n]/);
+        urls = readFileToArray(t);
     else
         urls = videoUrls as string[];
 
     return sanitizeUrls(urls);
+}
+
+
+export function getOutputDirectoriesList(outDirArg: string) {
+    const isList = outDirArg.substring(outDirArg.length-4) === '.txt';
+    let dirsList: string[];
+
+    if (isList)
+        dirsList = sanitizeOutDirsList(readFileToArray(outDirArg));
+    else
+        dirsList = [outDirArg];
+
+    return dirsList;
+}
+
+
+export function makeOutputDirectories(dirsList: string[]) {
+    dirsList.forEach(dir => {
+        if (!fs.existsSync(dir)) {
+            console.info(colors.yellow('Creating output directory:'));
+            console.info(colors.green(dir)+'\n');
+
+            try {
+                fs.mkdirSync(dir, { recursive: true });
+
+            } catch(e) {
+                process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+            }
+        }
+    });
+}
+
+
+export function checkOutDirsUrlsMismatch(dirsList: string[], urlsList: string[]) {
+    const dirsListL = dirsList.length;
+    const urlsListL = urlsList.length;
+
+    if (dirsListL == 1) // one out dir, treat this as the chosen one for all
+        return;
+    else if (dirsListL != urlsListL)
+        process.exit(ERROR_CODE.OUTDIRS_URLS_MISMATCH);
 }
 
 
@@ -55,10 +115,8 @@ export function checkRequirements() {
         console.info(colors.green(`Using ${ffmpegVer}\n`));
 
     } catch (e) {
-        return null;
+        process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
-
-    return true;
 }
 
 

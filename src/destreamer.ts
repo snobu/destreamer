@@ -1,90 +1,33 @@
-import { sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk } from './utils';
+import {
+    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
+    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
+} from './Utils';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
+import { setProcessEvents } from './Events';
+import { ERROR_CODE } from './Errors';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session, Errors } from './Types';
+import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
+import { argv } from './CommandLineParser';
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
-import fs from 'fs';
 import path from 'path';
-import yargs from 'yargs';
 import sanitize from 'sanitize-filename';
-import ffmpeg from 'fluent-ffmpeg';
 import cliProgress from 'cli-progress';
 
-let tokenCache = new TokenCache();
-
-const argv = yargs.options({
-    username: {
-        alias: 'u',
-        type: 'string',
-        demandOption: false
-    },
-    outputDirectory: {
-        alias: 'o',
-        type: 'string',
-        default: 'videos',
-        demandOption: false
-    },
-    videoUrls: {
-        alias: 'V',
-        describe: 'List of video urls or path to txt file containing the urls',
-        type: 'array',
-        demandOption: true
-    },
-    simulate: {
-        alias: 's',
-        describe: `Disable video download and print metadata information to the console`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    noThumbnails: {
-        alias: 'nthumb',
-        describe: `Do not display video thumbnails`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    verbose: {
-        alias: 'v',
-        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    }
-}).argv;
+const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
+const tokenCache = new TokenCache();
 
 async function init() {
-
-    process.on('unhandledRejection', (reason) => {
-        console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
-        console.error(colors.red(reason as string));
-    });
-
-    process.on('exit', (code) => {
-        if (code == 0) {
-            return
-        };
-        if (code in Errors)
-            console.error(colors.bgRed(`\n\nError: ${Errors[code]} \n`))
-        else
-            console.error(colors.bgRed(`\n\nUnknown exit code ${code} \n`))
-    });
+    setProcessEvents(); // must be first!
 
     if (await isElevated())
-        process.exit(55);
+        process.exit(ERROR_CODE.ELEVATED_SHELL);
 
-    // create output directory
-    if (!fs.existsSync(argv.outputDirectory)) {
-        console.log('Creating output directory: ' +
-            process.cwd() + path.sep + argv.outputDirectory);
-        fs.mkdirSync(argv.outputDirectory);
-    }
-
-    console.info('Output Directory: %s', argv.outputDirectory);
+    checkRequirements();
 
     if (argv.username)
         console.info('Username: %s', argv.username);
@@ -99,11 +42,11 @@ async function init() {
 }
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-
-    let videoId = url.split("/").pop() ?? process.exit(33)
+    const videoId = url.split("/").pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID)
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
+        executablePath: getPuppeteerChromiumPath(),
         headless: false,
         args: ['--disable-dev-shm-usage']
     });
@@ -122,7 +65,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.info('We are logged in.');
 
     let session = null;
-    let tries: number = 0;
+    let tries: number = 1;
 
     while (!session) {
         try {
@@ -137,13 +80,12 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
                 }
             );
         } catch (error) {
-            if (tries < 5){
-                session = null;
-                tries++;
-                await sleep(3000);
-            } else {
-                process.exit(44)
-            }
+            if (tries > 5)
+                process.exit(ERROR_CODE.NO_SESSION_INFO);
+
+            session = null;
+            tries++;
+            await sleep(3000);
         }
     }
 
@@ -157,7 +99,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 function extractVideoGuid(videoUrls: string[]): string[] {
-    let videoGuids: string[] = [];
+    const videoGuids: string[] = [];
     let guid: string | undefined = '';
 
     for (const url of videoUrls) {
@@ -165,8 +107,8 @@ function extractVideoGuid(videoUrls: string[]): string[] {
             guid = url.split('/').pop();
 
         } catch (e) {
-            console.error(`Could not split the video GUID from URL: ${e.message}`);
-            process.exit(33);
+            console.error(`${e.message}`);
+            process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
         if (guid)
@@ -181,16 +123,8 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     return videoGuids;
 }
 
-async function downloadVideo(videoUrls: string[], outputDirectory: string, session: Session) {
+async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
-    const pbar = new cliProgress.SingleBar({
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        format: 'progress [{bar}] {percentage}% {speed}Kbps {eta_formatted}',
-        barsize: Math.floor(process.stdout.columns / 3),
-        stopOnComplete: true,
-        etaBuffer: 20
-    });
 
     console.log('Fetching metadata...');
 
@@ -208,12 +142,25 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
         return;
     }
 
-    await Promise.all(metadata.map(async video => {
-        console.log(colors.blue(`\nDownloading Video: ${video.title}\n`));
+    if (argv.verbose)
+        console.log(outputDirectories);
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, argv.outputDirectory);
+    const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+    for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
+        const video = metadata[i];
+        let previousChunks = 0;
+        const pbar = new cliProgress.SingleBar({
+            barCompleteChar: '\u2588',
+            barIncompleteChar: '\u2591',
+            format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
+            barsize: Math.floor(process.stdout.columns / 3),
+            stopOnComplete: true,
+            hideCursor: true,
+        });
 
-        const outputPath = outputDirectory + path.sep + video.title + '.mp4';
+        console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
+
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
 
         // Very experimental inline thumbnail rendering
         if (!argv.noThumbnails)
@@ -221,57 +168,69 @@ async function downloadVideo(videoUrls: string[], outputDirectory: string, sessi
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
 
-        ffmpeg()
-            .input(video.playbackUrl)
-            .inputOption([
-                // Never remove those "useless" escapes or ffmpeg will not
-                // pick up the header correctly
-                // eslint-disable-next-line no-useless-escape
-                '-headers', `Authorization:\ Bearer\ ${session.AccessToken}`,
-            ])
-            .format('mp4')
-            .saveToFile(outputPath)
-            .on('codecData', data => {
-                console.log(`Input is ${data.video} with ${data.audio} audio.\n`);
+        const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
+        const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
+            ['headers', `Authorization:\ Bearer\ ${session.AccessToken}`]
+        ]));
+        const ffmpegOutput = new FFmpegOutput(outputPath);
+        const ffmpegCmd = new FFmpegCommand();
 
-                pbar.start(video.duration, 0, {
-                    speed: '0'
-                });
+        pbar.start(video.totalChunks, 0, {
+            speed: '0'
+        });
 
-                process.on('SIGINT', () => {
-                    pbar.stop();
-                });
-            })
-            .on('progress', progress => {
-                const currentChunks = ffmpegTimemarkToChunk(progress.timemark);
+        // prepare ffmpeg command line
+        ffmpegCmd.addInput(ffmpegInpt);
+        ffmpegCmd.addOutput(ffmpegOutput);
 
-                pbar.update(currentChunks, {
-                    speed: progress.currentKbps
-                });
-            })
-            .on('error', err => {
-                pbar.stop();
-                console.log(`ffmpeg returned an error: ${err.message}`);
-            })
-            .on('end', () => {
-                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+        // set events
+        ffmpegCmd.on('update', (data: any) => {
+            const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            const incChunk = currentChunks - previousChunks;
+
+            pbar.increment(incChunk, {
+                speed: data.bitrate
             });
-    }));
+
+            previousChunks = currentChunks;
+        });
+
+        ffmpegCmd.on('error', (error: any) => {
+            pbar.stop();
+            console.log(`\nffmpeg returned an error: ${error.message}`);
+            process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
+        });
+
+        process.on('SIGINT', () => {
+            pbar.stop();
+        });
+
+        // let the magic begin...
+        await new Promise((resolve: any, reject: any) => {
+            ffmpegCmd.on('success', (data:any) => {
+                pbar.update(video.totalChunks); // set progress bar to 100%
+                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+                resolve();
+            });
+
+            ffmpegCmd.spawn();
+        });
+    }
 }
 
 async function main() {
-    checkRequirements() ?? process.exit(22);
-    await init();
+    await init(); // must be first
 
-    const videoUrls: string[] = parseVideoUrls(argv.videoUrls) ?? process.exit(66);
+    const outDirs: string[] = getOutputDirectoriesList(argv.outputDirectory as string);
+    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
+    let session: Session;
 
-    let session = tokenCache.Read();
+    checkOutDirsUrlsMismatch(outDirs, videoUrls);
+    makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
 
-    if (session == null) {
-        session = await DoInteractiveLogin(videoUrls[0], argv.username);
-    }
+    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
-    downloadVideo(videoUrls, argv.outputDirectory, session);
+    downloadVideo(videoUrls, outDirs, session);
 }
 
 
