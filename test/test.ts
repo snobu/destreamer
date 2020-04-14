@@ -1,4 +1,4 @@
-import { parseVideoUrls } from '../src/utils';
+import { parseVideoUrls } from '../src/Utils';
 import puppeteer from 'puppeteer';
 import assert from 'assert';
 import tmp from 'tmp';

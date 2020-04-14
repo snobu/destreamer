@@ -1,7 +1,7 @@
 import {
     sleep, parseVideoUrls, checkRequirements, makeUniqueTitle,
     ffmpegTimemarkToChunk, makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
-} from './utils';
+} from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
@@ -14,7 +14,6 @@ import { argv } from './CommandLineParser';
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
-import fs from 'fs';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
