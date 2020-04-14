@@ -1,5 +1,4 @@
 import { ERROR_CODE } from './Errors';
-import { argv } from './CommandLineParser';
 
 import { execSync } from 'child_process';
 import colors from 'colors';
@@ -72,9 +71,6 @@ export function getOutputDirectoriesList(outDirArg: string) {
         dirsList = sanitizeOutDirsList(readFileToArray(outDirArg));
     else
         dirsList = [outDirArg];
-
-    if (argv.verbose)
-        console.log(dirsList);
 
     return dirsList;
 }

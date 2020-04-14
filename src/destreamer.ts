@@ -1,6 +1,6 @@
 import {
-    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle,
-    ffmpegTimemarkToChunk, makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
+    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
+    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
 } from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
@@ -141,6 +141,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         return;
     }
+
+    if (argv.verbose)
+        console.log(outputDirectories);
 
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
