@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+cd ..
 
 # vars
 chromeRev=`cat node_modules/puppeteer/package.json | grep chromium_revision | grep -oP '"([0-9]+)"' | cut -d"\"" -f2`
