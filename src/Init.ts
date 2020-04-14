@@ -17,7 +17,7 @@ export function checkRequirements() {
 }
 
 // TODO: implement check for absolute path for correct console logging
-export function createVideoDir(directory: string) {
+export function makeOutputDirectory(directory: string) {
     if (!fs.existsSync(directory)) {
         console.log('Creating output directory: ' +
             process.cwd() + path.sep + directory);
@@ -26,7 +26,7 @@ export function createVideoDir(directory: string) {
 }
 
 
-export function handleSetup() {
+export function hookEventHandlers() {
     process.on('unhandledRejection', (reason) => {
         console.error(colors.red('Unhandled error!\nTimeout or fatal error, please check your downloads and try again if necessary.\n'));
         console.error(colors.red(reason as string));
