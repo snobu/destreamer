@@ -149,7 +149,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
-        let previousChunks = 0;
         const pbar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
@@ -187,13 +186,10 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // set events
         ffmpegCmd.on('update', (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
-            const incChunk = currentChunks - previousChunks;
 
-            pbar.increment(incChunk, {
+            pbar.update(currentChunks, {
                 speed: data.bitrate
             });
-
-            previousChunks = currentChunks;
         });
 
         ffmpegCmd.on('error', (error: any) => {
