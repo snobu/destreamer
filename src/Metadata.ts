@@ -17,7 +17,7 @@ function durationToTotalChunks(duration: string) {
     const mins = durationObj['minutes'] ?? 0;
     const secs = Math.ceil(durationObj['seconds'] ?? 0);
 
-    return hrs * 1000 + mins * 100 + secs;
+    return (hrs * 60) + mins + (secs / 60);
 }
 
 
