@@ -174,6 +174,13 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ]));
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
+        const cleanupFn = function () {
+            pbar.stop();
+
+            try {
+                fs.unlinkSync(outputPath);
+            } catch(e) {}
+        }
 
         pbar.start(video.totalChunks, 0, {
             speed: '0'
@@ -203,13 +210,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
 
-        process.on('SIGINT', () => {
-            pbar.stop();
-
-            try {
-                fs.unlinkSync(outputPath);
-            } catch (e) {}
-        });
+        process.on('SIGINT', cleanupFn);
 
         // let the magic begin...
         await new Promise((resolve: any, reject: any) => {
@@ -221,6 +222,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             ffmpegCmd.spawn();
         });
+
+        process.off('SIGINT', cleanupFn);
     }
 }
 
