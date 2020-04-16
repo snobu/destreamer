@@ -15,6 +15,7 @@ import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
 import path from 'path';
+import fs from 'fs';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
@@ -197,6 +198,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         ffmpegCmd.on('error', (error: any) => {
             pbar.stop();
+            fs.unlinkSync(outputPath);
             console.log(`\nffmpeg returned an error: ${error.message}`);
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
