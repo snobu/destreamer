@@ -23,6 +23,10 @@
         "semi": [2, "always"],
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": "error",
-        "quotes": [2, "single", { "avoidEscape": true }]
+        "quotes": [2, "single", { "avoidEscape": true }],
+        "padding-line-between-statements": [
+            "error",
+            { "blankLine": "always", "prev": "*", "next": "return" }
+        ]
     }
 }

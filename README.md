@@ -85,21 +85,33 @@ Options:
                                                    [boolean] [default: false]
 ```
 
-Make sure you use the right escape char for your shell if using line breaks (as this example shows).
+Make sure you use the right escape char for your shell if using line breaks.
 
-For PowerShell your escape char is the backtick (`) instead of backslash (\\), for cmd.exe use caret (^).
-
-```
-$ node destreamer.js --username username@example.com --outputDirectory "videos" \
+Bash &mdash;
+```bash
+./destreamer.sh --username username@example.com --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
-                "https://web.microsoftstream.com/video/VIDEO-2" \
-                "https://web.microsoftstream.com/video/VIDEO-3"
+                "https://web.microsoftstream.com/video/VIDEO-2"
+```
+
+PowerShell &mdash;
+```powershell
+.\destreamer.ps1 --username username@example.com --outputDirectory "videos" `
+    --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" `
+                "https://web.microsoftstream.com/video/VIDEO-2"
+```
+
+cmd.exe &mdash;
+```cmd
+destreamer --username username@example.com --outputDirectory "videos" ^
+    --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" ^
+                "https://web.microsoftstream.com/video/VIDEO-2"
 ```
 
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension. Run destreamer as follows:
 ```
-$ node destreamer.js --username username@example.com --outputDirectory "videos" \
-    --videoUrls list.txt
+./destreamer.sh --username username@example.com --outputDirectory "videos" \
+    --videoUrlsFile list.txt
 ```
 
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
@@ -108,7 +120,6 @@ You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
 ## RANDOM NOTE
 
-## IMPORTANT NOTE
 Just ignore this error, we already have what we need to start the download, no time to deal with collaterals -
 
 ![image](https://user-images.githubusercontent.com/6472374/77905069-4c585000-728e-11ea-914e-26f1ce5e595b.png)

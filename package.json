@@ -4,14 +4,13 @@
     "type": "git",
     "url": "git://github.com/snobu/destreamer.git"
   },
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Save Microsoft Stream videos for offline enjoyment.",
   "main": "build/src/destreamer.js",
   "bin": "build/src/destreamer.js",
   "scripts": {
     "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
-    "run": "node ./build/src/destreamer.js",
-    "start": "npm run -s build & npm run -s run",
+    "start": "node ./build/src/destreamer.js process.argv",
     "test": "mocha build/test"
   },
   "keywords": [],

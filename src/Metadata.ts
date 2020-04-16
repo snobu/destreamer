@@ -60,6 +60,6 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
             posterImage: posterImage
         });
     }));
-
+    
     return metadata;
 }
