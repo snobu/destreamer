@@ -194,13 +194,21 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         ffmpegCmd.on('error', (error: any) => {
             pbar.stop();
-            fs.unlinkSync(outputPath);
+
+            try {
+                fs.unlinkSync(outputPath);
+            } catch (e) {}
+
             console.log(`\nffmpeg returned an error: ${error.message}`);
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
 
         process.on('SIGINT', () => {
             pbar.stop();
+
+            try {
+                fs.unlinkSync(outputPath);
+            } catch (e) {}
         });
 
         // let the magic begin...
