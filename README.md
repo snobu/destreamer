@@ -14,6 +14,7 @@ This release would not have been possible without the code and time contributed 
 
 ## What's new
 
+- Major code refactoring
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
 - We removed the dependency on `youtube-dl`.
 - Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
@@ -103,6 +104,10 @@ You can use an absolute path for `-o` (output directory), for example `/mnt/vide
 ![screenshot](assets/screenshot-win.png)
 
 By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
+
+## Contributing
+
+Contributions are welcome. Open an issue first before sending in a pull request. All pull requests require at least one code review.
 
 ## Found a bug?
 
