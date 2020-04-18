@@ -10,11 +10,13 @@
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
-## News
+## What's new
 
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
 - We removed the dependency on `youtube-dl`.
-- Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API 
+- Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
+- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list)
+- Fixed a wide variety of other bugs, maybe introduced a few new ones :)
 
 ## Disclaimer
 
@@ -74,7 +76,7 @@ $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" -o /Users/h
 Download two or more videos -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" \
-                    "https://web.microsoftstream.com/video/VIDEO-2"
+                     "https://web.microsoftstream.com/video/VIDEO-2"
 ```
 
 Download many videos but read URLs from a file -
