@@ -76,9 +76,9 @@ Download a video -
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
-Download a video and speed up the interactive login by automagically filling in the username -
+Download a video and speed up the interactive login by automagically filling in the username in both microsoft and Polimi -
 ```sh
-$ ./destreamer.sh -u user@example.com -i "https://web.microsoftstream.com/video/VIDEO-1"
+$ ./destreamer.sh -u user@example.com -c "YourPersonCode" -p "YourPassword" -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
 Download a video to a custom path -
