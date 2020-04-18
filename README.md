@@ -107,7 +107,7 @@ By default, downloads are saved under `videos/` unless specified by `-o` (output
 
 ## Contributing
 
-Contributions are welcome. Open an issue first before sending in a pull request. All pull requests require at least one code review.
+Contributions are welcome. Open an issue first before sending in a pull request. All pull requests require at least one code review before they are merged to master.
 
 ## Found a bug?
 
