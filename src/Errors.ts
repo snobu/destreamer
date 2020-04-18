@@ -23,7 +23,8 @@ export const Error: IError = {
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
                                         'Timeout or fatal error, please check your downloads directory and try again',
 
-    [ERROR_CODE.ELEVATED_SHELL]:        'Running in an elevated shell',
+    [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
+                                        'Please run in a regular, non-elevated window.',
 
     [ERROR_CODE.INVALID_OUTPUT_DIR]:    'Unable to create output directory',
 
@@ -32,7 +33,7 @@ export const Error: IError = {
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]:      'Unknown FFmpeg error',
 
-    [ERROR_CODE.INVALID_INPUT_URLS]:    'No valid URL in the input',
+    [ERROR_CODE.INVALID_INPUT_URLS]:    'No valid URL from input',
 
     [ERROR_CODE.OUTDIRS_URLS_MISMATCH]: 'Output directories and URLs mismatch!\n' +
                                         'You must input the same number of URLs and output directories',
