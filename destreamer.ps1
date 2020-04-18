@@ -1,0 +1,1 @@
+node.exe build\src\destreamer.js $args
