@@ -1,14 +1,9 @@
-# Destreamer
+## TO DO
 
-<a href="https://github.com/snobu/destreamer/actions">
-  <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
-</a>
+// Add instructions on how to setup your dev environment for destreamer
 
-![](logo.png)
+## Build a release
 
-## Saves Microsoft Stream videos for offline enjoyment
-
-## HOW TO BUILD FOR RELEASE
 Destreamer builder supports the following environments:
 * Linux
 * WLS (Windows Linux Subsystem)
