@@ -4,9 +4,9 @@
 
 ![destreamer](assets/logo.png)
 
-## Saves Microsoft Stream videos for offline enjoyment
+# Saves Microsoft Stream videos for offline enjoyment
 
-## v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
+### v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
