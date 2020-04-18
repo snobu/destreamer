@@ -6,7 +6,7 @@
 
 _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
-# Saves Microsoft Stream videos for offline enjoyment
+# Saves Microsoft Stream videos for offline enjoyment (optimized for Polimi Students)
 
 ### v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
 
