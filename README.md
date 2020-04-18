@@ -30,7 +30,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 ## Prereqs
 
 - **Node.js**: anything above v8.0 seems to work. A GitHub Action runs tests on all major Node versions on every commit.
-- **npm**: Usually comes with Node.js, type `npm` in your terminal to check for its presence
+- **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
@@ -39,7 +39,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 
 To build destreamer run the following commands, in order -
 - `npm install`
-- `npm run -s build`
+- `npm run build`
 
 ## Usage
 
