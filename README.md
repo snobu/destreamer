@@ -68,6 +68,8 @@ Options:
 Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
 PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
 
+Note that destreamer won't run in an elevated (Administrator/root) shell.
+
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
