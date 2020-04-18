@@ -136,6 +136,7 @@ export function ffmpegTimemarkToChunk(timemark: string) {
     const hrs = parseInt(timeVals[0]);
     const mins = parseInt(timeVals[1]);
     const secs = parseInt(timeVals[2]);
+    const chunk = (hrs * 60) + mins + (secs / 60);
 
-    return (hrs * 60) + mins + (secs / 60);
+    return chunk; 
 }

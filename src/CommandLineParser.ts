@@ -5,43 +5,51 @@ import colors from 'colors';
 import fs from 'fs';
 
 export const argv = yargs.options({
-    url: {
+    videoUrls: {
+        alias: 'i',
         describe: 'List of video urls',
         type: 'array',
         demandOption: false
     },
-    'from-file': {
+    videoUrlsFile: {
+        alias: 'f',
         describe: 'Path to txt file containing the urls',
         type: 'string',
         demandOption: false
     },
     username: {
+        alias: 'u',
         type: 'string',
         demandOption: false
     },
-    outdir: {
+    outputDirectory: {
+        alias: 'o',
         describe: 'The directory where destreamer will save your downloads [default: videos]',
         type: 'string',
         demandOption: false
     },
-    'out-dirs-from-file': {
+    outputDirectories: {
+        alias: 'O',
         describe: 'Path to a txt file containing one output directory per video',
         type: 'string',
         demandOption: false
     },
-    'no-experiments': {
-        describe: `Disable experimental features (do not display video thumbnails)`,
+    noExperiments: {
+        alias: 'x',
+        describe: `Do not attempt to render video thumbnails in the console`,
         type: 'boolean',
         default: false,
         demandOption: false
     },
     simulate: {
+        alias: 's',
         describe: `Disable video download and print metadata information to the console`,
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
+        alias: 'v',
         describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
         type: 'boolean',
         default: false,

@@ -48,13 +48,13 @@ export const enum CLI_ERROR {
     GRACEFULLY_STOP           = ' ', // gracefully stop execution, yargs way
 
     MISSING_REQUIRED_ARG      = 'You must specify a URLs source.\n' +
-                                'Valid options are --videoUrls or --videoUrlsFile.',
+                                'Valid options are -i for one or more URLs separated by sapce or -f for URLs from file.',
 
     VIDEOURLS_ARG_CONFLICT    = 'Too many URLs sources specified!\n' +
-                                'Please specify a single URLs source with either --videoUrls or --videoUrlsFile.',
+                                'Please specify a single source, either -i or -f (URLs from file)',
 
     OUTPUTDIR_ARG_CONFLICT    = 'Too many output arguments specified!\n' +
-                                'Please specify a single output argument with either --outputDirectory or --outputDirectories.',
+                                'Please specify a single output argument, either -o or --outputDirectories.',
 
     FILE_INPUT_VIDEOURLS_ARG  = 'Wrong input for option --videoUrls.\n' +
                                 'To read URLs from file, use --videoUrlsFile option.',

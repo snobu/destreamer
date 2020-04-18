@@ -163,17 +163,34 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
 
         // Very experimental inline thumbnail rendering
-        if (!argv.noThumbnails)
+        if (!argv.noExperiments)
             await drawThumbnail(video.posterImage, session.AccessToken);
 
-        console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n');
+        console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+
+        // Try to get a fresh cookie, else gracefully fall back
+        // to our session access token (Bearer)
+        let freshCookie = await tokenCache.RefreshToken(session);
+        let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
+        if (freshCookie) {
+            console.info(colors.green('Using a fresh cookie.'));
+            headers = `Cookie:\ ${freshCookie}`;
+        }
 
         const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
-            ['headers', `Authorization:\ Bearer\ ${session.AccessToken}`]
+            ['headers', headers]
         ]));
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
+        
+        const cleanupFn = function () {
+            pbar.stop();
+
+            try {
+                fs.unlinkSync(outputPath);
+            } catch(e) {}
+        }
 
         pbar.start(video.totalChunks, 0, {
             speed: '0'
@@ -203,13 +220,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
 
-        process.on('SIGINT', () => {
-            pbar.stop();
-
-            try {
-                fs.unlinkSync(outputPath);
-            } catch (e) {}
-        });
+        process.on('SIGINT', cleanupFn);
 
         // let the magic begin...
         await new Promise((resolve: any, reject: any) => {
@@ -221,6 +232,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             ffmpegCmd.spawn();
         });
+        
+        process.off('SIGINT', cleanupFn);
     }
 }
 

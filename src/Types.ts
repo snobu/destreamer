@@ -4,7 +4,6 @@ export type Session = {
     ApiGatewayVersion: string;
 }
 
-
 export type Metadata = {
     date: string;
     totalChunks: number; // Abstraction of FFmpeg timemark
