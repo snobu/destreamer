@@ -196,24 +196,3 @@ function windowsFileExtensionBadBehaviorFix(argv: any) {
 
     return true;
 }
-
-/**
- * check for polimi state
- * return state
- * state = 0 => no code no pass
- * state = 1 => only code
- * state = 2 => only pass
- * state = 3 => code & pass
- */
-function getPolimiState(argv: any) {
-    let state: number = 0;
-    if(argv.polimicode) {
-        state += 1;
-    }
-
-    if(argv.polimipass) {
-        state += 2;
-    }
-
-    return state
-}

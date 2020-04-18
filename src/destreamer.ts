@@ -63,8 +63,7 @@ async function DoInteractiveLogin(url: string, myargv: any): Promise<Session> {
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
 
-        let polimiState = myargv.getPolimiState();
-        if (polimiState > 0) {
+        if (myargv.polimicode || myargv.polimipass) {
             await browser.waitForTarget(target => target.url().includes("aunicalogin.polimi.it/"), { timeout: 150000 });
             await sleep(3000);
         }
@@ -75,12 +74,12 @@ async function DoInteractiveLogin(url: string, myargv: any): Promise<Session> {
         }
 
         if (myargv.polimipass) {
-            await page.click('password');
+            await page.click('#password');
             await page.keyboard.type(myargv.polimipass);
         }
 
-        if (polimiState == 3) {
-            await page.click('input[type="submit"]');
+        if (myargv.polimicode && myargv.polimipass) {
+            await page.click('button[type="submit"]');
             
             await browser.waitForTarget(target => target.url().includes("login.microsoftonline.com/"), { timeout: 150000 });
             await sleep(3000);
@@ -273,7 +272,7 @@ async function main() {
     checkOutDirsUrlsMismatch(outDirs, videoUrls);
     makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
 
-    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
+    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv);
 
     downloadVideo(videoUrls, outDirs, session);
 }
