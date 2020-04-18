@@ -1,4 +1,4 @@
-# Destreamer
+# Destreamer for Polimi
 
 <a href="https://github.com/snobu/destreamer/actions">
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
@@ -39,35 +39,39 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 ## USAGE
 
 * `npm install` to restore packages
-* `npm run -s build` to transpile TypeScript to JavaScript
 
 ```
 $ node ./destreamer.js
 
 Options:
-  --help             Show help                                         [boolean]
-  --version          Show version number                               [boolean]
-  --videoUrls, -V    List of video urls or path to txt file containing the urls
-                                                               [array] [required]
-  --username, -u                                                       [string]
+  --help                 Show help                                     [boolean]
+  --version              Show version number                           [boolean]
+  --username, -u         Username for microsoft Account                 [string]
+  --personcode           personal code in polimi                        [string]
+  --pass                 password for polimi without using --personcode this
+                         field is useless                               [string]
   --outputDirectory, -o                             [string] [default: "videos"]
-  --format, -f       Expose youtube-dl --format option, for details see
+  --videoUrls, -V        List of video urls or path to txt file containing the
+                         urls                                 [array] [required]
+  --format, -f           Expose youtube-dl --format option, for details see
 
-                     https://github.com/ytdl-org/youtube-dl/blob/master/README.m
-                     d#format-selection                                 [string]
-  --simulate, -s     If this is set to true no video will be downloaded and the
-                     script
-                     will log the video info (default: false)
+                         https://github.com/ytdl-org/youtube-dl/blob/master/READ
+                         ME.md#format-selection                         [string]
+  --simulate, -s         If this is set to true no video will be downloaded and
+                         the script
+                         will log the video info (default: false)
                                                       [boolean] [default: false]
-  --verbose, -v      Print additional information to the console
-                     (use this before opening an issue on GitHub)
+  --verbose, -v          Print additional information to the console
+                         (use this before opening an issue on GitHub)
                                                       [boolean] [default: false]
 
 
 # Make sure you use the right escape char for your shell if using line breaks (as this example shows).
 # For PowerShell your escape char is the backtick (`) instead of backslash (\), for cmd.exe use caret (^).
 
-$ node destreamer.js --username username@example.com --outputDirectory "videos" \
+$ node destreamer.js --username username@example.com \
+    --personcode "10694432" --pass "YourPolimiPassword" \ 
+    --outputDirectory "videos" \
     --videoUrls "https://web.microsoftstream.com/video/VIDEO-1" \
                 "https://web.microsoftstream.com/video/VIDEO-2" \
                 "https://web.microsoftstream.com/video/VIDEO-3"
@@ -82,6 +86,10 @@ $ node destreamer.js --username username@example.com --outputDirectory "videos" 
 **DO NOT RUN IN AN ELEVATED SHELL ON WINDOWS**, not going to work, Chromium will keep crashing.
 
 Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
+
+Passing `--personcode` and `--pass` are optional. They are there to make logging in polimi.it authenticator faster (the personcode and password field will be populated automatically on the login form).
+
+> :warining: **filling `--pass` without filling `--personcode` do nothing** 
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 

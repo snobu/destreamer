@@ -6,3 +6,6 @@ videos
 
 swagger.json
 cc.json
+
+.idea/
+.DS_store
