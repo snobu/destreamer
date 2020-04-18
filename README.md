@@ -3,7 +3,8 @@
 </a>
 
 ![destreamer](assets/logo.png)
-(Alternative art proposals are welcome! Submit one through an Issue.)
+
+_(Alternative art proposals are welcome! Submit one through an Issue.)_
 
 # Saves Microsoft Stream videos for offline enjoyment
 
@@ -67,6 +68,11 @@ PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
+```
+
+Download a video and speed up the interactive login by automagically filling in the username -
+```sh
+$ ./destreamer.sh -u user@example.com -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
 Download a video to a custom path -
