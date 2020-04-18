@@ -40,6 +40,7 @@ Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) ap
 To build destreamer run the following commands, in order -
 - `npm install`
 - `npm run -s build`
+- `chmod +x destreamer.sh` (just in Linux and MACOSX)
 
 ## Usage
 
@@ -51,7 +52,9 @@ Options:
   --version                Show version number                         [boolean]
   --videoUrls, -i          List of video urls                            [array]
   --videoUrlsFile, -f      Path to txt file containing the urls         [string]
-  --username, -u                                                        [string]
+  --username, -u           Microsoft account username                   [string]
+  --polimicode, -c         Polimi person code                           [string]
+  --polimipass, -p         Polimi password                              [string]
   --outputDirectory, -o    The directory where destreamer will save your
                            downloads [default: videos]                  [string]
   --outputDirectories, -O  Path to a txt file containing one output directory
