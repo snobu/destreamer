@@ -89,7 +89,7 @@ Passing `--username` is optional. It's there to make logging in faster (the user
 
 Passing `--personcode` and `--pass` are optional. They are there to make logging in polimi.it authenticator faster (the personcode and password field will be populated automatically on the login form).
 
-> :warining: **filling `--pass` without filling `--personcode` do nothing** 
+> ⚠️ **filling `--pass` without filling `--personcode` do nothing** 
 
 You can use an absolute path for `--outputDirectory`, for example `/mnt/videos`.
 
