@@ -111,4 +111,6 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 
 ## Found a bug?
 
-Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
+
+For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
