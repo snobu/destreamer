@@ -4,7 +4,7 @@
 
 ![destreamer](assets/logo.png)
 
-_(Alternative art proposals are welcome! Submit one through an Issue.)_
+_(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 # Saves Microsoft Stream videos for offline enjoyment
 
