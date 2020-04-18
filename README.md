@@ -3,6 +3,7 @@
 </a>
 
 ![destreamer](assets/logo.png)
+(Alternative art proposals are welcome! Submit one through an Issue.)
 
 # Saves Microsoft Stream videos for offline enjoyment
 
