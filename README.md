@@ -31,7 +31,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 - **Node.js**: You'll need Node.js v10 or higher. A GitHub Action runs tests on all major Node versions on every commit.
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
-- **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
+- [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 - **git**: one or more npm dependencies require git. Install git with your favorite package manager or https://git-scm.com/downloads
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
@@ -123,3 +123,6 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
 
 For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+
+
+[ffmpeg]: https://www.ffmpeg.org/download.html
