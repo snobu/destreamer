@@ -106,7 +106,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     for (const url of videoUrls) {
         try {
             guid = url.split('/').pop();
-
+            guid = guid != undefined ? guid.split('?')[0] : guid; // Account for URLs of the form: https://web.microsoftstream.com/video/<videoId>?channelId=<channelId>
         } catch (e) {
             console.error(`${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
