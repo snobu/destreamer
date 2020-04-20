@@ -105,10 +105,10 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
     for (const url of videoUrls) {
         try {
-            guid = url.split('/').pop();
-
+            const urlObj = new URL(url);
+            guid = urlObj.pathname.split('/').pop();
         } catch (e) {
-            console.error(`${e.message}`);
+            console.error(`Unrecognized URL format in ${url}: ${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
