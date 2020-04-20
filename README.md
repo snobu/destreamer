@@ -29,7 +29,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 ## Prereqs
 
-- **Node.js**: anything above v8.0 seems to work. A GitHub Action runs tests on all major Node versions on every commit.
+- **Node.js**: You'll need Node.js v10 or higher. A GitHub Action runs tests on all major Node versions on every commit.
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 - **git**: one or more npm dependencies require git. Install git with your favorite package manager or https://git-scm.com/downloads
