@@ -149,6 +149,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
     let columns = 30;
+    console.log(`process.stdout.columns = ${process.stdout.columns}`)
     if (!process.stdout.columns || process.stdout.columns === 0) {
         columns = process.stdout.columns
     }
