@@ -154,6 +154,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
+            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
             barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
             hideCursor: true,
