@@ -171,8 +171,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         if (!process.stdout.columns) {
             console.info(colors.red('Unable to get number of columns from terminal.\n' +
                 'This happens sometimes in Cygwin/MSYS.\n' +
-                'No progress bar can be rendered, ' +
-                'however the download process should not be affected.'));
+                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                'Please use PowerShell or cmd.exe to run destreamer.'));
         }
 
         // Try to get a fresh cookie, else gracefully fall back
