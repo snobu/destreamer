@@ -74,7 +74,7 @@ Options:
 Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
 PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
 
-Note that destreamer won't run in an elevated (Administrator/root) shell.
+Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
 
 Download a video -
 ```sh
