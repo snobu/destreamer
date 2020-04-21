@@ -16,6 +16,7 @@ import puppeteer from 'puppeteer';
 import colors from 'colors';
 import path from 'path';
 import fs from 'fs';
+import { URL } from 'url';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
@@ -233,7 +234,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             ffmpegCmd.spawn();
         });
         
-        process.off('SIGINT', cleanupFn);
+        process.removeListener('SIGINT', cleanupFn);
     }
 }
 
