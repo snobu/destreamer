@@ -148,18 +148,13 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(outputDirectories);
 
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
-    let columns = 30;
-    console.log(`process.stdout.columns = ${process.stdout.columns}`)
-    if (!process.stdout.columns || process.stdout.columns === 0) {
-        columns = process.stdout.columns
-    }
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
         const pbar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
-            barsize: Math.floor(columns / 3),
+            barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
             hideCursor: true,
         });
