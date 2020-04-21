@@ -154,7 +154,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
-            barsize: Math.floor(process.stdout.columns / 3),
+            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
+            barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
             hideCursor: true,
         });
@@ -168,6 +169,12 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        if (!process.stdout.columns) {
+            console.info(colors.red('Unable to get number of columns from terminal.\n' +
+                'This happens sometimes in Cygwin/MSYS.\n' +
+                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+        }
 
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
@@ -208,6 +215,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.update(currentChunks, {
                 speed: data.bitrate
             });
+
+            // Graceful fallback in case we can't get columns (Cygwin/MSYS)
+            if (!process.stdout.columns) {
+                process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
+            }
         });
 
         ffmpegCmd.on('error', (error: any) => {
