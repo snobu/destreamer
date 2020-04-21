@@ -215,6 +215,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.update(currentChunks, {
                 speed: data.bitrate
             });
+
+            // Graceful fallback in case we can't get columns (Cygwin/MSYS)
+            if (!process.stdout.columns) {
+                process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
+            }
         });
 
         ffmpegCmd.on('error', (error: any) => {
