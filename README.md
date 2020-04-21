@@ -99,7 +99,7 @@ $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" \
 
 Download many videos but read URLs from a file -
 ```sh
-$ ./destreame.sh -f list.txt
+$ ./destreamer.sh -f list.txt
 ```
 
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
