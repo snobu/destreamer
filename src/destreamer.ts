@@ -148,12 +148,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(outputDirectories);
 
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
-    if (!process.stdout.columns) {
-        console.info(colors.red('Unable to get number of columns from terminal.\n' +
-            'This happens sometimes in Cygwin/MSYS.\n' +
-            'No progress bar can be rendered, ' +
-            'however the download process should not be affected.'));
-    }
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
         const pbar = new cliProgress.SingleBar({
@@ -174,6 +168,12 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        if (!process.stdout.columns) {
+            console.info(colors.red('Unable to get number of columns from terminal.\n' +
+                'This happens sometimes in Cygwin/MSYS.\n' +
+                'No progress bar can be rendered, ' +
+                'however the download process should not be affected.'));
+        }
 
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
