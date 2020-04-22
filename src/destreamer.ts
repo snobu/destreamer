@@ -147,6 +147,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
     if (argv.verbose)
         console.log(outputDirectories);
 
+    let refreshTokenInterval: object | null = null;
+
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
@@ -179,9 +181,14 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
         let freshCookie = await tokenCache.RefreshToken(session);
+
+        // Don't remove the "useless" escapes otherwise ffmpeg will
+        // not pick up the header
+        // eslint-disable-next-line no-useless-escape
         let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
         if (freshCookie) {
             console.info(colors.green('Using a fresh cookie.'));
+            // eslint-disable-next-line no-useless-escape
             headers = `Cookie:\ ${freshCookie}`;
         }
 
@@ -208,8 +215,16 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
 
-        // set events
         ffmpegCmd.on('update', (data: any) => {
+            if (!refreshTokenInterval) {
+                refreshTokenInterval = setInterval(async () => {
+                    let date = new Date();
+                    process.stdout.write('\n[ Refreshed cookie at ' +
+                        `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} ]\n`);
+                    freshCookie = await tokenCache.RefreshToken(session);
+                }, 5 * 1000);
+            }
+
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
 
             pbar.update(currentChunks, {
