@@ -110,7 +110,13 @@ You can use an absolute path for `-o` (output directory), for example `/mnt/vide
 
 ## Expected output
 
+Windows Terminal -
+
 ![screenshot](assets/screenshot-win.png)
+
+iTerm2 on a Mac -
+
+![screenshot](assets/screenshot-mac.png)
 
 By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
 
