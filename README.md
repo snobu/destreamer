@@ -36,6 +36,15 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
+## Limits and Limitations
+
+Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
+PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
+
+Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
+
+**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
+
 ## How to build
 
 To build destreamer clone this repository, install dependencies and run the build script -
@@ -46,15 +55,6 @@ $ cd destreamer
 $ npm install
 $ npm run build
 ```
-
-## Limits and Limitations
-
-Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
-PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
-
-Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
-
-**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
 
 ## Usage
 
