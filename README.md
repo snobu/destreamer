@@ -32,7 +32,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 - [**Node.js**][node]: You'll need Node.js version 8.0 or higher. A GitHub Action runs tests on all major Node versions on every commit.
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
-- **git**: one or more npm dependencies require git. Install git with your favorite package manager or https://git-scm.com/downloads
+- [**git**][git]: one or more npm dependencies require git.
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
@@ -138,3 +138,4 @@ For other bugs, please open an [issue](https://github.com/snobu/destreamer/issue
 [ffmpeg]: https://www.ffmpeg.org/download.html
 [xming]: https://sourceforge.net/projects/xming/
 [node]: https://nodejs.org/en/download/
+[git]: https://git-scm.com/downloads
