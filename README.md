@@ -47,6 +47,15 @@ $ npm install
 $ npm run build
 ```
 
+## Limits and Limitations
+
+Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
+PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
+
+Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
+
+**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
+
 ## Usage
 
 ```
@@ -70,13 +79,6 @@ Options:
                            before opening an issue on GitHub)
                                                       [boolean] [default: false]
 ```
-
-Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
-PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
-
-Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
-
-**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
 
 Download a video -
 ```sh
