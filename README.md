@@ -36,7 +36,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
-## Limits and Limitations
+## Limits and limitations
 
 Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
 PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
