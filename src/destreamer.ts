@@ -11,6 +11,8 @@ import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
 
+import { testAria } from "./test";
+
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
@@ -183,7 +185,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ]));
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
-        
+
         const cleanupFn = function () {
             pbar.stop();
 
@@ -232,7 +234,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             ffmpegCmd.spawn();
         });
-        
+
         process.off('SIGINT', cleanupFn);
     }
 }
@@ -249,7 +251,8 @@ async function main() {
 
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
-    downloadVideo(videoUrls, outDirs, session);
+    // downloadVideo(videoUrls, outDirs, session);
+    testAria(videoUrls[0], session)
 }
 
 
