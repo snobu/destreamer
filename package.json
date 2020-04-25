@@ -37,6 +37,7 @@
     "is-elevated": "^3.0.0",
     "iso8601-duration": "^1.2.0",
     "jwt-decode": "^2.2.0",
+    "m3u8-parser": "^4.4.0",
     "puppeteer": "^2.1.1",
     "sanitize-filename": "^1.6.3",
     "terminal-image": "^0.2.0",
