@@ -23,6 +23,10 @@ import cliProgress from 'cli-progress';
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 const tokenCache = new TokenCache();
 
+// The cookie lifetime is one hour,
+// let's refresh every 3000 seconds.
+const REFRESH_TOKEN_INTERVAL = 3000;
+
 async function init() {
     setProcessEvents(); // must be first!
 
@@ -127,6 +131,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
+    let lastTokenRefresh: number;
 
     console.log('Fetching metadata...');
 
@@ -147,7 +152,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
     if (argv.verbose)
         console.log(outputDirectories);
 
-    let refreshTokenInterval: object | null = null;
 
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
@@ -187,10 +191,21 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // eslint-disable-next-line no-useless-escape
         let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
         if (freshCookie) {
+            lastTokenRefresh = Date.now();
+            session.Cookie = freshCookie;
             console.info(colors.green('Using a fresh cookie.'));
             // eslint-disable-next-line no-useless-escape
             headers = `Cookie:\ ${freshCookie}`;
         }
+
+        const RefreshTokenMaybe = async (): Promise<void> => {
+            let elapsed = Date.now() - lastTokenRefresh;
+            if (elapsed > REFRESH_TOKEN_INTERVAL * 1000) {
+                console.info(colors.green('\nRefreshing access token...'));
+                lastTokenRefresh = Date.now();
+                freshCookie = await tokenCache.RefreshToken(session);
+            }
+        };
 
         const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
@@ -199,7 +214,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
         
-        const cleanupFn = function () {
+        const cleanupFn = (): void => {
             pbar.stop();
 
             try {
@@ -216,16 +231,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ffmpegCmd.addOutput(ffmpegOutput);
 
         ffmpegCmd.on('update', (data: any) => {
-            if (!refreshTokenInterval) {
-                refreshTokenInterval = setInterval(async () => {
-                    let date = new Date();
-                    process.stdout.write('\n[ Refreshed cookie at ' +
-                        `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} ]\n`);
-                    freshCookie = await tokenCache.RefreshToken(session);
-                }, 5 * 1000);
-            }
-
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            RefreshTokenMaybe();
 
             pbar.update(currentChunks, {
                 speed: data.bitrate
