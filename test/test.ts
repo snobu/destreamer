@@ -7,27 +7,19 @@ import fs from 'fs';
 let browser: any;
 let page: any;
 
-before(async () => {
-    browser = await puppeteer.launch({
-        headless: true,
-        args: ['--disable-dev-shm-usage']
-    });
-    page = await browser.newPage();
-});
-
 describe('Puppeteer', () => {
     it('should grab GitHub page title', async () => {
-        await page.goto("https://github.com/", { waitUntil: 'networkidle2' });
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--disable-dev-shm-usage']
+        });
+        page = await browser.newPage();
+        await page.goto("https://github.com/", { waitUntil: 'load' });
         let pageTitle = await page.title();
         assert.equal(true, pageTitle.includes('GitHub'));
-
+        await browser.close();
     }).timeout(15000); // yeah, this may take a while...
 });
-
-after(async () => {
-    await browser.close();
-});
-
 
 describe('Destreamer', () => {
     it('should parse and sanitize URL list from file', () => {
