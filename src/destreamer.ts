@@ -193,7 +193,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         if (freshCookie) {
             lastTokenRefresh = Date.now();
             session.Cookie = freshCookie;
-            console.info(colors.green('Using a fresh cookie.'));
+            if (argv.verbose) {
+                console.info(colors.green('Using a fresh cookie.'));
+            }
             // eslint-disable-next-line no-useless-escape
             headers = `Cookie:\ ${freshCookie}`;
         }
@@ -201,7 +203,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         const RefreshTokenMaybe = async (): Promise<void> => {
             let elapsed = Date.now() - lastTokenRefresh;
             if (elapsed > REFRESH_TOKEN_INTERVAL * 1000) {
-                console.info(colors.green('\nRefreshing access token...'));
+                if (argv.verbose) {
+                    console.info(colors.green('\nRefreshing access token...'));
+                }
                 lastTokenRefresh = Date.now();
                 freshCookie = await tokenCache.RefreshToken(session);
             }
