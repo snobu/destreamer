@@ -11,13 +11,14 @@ import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
 
-import { testAria } from "./test";
+import { testAria } from './test';
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
 import path from 'path';
 import fs from 'fs';
+import { URL } from 'url';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
@@ -45,7 +46,7 @@ async function init() {
 }
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId = url.split("/").pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID)
+    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
     const browser = await puppeteer.launch({
@@ -107,10 +108,10 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
     for (const url of videoUrls) {
         try {
-            guid = url.split('/').pop();
-
+            const urlObj = new URL(url);
+            guid = urlObj.pathname.split('/').pop();
         } catch (e) {
-            console.error(`${e.message}`);
+            console.error(`Unrecognized URL format in ${url}: ${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
@@ -155,7 +156,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
-            barsize: Math.floor(process.stdout.columns / 3),
+            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
+            barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
             hideCursor: true,
         });
@@ -169,6 +171,12 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        if (!process.stdout.columns) {
+            console.info(colors.red('Unable to get number of columns from terminal.\n' +
+                'This happens sometimes in Cygwin/MSYS.\n' +
+                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+        }
 
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
@@ -192,7 +200,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             try {
                 fs.unlinkSync(outputPath);
             } catch(e) {}
-        }
+        };
 
         pbar.start(video.totalChunks, 0, {
             speed: '0'
@@ -209,6 +217,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.update(currentChunks, {
                 speed: data.bitrate
             });
+
+            // Graceful fallback in case we can't get columns (Cygwin/MSYS)
+            if (!process.stdout.columns) {
+                process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
+            }
         });
 
         ffmpegCmd.on('error', (error: any) => {
@@ -235,7 +248,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             ffmpegCmd.spawn();
         });
 
-        process.off('SIGINT', cleanupFn);
+        process.removeListener('SIGINT', cleanupFn);
     }
 }
 
@@ -252,7 +265,7 @@ async function main() {
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
     // downloadVideo(videoUrls, outDirs, session);
-    testAria(videoUrls[0], session)
+    testAria(videoUrls[0], session);
 }
 
 

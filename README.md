@@ -29,17 +29,32 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 ## Prereqs
 
-- **Node.js**: anything above v8.0 seems to work. A GitHub Action runs tests on all major Node versions on every commit.
-- **npm**: Usually comes with Node.js, type `npm` in your terminal to check for its presence
-- **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
+- [**Node.js**][node]: You'll need Node.js version 8.0 or higher. A GitHub Action runs tests on all major Node versions on every commit.
+- **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
+- [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
+- [**git**][git]: one or more npm dependencies require git.
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
+## Limits and limitations
+
+Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
+PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
+
+Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
+
+**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
+
 ## How to build
 
-To build destreamer run the following commands, in order -
-- `npm install`
-- `npm run -s build`
+To build destreamer clone this repository, install dependencies and run the build script -
+
+```sh
+$ git clone https://github.com/snobu/destreamer
+$ cd destreamer
+$ npm install
+$ npm run build
+```
 
 ## Usage
 
@@ -65,11 +80,6 @@ Options:
                                                       [boolean] [default: false]
 ```
 
-Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
-PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
-
-Note that destreamer won't run in an elevated (Administrator/root) shell.
-
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
@@ -93,7 +103,7 @@ $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" \
 
 Download many videos but read URLs from a file -
 ```sh
-$ ./destreame.sh -f list.txt
+$ ./destreamer.sh -f list.txt
 ```
 
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
@@ -104,7 +114,13 @@ You can use an absolute path for `-o` (output directory), for example `/mnt/vide
 
 ## Expected output
 
+Windows Terminal -
+
 ![screenshot](assets/screenshot-win.png)
+
+iTerm2 on a Mac -
+
+![screenshot](assets/screenshot-mac.png)
 
 By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
 
@@ -117,3 +133,9 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
 
 For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+
+
+[ffmpeg]: https://www.ffmpeg.org/download.html
+[xming]: https://sourceforge.net/projects/xming/
+[node]: https://nodejs.org/en/download/
+[git]: https://git-scm.com/downloads
