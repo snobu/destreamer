@@ -11,3 +11,5 @@ export type Metadata = {
     playbackUrl: string;
     posterImage: string;
 }
+
+export type PlaylistType = 'video' | 'audio';
