@@ -2,11 +2,11 @@ import { ERROR_CODE } from './Errors';
 
 import { execSync } from 'child_process';
 import colors from 'colors';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 
 function sanitizeUrls(urls: string[]) {
-    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
+    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}-){3}[a-z0-9]{12}$/, 'i');
     const sanitized: string[] = [];
 
     for (let i=0, l=urls.length; i<l; ++i) {
@@ -76,6 +76,36 @@ export function getOutputDirectoriesList(outDirArg: string) {
 }
 
 
+export function createTmpDirectory(dir: string) {
+    if (fs.existsSync(dir))
+        process.exit(ERROR_CODE.INVALID_TMP_DIR);
+    else {
+        try {
+            fs.mkdirSync(dir, { recursive: true });
+        } catch(e) {
+            console.log('CANNOT CREATE TEMP DIRECTORY');
+            process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+        }
+    }
+}
+
+
+export function removeDirectory(dir: string) {
+    if (!fs.existsSync(dir)){
+        console.log(`Can't find ${dir} to remove it`);
+        process.exit(ERROR_CODE.MISSING_DIR);
+    }
+    else {
+        try {
+            fs.removeSync(dir);
+        } catch(e) {
+            console.log(e);
+            process.exit(ERROR_CODE.CANNOT_REMOVE_DIR);
+        }
+    }
+}
+
+
 export function makeOutputDirectories(dirsList: string[]) {
     dirsList.forEach(dir => {
         if (!fs.existsSync(dir)) {
@@ -138,5 +168,5 @@ export function ffmpegTimemarkToChunk(timemark: string) {
     const secs = parseInt(timeVals[2]);
     const chunk = (hrs * 60) + mins + (secs / 60);
 
-    return chunk; 
+    return chunk;
 }
