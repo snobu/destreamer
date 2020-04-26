@@ -43,7 +43,7 @@ PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
 
 Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
 
-**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an XWindow server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. However we didn't test this so it's pure speculation on our part.
+**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an X Window server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. See [this issue for more on WSL v1 and v2][wsl].
 
 ## How to build
 
@@ -139,3 +139,4 @@ For other bugs, please open an [issue](https://github.com/snobu/destreamer/issue
 [xming]: https://sourceforge.net/projects/xming/
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
+[wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950

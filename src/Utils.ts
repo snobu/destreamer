@@ -10,9 +10,7 @@ function sanitizeUrls(urls: string[]) {
     const sanitized: string[] = [];
 
     for (let i=0, l=urls.length; i<l; ++i) {
-        const urlAr = urls[i].split('?');
-        const query = urlAr.length === 2 && urlAr[1] !== '' ? '?'+urlAr[1] : '';
-        let url = urlAr[0];
+        let url = urls[i].split('?')[0];
 
         if (!rex.test(url)) {
             if (url !== '')
@@ -24,7 +22,7 @@ function sanitizeUrls(urls: string[]) {
         if (url.substring(0, 8) !== 'https://')
             url = 'https://'+url;
 
-        sanitized.push(url+query);
+        sanitized.push(url);
     }
 
     if (!sanitized.length)
