@@ -6,6 +6,7 @@ export const enum ERROR_CODE {
     NO_ERROR,
     UNHANDLED_ERROR,
     MISSING_FFMPEG,
+    MISSING_ARIA2C,
     ELEVATED_SHELL,
     CANCELLED_USER_INPUT,
     MISSING_DIR,
@@ -45,6 +46,9 @@ export const Error: IError = {
 
     [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing!\n' +
                                         'Destreamer requires a fairly recent release of FFmpeg to download videos',
+
+    [ERROR_CODE.MISSING_ARIA2C]:        'Aria2c is missing!\n' +
+                                        'Destreamer requires a fairly recent release of Aria2c to download videos',
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]:      'Unknown FFmpeg error',
 

@@ -148,6 +148,14 @@ export function checkRequirements() {
     } catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
+
+    try {
+        const aria2cVer = execSync('aria2c --version').toString().split('\n')[0];
+        console.info(colors.green(`Using ${aria2cVer}\n`));
+
+    } catch (e) {
+        process.exit(ERROR_CODE.MISSING_ARIA2C);
+    }
 }
 
 
