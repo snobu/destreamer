@@ -1,8 +1,9 @@
-import { CLI_ERROR } from './Errors';
+import { CLI_ERROR, ERROR_CODE } from './Errors';
 
 import yargs from 'yargs';
 import colors from 'colors';
 import fs from 'fs-extra';
+import readlineSync from 'readline-sync';
 
 export const argv = yargs.options({
     videoUrls: {
@@ -189,4 +190,15 @@ function windowsFileExtensionBadBehaviorFix(argv: any) {
     }
 
     return true;
+}
+
+
+
+export function askUserChoiche(options: Array<string>): number {
+    let index = readlineSync.keyInSelect(options, 'Which resolution/format do you prefer?');
+
+    if (index === -1)
+        process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
+
+    return index;
 }
