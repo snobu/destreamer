@@ -75,14 +75,16 @@ export function getOutputDirectoriesList(outDirArg: string) {
 
 
 export function createTmpDirectory(dir: string) {
-    if (fs.existsSync(dir))
+    if (fs.existsSync(dir)){
+        console.log(`${dir} already exists`);
         process.exit(ERROR_CODE.INVALID_TMP_DIR);
+    }
     else {
         try {
             fs.mkdirSync(dir, { recursive: true });
         } catch(e) {
             console.log('CANNOT CREATE TEMP DIRECTORY');
-            process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+            process.exit(ERROR_CODE.CANNOT_CREATE_DIR);
         }
     }
 }
@@ -114,7 +116,8 @@ export function makeOutputDirectories(dirsList: string[]) {
                 fs.mkdirSync(dir, { recursive: true });
 
             } catch(e) {
-                process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
+                console.log(`Cannot create ${dir}`);
+                process.exit(ERROR_CODE.CANNOT_CREATE_DIR);
             }
         }
     });
