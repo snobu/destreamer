@@ -17,9 +17,9 @@ This release would not have been possible without the code and time contributed 
 - Major code refactoring
 - Dramatically improved error handling
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
-- We removed the dependency on `youtube-dl`.
+- We removed the dependency on `youtube-dl`
 - Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
-- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list). Still one outstanding edge case here, see _Found a bug_ at the bottom for more.
+- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list)
 - Fixed a major 2FA bug that would sometimes cause a timeout in our code
 - Fixed a wide variety of other bugs, maybe introduced a few new ones :)
 
@@ -132,9 +132,7 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 
 ## Found a bug?
 
-There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
-
-For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
 
 
 [ffmpeg]: https://www.ffmpeg.org/download.html

@@ -56,16 +56,23 @@ export class TokenCache {
         });
     }
 
-    public async RefreshToken(session: Session): Promise<string | null> {
+    public async RefreshToken(session: Session, cookie?: string | null): Promise<string | null> {
         let endpoint = `${session.ApiGatewayUri}refreshtoken?api-version=${session.ApiGatewayVersion}`;
 
-        let response = await axios.get(endpoint,
-            {
-                headers: {
-                    Authorization: `Bearer ${session.AccessToken}`
-                }
-            });
+        let headers: Function = (): object => {
+            if (cookie) {
+                return {
+                    Cookie: cookie
+                };
+            }
+            else {
+                return {
+                    Authorization: 'Bearer ' + session.AccessToken
+                };
+            }
+        }
 
+        let response = await axios.get(endpoint, { headers: headers() });
         let freshCookie: string | null = null;
         
         try {
