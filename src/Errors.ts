@@ -7,6 +7,10 @@ export const enum ERROR_CODE {
     UNHANDLED_ERROR,
     MISSING_FFMPEG,
     ELEVATED_SHELL,
+    MISSING_DIR,
+    INVALID_TMP_DIR,
+    CANNOT_REMOVE_DIR,
+    CANNOT_REMOVE_FILE,
     INVALID_OUTPUT_DIR,
     INVALID_INPUT_URLS,
     OUTDIRS_URLS_MISMATCH,
@@ -18,13 +22,21 @@ export const enum ERROR_CODE {
 
 // TODO: create better errors descriptions
 export const Error: IError = {
-    [ERROR_CODE.NO_ERROR]:           'Clean exit with code 0',
+    [ERROR_CODE.NO_ERROR]:              'Clean exit with code 0',
 
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
                                         'Timeout or fatal error, please check your downloads directory and try again',
 
     [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
                                         'Please run in a regular, non-elevated window.',
+
+    [ERROR_CODE.MISSING_DIR]:           'The dir is missing',
+
+    [ERROR_CODE.INVALID_TMP_DIR]:       'The selected tmp directory already exists, exiting to preserve content',
+
+    [ERROR_CODE.CANNOT_REMOVE_DIR]:    'The selected directory cannot be deleted',
+
+    [ERROR_CODE.CANNOT_REMOVE_FILE]:    'The selected file cannot be deleted',
 
     [ERROR_CODE.INVALID_OUTPUT_DIR]:    'Unable to create output directory',
 
@@ -43,7 +55,7 @@ export const Error: IError = {
     [ERROR_CODE.INVALID_VIDEO_GUID]:    'Unable to get video GUID from URL',
 
     [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page'
-}
+};
 
 export const enum CLI_ERROR {
     GRACEFULLY_STOP           = ' ', // gracefully stop execution, yargs way
