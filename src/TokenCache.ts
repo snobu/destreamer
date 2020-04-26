@@ -69,11 +69,11 @@ export class TokenCache {
         let freshCookie: string | null = null;
 
         try {
-            let cookie: string = response.headers["set-cookie"].toString();
+            let cookie: string = response.headers['set-cookie'].toString();
             freshCookie = cookie.split(',Authorization_Api=')[0];
         }
         catch (e) {
-            console.error(colors.yellow("Error when calling /refreshtoken: Missing or unexpected set-cookie header."));
+            console.error(colors.yellow('Error when calling /refreshtoken: Missing or unexpected set-cookie header.'));
         }
 
         return freshCookie;
