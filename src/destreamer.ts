@@ -226,7 +226,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.stop();
 
             try {
-                fs.unlinkSync(outputPath);
+                if (!argv.noDeleteOnError)
+                    fs.unlinkSync(outputPath);
             } catch (e) {}
 
             console.log(`\nffmpeg returned an error: ${error.message}`);
