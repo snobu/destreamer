@@ -7,11 +7,12 @@ export const enum ERROR_CODE {
     UNHANDLED_ERROR,
     MISSING_FFMPEG,
     ELEVATED_SHELL,
+    CANCELLED_USER_INPUT,
     MISSING_DIR,
     INVALID_TMP_DIR,
     CANNOT_REMOVE_DIR,
     CANNOT_REMOVE_FILE,
-    INVALID_OUTPUT_DIR,
+    CANNOT_CREATE_DIR,
     INVALID_INPUT_URLS,
     OUTDIRS_URLS_MISMATCH,
     INVALID_VIDEO_ID,
@@ -30,7 +31,9 @@ export const Error: IError = {
     [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
                                         'Please run in a regular, non-elevated window.',
 
-    [ERROR_CODE.MISSING_DIR]:           'The dir is missing',
+    [ERROR_CODE.CANCELLED_USER_INPUT]:  'Input was cancelled by user',
+
+    [ERROR_CODE.MISSING_DIR]:           'A directory is missing',
 
     [ERROR_CODE.INVALID_TMP_DIR]:       'The selected tmp directory already exists, exiting to preserve content',
 
@@ -38,7 +41,7 @@ export const Error: IError = {
 
     [ERROR_CODE.CANNOT_REMOVE_FILE]:    'The selected file cannot be deleted',
 
-    [ERROR_CODE.INVALID_OUTPUT_DIR]:    'Unable to create output directory',
+    [ERROR_CODE.CANNOT_CREATE_DIR]:     'Unable to create the desired directory',
 
     [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing!\n' +
                                         'Destreamer requires a fairly recent release of FFmpeg to download videos',
