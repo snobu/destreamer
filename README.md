@@ -78,6 +78,8 @@ Options:
   --verbose, -v            Print additional information to the console (use this
                            before opening an issue on GitHub)
                                                       [boolean] [default: false]
+  --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
+                           error occurs               [boolean] [default: false]
 ```
 
 Download a video -
