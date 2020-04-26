@@ -10,7 +10,7 @@ import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
 import { Metadata, Session, PlaylistType } from './Types';
 import { drawThumbnail } from './Thumbnail';
-import { argv } from './CommandLineParser';
+import { argv, askUserChoiche } from './CommandLineParser';
 
 import isElevated from 'is-elevated';
 import axios from 'axios';
@@ -135,8 +135,6 @@ function extractVideoGuid(videoUrls: string[]): string[] {
  * TODO: aria2c wraper?? or maybe JSON-RPC via WebSocket for callback from server?
  * TODO: implement aria2c arguments? (now using defaults for testing,
  *       we could ramp up to maybe 8 parallel connections)
- * TODO: implement resolution choice
- * TODO: better parsing of audio channels
  */
 async function createPLaylists(url: string, type: PlaylistType, session: Session) {
 
@@ -208,11 +206,30 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
             });
         masterParser.push(master);
         masterParser.end();
+        fs.writeFileSync(`${argv.tmpDirectory}/master.json`,
+            JSON.stringify(masterParser.manifest, undefined, 4));
 
-        let videoUrl: string = masterParser.manifest.playlists[0].uri;
+        let videoUrl: string = '';
+        let videoResolutions: Array<string> = [];
+        for (const playlist of masterParser.manifest.playlists) {
+            if (Object.prototype.hasOwnProperty.call(playlist.attributes, 'RESOLUTION')) {
+                videoResolutions.push(
+                    `${playlist.attributes.RESOLUTION.width}x${playlist.attributes.RESOLUTION.height}`);
+            }
+        }
+        if (videoResolutions.length === 1)
+            videoUrl = masterParser.manifest.playlists[0].uri;
+        else
+            videoUrl = masterParser.manifest.playlists[askUserChoiche(videoResolutions)].uri;
+
         let audioUrl: string = '';
-        for (let key of Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio)) {
-            audioUrl = masterParser.manifest.mediaGroups.AUDIO.audio[key].uri;
+        let audioChoiches = Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
+        if (audioChoiches.length === 1){
+            audioUrl = masterParser.manifest.mediaGroups.AUDIO
+                .audio[audioChoiches[0]].uri;
+        } else {
+            audioUrl = masterParser.manifest.mediaGroups.AUDIO
+                .audio[audioChoiches[askUserChoiche(audioChoiches)]].uri;
         }
 
         const keyUrl: string = await createPLaylists(videoUrl, 'video', session);
