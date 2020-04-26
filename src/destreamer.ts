@@ -195,6 +195,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         const cleanupFn = function () {
             pbar.stop();
 
+           if (argv.noCleanup)
+               return;
+
             try {
                 fs.unlinkSync(outputPath);
             } catch(e) {}
@@ -223,12 +226,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         });
 
         ffmpegCmd.on('error', (error: any) => {
-            pbar.stop();
-
-            try {
-                if (!argv.noCleanup)
-                    fs.unlinkSync(outputPath);
-            } catch (e) {}
+            cleanupFn();
 
             console.log(`\nffmpeg returned an error: ${error.message}`);
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
