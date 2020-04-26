@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
@@ -67,7 +67,7 @@ export class TokenCache {
             });
 
         let freshCookie: string | null = null;
-        
+
         try {
             let cookie: string = response.headers["set-cookie"].toString();
             freshCookie = cookie.split(',Authorization_Api=')[0];
