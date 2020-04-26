@@ -2,7 +2,7 @@ import { CLI_ERROR } from './Errors';
 
 import yargs from 'yargs';
 import colors from 'colors';
-import fs from 'fs';
+import fs from 'fs-extra';
 
 export const argv = yargs.options({
     videoUrls: {
@@ -34,23 +34,30 @@ export const argv = yargs.options({
         type: 'string',
         demandOption: false
     },
+    tmpDirectory: {
+        alias: 't',
+        describe: 'The temporary directory that will be used during the download',
+        type: 'string',
+        demandOption: false,
+        default: 'tmp'
+    },
     noExperiments: {
         alias: 'x',
-        describe: `Do not attempt to render video thumbnails in the console`,
+        describe: 'Do not attempt to render video thumbnails in the console',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     simulate: {
         alias: 's',
-        describe: `Disable video download and print metadata information to the console`,
+        describe: 'Disable video download and print metadata information to the console',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
         alias: 'v',
-        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
+        describe: 'Print additional information to the console (use this before opening an issue on GitHub)',
         type: 'boolean',
         default: false,
         demandOption: false
