@@ -1,5 +1,5 @@
 import {
-    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, // ffmpegTimemarkToChunk,
+    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle,
     makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch,
     createTmpDirectory, removeDirectory
 } from './Utils';
