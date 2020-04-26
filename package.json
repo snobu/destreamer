@@ -9,7 +9,7 @@
   "main": "build/src/destreamer.js",
   "bin": "build/src/destreamer.js",
   "scripts": {
-    "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc & echo Destreamer was built successfully.",
+    "build": "echo Transpiling TypeScript to JavaScript... && node node_modules/typescript/bin/tsc && echo Destreamer was built successfully.",
     "test": "mocha build/test"
   },
   "keywords": [],

@@ -25,7 +25,7 @@ const tokenCache = new TokenCache();
 
 // The cookie lifetime is one hour,
 // let's refresh every 3000 seconds.
-const REFRESH_TOKEN_INTERVAL = 60;
+const REFRESH_TOKEN_INTERVAL = 3000;
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -226,7 +226,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 fs.unlinkSync(outputPath);
             } catch(e) {}
         }
-        
+
         pbar.start(video.totalChunks, 0, {
             speed: '0'
         });
