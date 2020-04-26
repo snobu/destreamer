@@ -1,29 +1,34 @@
 import {
-    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
-    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
+    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, // ffmpegTimemarkToChunk,
+    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch,
+    createTmpDirectory, removeDirectory
 } from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
 import { TokenCache } from './TokenCache';
 import { getVideoMetadata } from './Metadata';
-import { Metadata, Session } from './Types';
+import { Metadata, Session, PlaylistType } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
 
-import { testAria } from './test';
-
 import isElevated from 'is-elevated';
+import axios from 'axios';
 import puppeteer from 'puppeteer';
 import colors from 'colors';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import { URL } from 'url';
+import { execSync } from 'child_process';
 import sanitize from 'sanitize-filename';
-import cliProgress from 'cli-progress';
+// import cliProgress from 'cli-progress';
 
-const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
+// const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
+const m3u8Parser = require('m3u8-parser'); // TODO: can we create an export or something for this?
+
+
 const tokenCache = new TokenCache();
+
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -127,11 +132,44 @@ function extractVideoGuid(videoUrls: string[]): string[] {
     return videoGuids;
 }
 
-async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
+/**
+ * TODO: aria2c wraper?? or maybe JSON-RPC via WebSocket for callback from server?
+ * TODO: implement aria2c arguments? (now using defaults for testing,
+ *       we could ramp up to maybe 8 parallel connections)
+ * TODO: implement resolution choice
+ * TODO: better parsing of audio channels
+ */
+async function createPLaylists(url: string, type: PlaylistType, session: Session) {
+
+    let playlist: string = await axios.get(url,
+        {
+            headers: {
+                Authorization: `Bearer ${session.AccessToken}`
+            }
+        }).then((response) => {
+            return response.data;
+        });
+
+    fs.writeFileSync(`${argv.tmpDirectory}/${type}.m3u8`, playlist);
+    fs.writeFileSync(`${argv.tmpDirectory}/${type}Local.m3u8`,
+        playlist.replace(/http.*Fragments/g, `${type}/Fragments`)
+        .replace(/URI=".*"/, 'URI=.key'));
+
+
+    if (type === 'video'){
+        const videoParser = new m3u8Parser.Parser();
+        videoParser.push(playlist);
+        videoParser.end();
+
+        return videoParser.manifest.segments[0].key.uri;
+    }
+}
+
+
+async function downloadVideo(videoUrls: string[], outDirs: string[], session: Session) {
+
     const videoGuids = extractVideoGuid(videoUrls);
-
     console.log('Fetching metadata...');
-
     const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
 
     if (argv.simulate) {
@@ -142,114 +180,67 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
             );
         });
-
-        return;
     }
 
     if (argv.verbose)
-        console.log(outputDirectories);
+        console.log(`outputDirectories: ${outDirs}`);
 
-    const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
-    for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
+    const outDirsIdxInc = outDirs.length > 1 ? 1:0;
+    for (let i=0, j=0; i < metadata.length; ++i, j+=outDirsIdxInc) {
+        createTmpDirectory(argv.tmpDirectory);
+        const masterParser = new m3u8Parser.Parser();
+
         const video = metadata[i];
-        const pbar = new cliProgress.SingleBar({
-            barCompleteChar: '\u2588',
-            barIncompleteChar: '\u2591',
-            format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
-            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
-            barsize: Math.floor((process.stdout.columns || 30) / 3),
-            stopOnComplete: true,
-            hideCursor: true,
-        });
 
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outDirs[j]);
+        const outputPath = outDirs[j] + path.sep + video.title + '.mp4';
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
-
-        // Very experimental inline thumbnail rendering
         if (!argv.noExperiments)
             await drawThumbnail(video.posterImage, session.AccessToken);
 
-        console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
-        if (!process.stdout.columns) {
-            console.info(colors.red('Unable to get number of columns from terminal.\n' +
-                'This happens sometimes in Cygwin/MSYS.\n' +
-                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
-                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+        let master = await axios.get(video.playbackUrl,
+            {
+                headers: {
+                    Authorization: `Bearer ${session.AccessToken}`
+                }
+            }).then((response) => {
+                return response.data;
+            });
+        masterParser.push(master);
+        masterParser.end();
+
+        let videoUrl: string = masterParser.manifest.playlists[0].uri;
+        let audioUrl: string = '';
+        for (let key of Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio)) {
+            audioUrl = masterParser.manifest.mediaGroups.AUDIO.audio[key].uri;
         }
 
-        // Try to get a fresh cookie, else gracefully fall back
-        // to our session access token (Bearer)
-        let freshCookie = await tokenCache.RefreshToken(session);
-        let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
-        if (freshCookie) {
-            console.info(colors.green('Using a fresh cookie.'));
-            headers = `Cookie:\ ${freshCookie}`;
-        }
+        const keyUrl: string = await createPLaylists(videoUrl, 'video', session);
+        await createPLaylists(audioUrl, 'audio', session);
 
-        const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
-        const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
-            ['headers', headers]
-        ]));
-        const ffmpegOutput = new FFmpegOutput(outputPath);
-        const ffmpegCmd = new FFmpegCommand();
-
-        const cleanupFn = function () {
-            pbar.stop();
-
-            try {
-                fs.unlinkSync(outputPath);
-            } catch(e) {}
-        };
-
-        pbar.start(video.totalChunks, 0, {
-            speed: '0'
-        });
-
-        // prepare ffmpeg command line
-        ffmpegCmd.addInput(ffmpegInpt);
-        ffmpegCmd.addOutput(ffmpegOutput);
-
-        // set events
-        ffmpegCmd.on('update', (data: any) => {
-            const currentChunks = ffmpegTimemarkToChunk(data.out_time);
-
-            pbar.update(currentChunks, {
-                speed: data.bitrate
+        let key: ArrayBuffer = await axios.get(keyUrl,
+            {
+                headers:{
+                    Authorization: `Bearer ${session.AccessToken}`
+                },
+                responseType: 'arraybuffer'
+            }).then((response) => {
+                return response.data;
             });
 
-            // Graceful fallback in case we can't get columns (Cygwin/MSYS)
-            if (!process.stdout.columns) {
-                process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
-            }
-        });
+        fs.writeFileSync(`${argv.tmpDirectory}/.key`, key);
 
-        ffmpegCmd.on('error', (error: any) => {
-            pbar.stop();
+        let aria2c = `aria2c -i "${argv.tmpDirectory}/video.m3u8" -d "${argv.tmpDirectory}/video"`;
+        execSync(aria2c, {stdio: 'inherit'});
+        aria2c = `aria2c -i "${argv.tmpDirectory}/audio.m3u8" -d "${argv.tmpDirectory}/audio"`;
+        execSync(aria2c, {stdio: 'inherit'});
 
-            try {
-                fs.unlinkSync(outputPath);
-            } catch (e) {}
-
-            console.log(`\nffmpeg returned an error: ${error.message}`);
-            process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
-        });
-
-        process.on('SIGINT', cleanupFn);
-
-        // let the magic begin...
-        await new Promise((resolve: any, reject: any) => {
-            ffmpegCmd.on('success', (data:any) => {
-                pbar.update(video.totalChunks); // set progress bar to 100%
-                console.log(colors.green(`\nDownload finished: ${outputPath}`));
-                resolve();
-            });
-
-            ffmpegCmd.spawn();
-        });
-
-        process.removeListener('SIGINT', cleanupFn);
+        let ffmpeg = `ffmpeg -allowed_extensions ALL -i "${argv.tmpDirectory}/videoLocal.m3u8" -allowed_extensions ALL -i "${argv.tmpDirectory}/audioLocal.m3u8" -c copy "${outputPath}"`;
+        execSync(ffmpeg, {stdio: 'inherit'});
+        removeDirectory(argv.tmpDirectory);
     }
+
 }
 
 async function main() {
@@ -264,8 +255,8 @@ async function main() {
 
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
-    // downloadVideo(videoUrls, outDirs, session);
-    testAria(videoUrls[0], session);
+    downloadVideo(videoUrls, outDirs, session);
+    // aria2c(videoUrls, outDirs, session);
 }
 
 
