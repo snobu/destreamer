@@ -29,10 +29,12 @@
   "dependencies": {
     "@tedconf/fessonia": "^2.1.0",
     "@types/cli-progress": "^3.4.2",
+    "@types/fs-extra": "^8.1.0",
     "@types/jwt-decode": "^2.2.1",
     "axios": "^0.19.2",
     "cli-progress": "^3.7.0",
     "colors": "^1.4.0",
+    "fs-extra": "^9.0.0",
     "is-elevated": "^3.0.0",
     "iso8601-duration": "^1.2.0",
     "jwt-decode": "^2.2.0",
