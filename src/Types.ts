@@ -2,7 +2,6 @@ export type Session = {
     AccessToken: string;
     ApiGatewayUri: string;
     ApiGatewayVersion: string;
-    Cookie?: string;
 }
 
 export type Metadata = {

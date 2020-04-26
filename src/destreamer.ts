@@ -25,7 +25,7 @@ const tokenCache = new TokenCache();
 
 // The cookie lifetime is one hour,
 // let's refresh every 3000 seconds.
-const REFRESH_TOKEN_INTERVAL = 3000;
+const REFRESH_TOKEN_INTERVAL = 60;
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -153,7 +153,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(outputDirectories);
 
 
+    let freshCookie: string | null = null;
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
         const pbar = new cliProgress.SingleBar({
@@ -184,20 +186,19 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
-        let freshCookie = await tokenCache.RefreshToken(session);
+        freshCookie = await tokenCache.RefreshToken(session, freshCookie);
 
         // Don't remove the "useless" escapes otherwise ffmpeg will
         // not pick up the header
         // eslint-disable-next-line no-useless-escape
-        let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
+        let headers = 'Authorization:\ Bearer\ ' + session.AccessToken;
         if (freshCookie) {
             lastTokenRefresh = Date.now();
-            session.Cookie = freshCookie;
             if (argv.verbose) {
                 console.info(colors.green('Using a fresh cookie.'));
             }
             // eslint-disable-next-line no-useless-escape
-            headers = `Cookie:\ ${freshCookie}`;
+            headers = 'Cookie:\ ' + freshCookie;
         }
 
         const RefreshTokenMaybe = async (): Promise<void> => {
@@ -207,7 +208,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                     console.info(colors.green('\nRefreshing access token...'));
                 }
                 lastTokenRefresh = Date.now();
-                freshCookie = await tokenCache.RefreshToken(session);
+                freshCookie = await tokenCache.RefreshToken(session, freshCookie);
             }
         };
 
@@ -225,7 +226,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 fs.unlinkSync(outputPath);
             } catch(e) {}
         }
-
+        
         pbar.start(video.totalChunks, 0, {
             speed: '0'
         });

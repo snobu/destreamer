@@ -7,6 +7,7 @@
 
         {
             "type": "node",
+            "runtimeArgs": ["--max-http-header-size", "32768"],
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/build/src/destreamer.js",

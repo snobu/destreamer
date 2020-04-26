@@ -56,13 +56,13 @@ export class TokenCache {
         });
     }
 
-    public async RefreshToken(session: Session): Promise<string | null> {
+    public async RefreshToken(session: Session, cookie?: string | null): Promise<string | null> {
         let endpoint = `${session.ApiGatewayUri}refreshtoken?api-version=${session.ApiGatewayVersion}`;
 
         let headers: Function = (): object => {
-            if (session.Cookie) {
+            if (cookie) {
                 return {
-                    Cookie: session.Cookie
+                    Cookie: cookie
                 };
             }
             else {
