@@ -21,9 +21,8 @@ import fs from 'fs-extra';
 import { URL } from 'url';
 import { execSync } from 'child_process';
 import sanitize from 'sanitize-filename';
-// import cliProgress from 'cli-progress';
 
-// const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
+
 const m3u8Parser = require('m3u8-parser'); // TODO: can we create an export or something for this?
 
 
@@ -31,7 +30,7 @@ const tokenCache = new TokenCache();
 
 
 async function init() {
-    setProcessEvents(); // must be first!
+    setProcessEvents();
 
     if (await isElevated())
         process.exit(ERROR_CODE.ELEVATED_SHELL);
@@ -244,19 +243,18 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
 }
 
 async function main() {
-    await init(); // must be first
+    await init();
 
     const outDirs: string[] = getOutputDirectoriesList(argv.outputDirectory as string);
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
     let session: Session;
 
     checkOutDirsUrlsMismatch(outDirs, videoUrls);
-    makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
+    makeOutputDirectories(outDirs);
 
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
     downloadVideo(videoUrls, outDirs, session);
-    // aria2c(videoUrls, outDirs, session);
 }
 
 
