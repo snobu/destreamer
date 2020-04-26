@@ -226,7 +226,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.stop();
 
             try {
-                if (!argv.noDeleteOnError)
+                if (!argv.noCleanup)
                     fs.unlinkSync(outputPath);
             } catch (e) {}
 

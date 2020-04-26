@@ -55,12 +55,12 @@ export const argv = yargs.options({
         default: false,
         demandOption: false
     },
-	noDeleteOnError: {
-	alias: 'd',
-	describe: `Don't delete the downloaded video file when an FFmpeg error occurs`,
-	type: 'boolean',
-	default: false,
-	demandOption: false
+    noCleanup: {
+        alias: 'nc',
+        describe: `Don't delete the downloaded video file when an FFmpeg error occurs`,
+        type: 'boolean',
+        default: false,
+        demandOption: false
     }
 })
 /**
