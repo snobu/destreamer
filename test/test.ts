@@ -37,8 +37,8 @@ describe('Destreamer', () => {
         const expectedOut: string[] = [
             "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
             "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
-            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd?a=b&c",
-            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd?a"
+            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
+            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd"
         ];
         const tmpFile = tmp.fileSync({ postfix: '.txt' });
         let testOut: string[];
