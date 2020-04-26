@@ -27,6 +27,8 @@
         "padding-line-between-statements": [
             "error",
             { "blankLine": "always", "prev": "*", "next": "return" }
-        ]
+        ],
+        "brace-style": [2, "stroustrup", { "allowSingleLine": false }],
+        "curly": ["error", "all"]
     }
 }
