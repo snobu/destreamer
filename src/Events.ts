@@ -1,6 +1,8 @@
 import { Error, ERROR_CODE } from './Errors';
 
 import colors from 'colors';
+import fs from 'fs-extra';
+import { argv } from './CommandLineParser';
 
 /**
  * This file contains global destreamer process events
@@ -14,6 +16,9 @@ export function setProcessEvents() {
     process.on('exit', (code) => {
         if (code == 0)
             return;
+
+        if (code !== ERROR_CODE.INVALID_TMP_DIR)
+            fs.removeSync(argv.tmpDirectory);
 
         const msg = code in Error ? `\n\n${Error[code]} \n` : `\n\nUnknown error: exit code ${code} \n`;
 
