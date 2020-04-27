@@ -6,7 +6,7 @@
 
 _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
-# Saves Microsoft Stream videos for offline enjoyment (optimized for Polimi Students)
+# Saves Microsoft Stream videos for offline enjoyment
 
 ### v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
 
@@ -17,11 +17,12 @@ This release would not have been possible without the code and time contributed 
 - Major code refactoring
 - Dramatically improved error handling
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
-- We removed the dependency on `youtube-dl`.
+- We removed the dependency on `youtube-dl`
 - Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
-- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list). Still one outstanding edge case here, see _Found a bug_ at the bottom for more.
+- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list)
 - Fixed a major 2FA bug that would sometimes cause a timeout in our code
 - Fixed a wide variety of other bugs, maybe introduced a few new ones :)
+- Automatic authentication for polimi student in [this repository][polimi]
 
 ## Disclaimer
 
@@ -29,18 +30,32 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 ## Prereqs
 
-- **Node.js**: anything above v8.0 seems to work. A GitHub Action runs tests on all major Node versions on every commit.
-- **npm**: Usually comes with Node.js, type `npm` in your terminal to check for its presence
-- **ffmpeg**: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
+- [**Node.js**][node]: You'll need Node.js version 8.0 or higher. A GitHub Action runs tests on all major Node versions on every commit.
+- **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
+- [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
+- [**git**][git]: one or more npm dependencies require git.
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
+## Limits and limitations
+
+Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
+PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
+
+Note that destreamer won't run in an elevated (Administrator/root) shell. Running inside **Cygwin/MinGW/MSYS** may also fail, please use **cmd.exe** or **PowerShell** if you're on Windows.
+
+**WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an X Window server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. See [this issue for more on WSL v1 and v2][wsl].
+
 ## How to build
 
-To build destreamer run the following commands, in order -
-- `npm install`
-- `npm run -s build`
-- `chmod +x destreamer.sh` (just in Linux and MACOSX)
+To build destreamer clone this repository, install dependencies and run the build script -
+
+```sh
+$ git clone https://github.com/snobu/destreamer
+$ cd destreamer
+$ npm install
+$ npm run build
+```
 
 ## Usage
 
@@ -52,9 +67,7 @@ Options:
   --version                Show version number                         [boolean]
   --videoUrls, -i          List of video urls                            [array]
   --videoUrlsFile, -f      Path to txt file containing the urls         [string]
-  --username, -u           Microsoft account username                   [string]
-  --polimicode, -c         Polimi person code                           [string]
-  --polimipass, -p         Polimi password                              [string]
+  --username, -u                                                        [string]
   --outputDirectory, -o    The directory where destreamer will save your
                            downloads [default: videos]                  [string]
   --outputDirectories, -O  Path to a txt file containing one output directory
@@ -66,19 +79,18 @@ Options:
   --verbose, -v            Print additional information to the console (use this
                            before opening an issue on GitHub)
                                                       [boolean] [default: false]
+  --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
+                           error occurs               [boolean] [default: false]
 ```
-
-Make sure you use the right script (`.sh`, `.ps1` or `.cmd`) and escape char (if using line breaks) for your shell.
-PowerShell uses a backtick [ **`** ] and cmd.exe uses a caret [ **^** ].
 
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
-Download a video and speed up the interactive login by automagically filling in the username in both microsoft and Polimi -
+Download a video and speed up the interactive login by automagically filling in the username -
 ```sh
-$ ./destreamer.sh -u user@example.com -c "YourPersonCode" -p "YourPassword" -i "https://web.microsoftstream.com/video/VIDEO-1"
+$ ./destreamer.sh -u user@example.com -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
 Download a video to a custom path -
@@ -94,7 +106,7 @@ $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" \
 
 Download many videos but read URLs from a file -
 ```sh
-$ ./destreame.sh -f list.txt
+$ ./destreamer.sh -f list.txt
 ```
 
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
@@ -105,7 +117,13 @@ You can use an absolute path for `-o` (output directory), for example `/mnt/vide
 
 ## Expected output
 
+Windows Terminal -
+
 ![screenshot](assets/screenshot-win.png)
+
+iTerm2 on a Mac -
+
+![screenshot](assets/screenshot-mac.png)
 
 By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
 
@@ -115,6 +133,12 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 
 ## Found a bug?
 
-There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
+Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
 
-For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+
+[ffmpeg]: https://www.ffmpeg.org/download.html
+[xming]: https://sourceforge.net/projects/xming/
+[node]: https://nodejs.org/en/download/
+[git]: https://git-scm.com/downloads
+[wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
+[polimi]: https://github.com/SamanFekri/destreamer
