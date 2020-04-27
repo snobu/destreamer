@@ -12,6 +12,8 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
+[Politecnico di Milano][polisite] students may want to use this fork over at https://github.com/SamanFekri/destreamer which is a specialized implementation of this project with automatic logon.
+
 ## What's new
 
 - Major code refactoring
@@ -140,3 +142,4 @@ Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll loo
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
 [wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
+[polisite]: https://www.polimi.it
