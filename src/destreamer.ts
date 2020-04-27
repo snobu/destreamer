@@ -16,11 +16,16 @@ import puppeteer from 'puppeteer';
 import colors from 'colors';
 import path from 'path';
 import fs from 'fs';
+import { URL } from 'url';
 import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 const tokenCache = new TokenCache();
+
+// The cookie lifetime is one hour,
+// let's refresh every 3000 seconds.
+const REFRESH_TOKEN_INTERVAL = 3000;
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -42,9 +47,7 @@ async function init() {
     }
 }
 
-async function DoInteractiveLogin(url: string, myargv: any): Promise<Session> {
-    let username = myargv.username;
-
+async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
     const videoId = url.split("/").pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID)
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
@@ -62,29 +65,6 @@ async function DoInteractiveLogin(url: string, myargv: any): Promise<Session> {
     if (username) {
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
-
-        if (myargv.polimicode || myargv.polimipass) {
-            await browser.waitForTarget(target => target.url().includes("aunicalogin.polimi.it/"), { timeout: 150000 });
-            await sleep(3000);
-        }
-
-        if (myargv.polimicode) {
-            await page.click('#login');
-            await page.keyboard.type(myargv.polimicode);
-        }
-
-        if (myargv.polimipass) {
-            await page.click('#password');
-            await page.keyboard.type(myargv.polimipass);
-        }
-
-        if (myargv.polimicode && myargv.polimipass) {
-            await page.click('button[type="submit"]');
-            
-            await browser.waitForTarget(target => target.url().includes("login.microsoftonline.com/"), { timeout: 150000 });
-            await sleep(3000);
-            await page.click('input[type="submit"]');
-        }
     }
 
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
@@ -130,10 +110,10 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
     for (const url of videoUrls) {
         try {
-            guid = url.split('/').pop();
-
+            const urlObj = new URL(url);
+            guid = urlObj.pathname.split('/').pop();
         } catch (e) {
-            console.error(`${e.message}`);
+            console.error(`Unrecognized URL format in ${url}: ${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
@@ -151,6 +131,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
+    let lastTokenRefresh: number;
 
     console.log('Fetching metadata...');
 
@@ -171,14 +152,18 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
     if (argv.verbose)
         console.log(outputDirectories);
 
+
+    let freshCookie: string | null = null;
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
         const pbar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
-            barsize: Math.floor(process.stdout.columns / 3),
+            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
+            barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
             hideCursor: true,
         });
@@ -192,15 +177,40 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             await drawThumbnail(video.posterImage, session.AccessToken);
 
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        if (!process.stdout.columns) {
+            console.info(colors.red('Unable to get number of columns from terminal.\n' +
+                'This happens sometimes in Cygwin/MSYS.\n' +
+                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+        }
 
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
-        let freshCookie = await tokenCache.RefreshToken(session);
-        let headers = `Authorization:\ Bearer\ ${session.AccessToken}`;
+        freshCookie = await tokenCache.RefreshToken(session, freshCookie);
+
+        // Don't remove the "useless" escapes otherwise ffmpeg will
+        // not pick up the header
+        // eslint-disable-next-line no-useless-escape
+        let headers = 'Authorization:\ Bearer\ ' + session.AccessToken;
         if (freshCookie) {
-            console.info(colors.green('Using a fresh cookie.'));
-            headers = `Cookie:\ ${freshCookie}`;
+            lastTokenRefresh = Date.now();
+            if (argv.verbose) {
+                console.info(colors.green('Using a fresh cookie.'));
+            }
+            // eslint-disable-next-line no-useless-escape
+            headers = 'Cookie:\ ' + freshCookie;
         }
+
+        const RefreshTokenMaybe = async (): Promise<void> => {
+            let elapsed = Date.now() - lastTokenRefresh;
+            if (elapsed > REFRESH_TOKEN_INTERVAL * 1000) {
+                if (argv.verbose) {
+                    console.info(colors.green('\nRefreshing access token...'));
+                }
+                lastTokenRefresh = Date.now();
+                freshCookie = await tokenCache.RefreshToken(session, freshCookie);
+            }
+        };
 
         const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
@@ -209,8 +219,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         const ffmpegOutput = new FFmpegOutput(outputPath);
         const ffmpegCmd = new FFmpegCommand();
         
-        const cleanupFn = function () {
+        const cleanupFn = (): void => {
             pbar.stop();
+
+           if (argv.noCleanup)
+               return;
 
             try {
                 fs.unlinkSync(outputPath);
@@ -225,21 +238,22 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
 
-        // set events
         ffmpegCmd.on('update', (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            RefreshTokenMaybe();
 
             pbar.update(currentChunks, {
                 speed: data.bitrate
             });
+
+            // Graceful fallback in case we can't get columns (Cygwin/MSYS)
+            if (!process.stdout.columns) {
+                process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
+            }
         });
 
         ffmpegCmd.on('error', (error: any) => {
-            pbar.stop();
-
-            try {
-                fs.unlinkSync(outputPath);
-            } catch (e) {}
+            cleanupFn();
 
             console.log(`\nffmpeg returned an error: ${error.message}`);
             process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
@@ -258,7 +272,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             ffmpegCmd.spawn();
         });
         
-        process.off('SIGINT', cleanupFn);
+        process.removeListener('SIGINT', cleanupFn);
     }
 }
 
@@ -272,10 +286,11 @@ async function main() {
     checkOutDirsUrlsMismatch(outDirs, videoUrls);
     makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
 
-    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv);
+    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
     downloadVideo(videoUrls, outDirs, session);
 }
 
 
 main();
+
