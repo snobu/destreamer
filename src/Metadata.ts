@@ -29,7 +29,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
     let playbackUrl: string;
     let posterImage: string;
 
-    await Promise.all(videoGuids.map(async guid => {
+    videoGuids.forEach(async guid => {
         let apiUrl = `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`;
 
         if (verbose)
@@ -59,7 +59,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
             playbackUrl: playbackUrl,
             posterImage: posterImage
         });
-    }));
-    
+    });
+
     return metadata;
 }
