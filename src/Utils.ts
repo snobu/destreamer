@@ -46,6 +46,10 @@ function readFileToArray(path: string) {
     return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
 }
 
+export async function forEachAsync(array: any, callback: any) {
+    for (let i=0, l=array.length; i<l; ++i)
+        await callback(array[i], i, array);
+}
 
 export function parseVideoUrls(videoUrls: any) {
     let t = videoUrls[0] as string;
