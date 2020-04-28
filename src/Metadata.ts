@@ -3,6 +3,8 @@ import { Metadata, Session } from './Types';
 import { parse } from 'iso8601-duration';
 import axios from 'axios';
 
+axios.defaults.headers.common['User-Agent'] = 'destreamer/2.0';
+
 function publishedDateToString(date: string) {
     const dateJs = new Date(date);
     const day = dateJs.getDate().toString().padStart(2, '0');

@@ -5,6 +5,8 @@ import jwtDecode from 'jwt-decode';
 import axios from 'axios';
 import colors from 'colors';
 
+axios.defaults.headers.common['User-Agent'] = 'destreamer/2.0';
+
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
 
