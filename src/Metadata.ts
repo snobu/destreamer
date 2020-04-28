@@ -30,7 +30,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
     let playbackUrl: string;
     let posterImage: string;
 
-    forEachAsync(videoGuids, async (guid: string) => {
+    await forEachAsync(videoGuids, async (guid: string) => {
         let apiUrl = `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`;
 
         if (verbose)
