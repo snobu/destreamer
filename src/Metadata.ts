@@ -1,4 +1,5 @@
 import { Metadata, Session } from './Types';
+import { forEachAsync } from './Utils';
 
 import { parse } from 'iso8601-duration';
 import axios from 'axios';
@@ -29,7 +30,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
     let playbackUrl: string;
     let posterImage: string;
 
-    await Promise.all(videoGuids.map(async guid => {
+    await forEachAsync(videoGuids, async (guid: string) => {
         let apiUrl = `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`;
 
         if (verbose)
@@ -59,7 +60,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
             playbackUrl: playbackUrl,
             posterImage: posterImage
         });
-    }));
-    
+    });
+
     return metadata;
 }
