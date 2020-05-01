@@ -212,13 +212,16 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             }
         };
 
-        const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
+        const outputPath = outputDirectories[j] + path.sep + video.title + '.' + argv.format;
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput = new FFmpegOutput(outputPath);
+        const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
+            argv.encodeAudio === 'none' ? ['an', null] : ['c:a', argv.encodeAudio],
+            argv.encodeVideo === 'none' ? ['vn', null] : ['c:v', argv.encodeVideo]
+        ]));
         const ffmpegCmd = new FFmpegCommand();
-        
+
         const cleanupFn = (): void => {
             pbar.stop();
 
@@ -271,7 +274,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             ffmpegCmd.spawn();
         });
-        
+
         process.removeListener('SIGINT', cleanupFn);
     }
 }

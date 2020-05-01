@@ -61,6 +61,27 @@ export const argv = yargs.options({
         type: 'boolean',
         default: false,
         demandOption: false
+    },
+    encodeVideo: {
+        alias: 'ev',
+        describe: 'Encode the video with a specify encoder. Set to "none" to disable video.',
+        type: 'string',
+        default: 'copy',
+        demandOption: false
+    },
+    encodeAudio: {
+        alias: 'ea',
+        describe: 'Encode the audio with a specify encoder. Set to "none" to disable audio.',
+        type: 'string',
+        default: 'copy',
+        demandOption: false
+    },
+    format: {
+        alias: 'F',
+        describe: 'The file format of the output file(s)',
+        type: 'string',
+        default: 'mkv',
+        demandOption: false
     }
 })
 /**
