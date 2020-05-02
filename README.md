@@ -88,7 +88,7 @@ Options:
   --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
                            libopus) or set to "none" to disable audio.
                                                       [string] [default: "copy"]
-  --format                 The file format of the output file(s)
+  --format                 Output container format (mkv, mp4, mov, anything that FFmpeg supports)
                                                        [string] [default: "mkv"]
 ```
 
