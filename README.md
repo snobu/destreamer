@@ -82,17 +82,26 @@ Options:
                                                       [boolean] [default: false]
   --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
                            error occurs               [boolean] [default: false]
-  --encodeVideo, --ev      Encode the video with a specify encoder. Set to
-                           "none" to disable video.   [string] [default: "copy"]
-  --encodeAudio, --ea      Encode the audio with a specify encoder. Set to
-                           "none" to disable audio.   [string] [default: "copy"]
-  --format, -F             The file format of the output file(s)
+  --vcodec                 Re-encode video track. Specify FFmpeg codec (e.g.
+                           libx265) or set to "none" to disable video.
+                                                      [string] [default: "copy"]
+  --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
+                           libopus) or set to "none" to disable audio.
+                                                      [string] [default: "copy"]
+  --format                 The file format of the output file(s)
                                                        [string] [default: "mkv"]
 ```
+
+We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
 
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
+```
+
+Download a video and re-encode with HEVC (libx265):
+```sh
+$ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" --vcodec libx265
 ```
 
 Download a video and speed up the interactive login by automagically filling in the username -

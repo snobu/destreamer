@@ -217,8 +217,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             ['headers', headers]
         ]));
         const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
-            argv.encodeAudio === 'none' ? ['an', null] : ['c:a', argv.encodeAudio],
-            argv.encodeVideo === 'none' ? ['vn', null] : ['c:v', argv.encodeVideo]
+            argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
+            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec]
         ]));
         const ffmpegCmd = new FFmpegCommand();
 
