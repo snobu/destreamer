@@ -75,7 +75,7 @@ export const argv = yargs.options({
         demandOption: false
     },
     format: {
-        describe: 'The file format of the output file(s)',
+        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports)',
         type: 'string',
         default: 'mkv',
         demandOption: false
