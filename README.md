@@ -82,6 +82,12 @@ Options:
                                                       [boolean] [default: false]
   --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
                            error occurs               [boolean] [default: false]
+  --encodeVideo, --ev      Encode the video with a specify encoder. Set to
+                           "none" to disable video.   [string] [default: "copy"]
+  --encodeAudio, --ea      Encode the audio with a specify encoder. Set to
+                           "none" to disable audio.   [string] [default: "copy"]
+  --format, -F             The file format of the output file(s)
+                                                       [string] [default: "mkv"]
 ```
 
 Download a video -
