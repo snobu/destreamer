@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
+import { argv } from './CommandLineParser';
 
 function sanitizeUrls(urls: string[]) {
     const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
@@ -126,7 +127,7 @@ export function makeUniqueTitle(title: string, outDir: string) {
     let ntitle = title;
     let k = 0;
 
-    while (fs.existsSync(outDir + path.sep + ntitle + '.mp4'))
+    while (fs.existsSync(outDir + path.sep + ntitle + '.' + argv.format))
         ntitle = title + ' - ' + (++k).toString();
 
     return ntitle;
