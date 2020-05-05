@@ -127,7 +127,7 @@ export function makeUniqueTitle(title: string, outDir: string) {
     let ntitle = title;
     let k = 0;
 
-    while (fs.existsSync(outDir + path.sep + ntitle + '.' + argv.format))
+    while (!argv.skip && fs.existsSync(outDir + path.sep + ntitle + '.' + argv.format))
         ntitle = title + ' - ' + (++k).toString();
 
     return ntitle;
