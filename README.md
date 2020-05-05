@@ -88,8 +88,10 @@ Options:
   --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
                            libopus) or set to "none" to disable audio.
                                                       [string] [default: "copy"]
-  --format                 Output container format (mkv, mp4, mov, anything that FFmpeg supports)
-                                                       [string] [default: "mkv"]
+  --format                 Output container format (mkv, mp4, mov, anything that
+                           FFmpeg supports)            [string] [default: "mkv"]
+  --skip                   Skip download if file already exists
+                                                      [boolean] [default: false]
 ```
 
 We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
