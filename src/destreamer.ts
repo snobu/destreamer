@@ -135,7 +135,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     console.log('Fetching metadata...');
 
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
 
     if (argv.simulate) {
         metadata.forEach(video => {
@@ -153,7 +153,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(outputDirectories);
 
 
-    let freshCookie: string | null = null;
+    let freshCookie: string | undefined = undefined;
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
 
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
@@ -172,22 +172,19 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
 
-        // Very experimental inline thumbnail rendering
-        if (!argv.noExperiments)
-            await drawThumbnail(video.posterImage, session.AccessToken);
-
+        
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
             console.info(colors.red('Unable to get number of columns from terminal.\n' +
-                'This happens sometimes in Cygwin/MSYS.\n' +
-                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
-                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+            'This happens sometimes in Cygwin/MSYS.\n' +
+            'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+            'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
         }
-
+        
         // Try to get a fresh cookie, else gracefully fall back
         // to our session access token (Bearer)
         freshCookie = await tokenCache.RefreshToken(session, freshCookie);
-
+        
         // Don't remove the "useless" escapes otherwise ffmpeg will
         // not pick up the header
         // eslint-disable-next-line no-useless-escape
@@ -201,6 +198,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             headers = 'Cookie:\ ' + freshCookie;
         }
 
+        // Very experimental inline thumbnail rendering
+        if (!argv.noExperiments && freshCookie) {
+            //await drawThumbnail(video.posterImage, freshCookie);
+        }
+        
         const RefreshTokenMaybe = async (): Promise<void> => {
             let elapsed = Date.now() - lastTokenRefresh;
             if (elapsed > REFRESH_TOKEN_INTERVAL * 1000) {

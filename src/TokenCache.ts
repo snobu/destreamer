@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
-import axios from 'axios';
+import { ApiClient } from './ApiClient';
 import colors from 'colors';
 
 export class TokenCache {
@@ -56,31 +56,19 @@ export class TokenCache {
         });
     }
 
-    public async RefreshToken(session: Session, cookie?: string | null): Promise<string | null> {
-        let endpoint = `${session.ApiGatewayUri}refreshtoken?api-version=${session.ApiGatewayVersion}`;
+    public async RefreshToken(session: Session, cookie?: string): Promise<string | undefined> {
+        const apiClient = ApiClient.getInstance(session);
 
-        let headers: Function = (): object => {
-            if (cookie) {
-                return {
-                    Cookie: cookie
-                };
-            }
-            else {
-                return {
-                    Authorization: 'Bearer ' + session.AccessToken
-                };
-            }
-        }
-
-        let response = await axios.get(endpoint, { headers: headers() });
-        let freshCookie: string | null = null;
+        let response = await apiClient.callApi('refreshToken', 'get', cookie);
+        let freshCookie: string | undefined = undefined;
         
         try {
-            let cookie: string = response.headers["set-cookie"].toString();
+            let cookie: string = response?.headers['set-cookie'].toString();
             freshCookie = cookie.split(',Authorization_Api=')[0];
         }
         catch (e) {
-            console.error(colors.yellow("Error when calling /refreshtoken: Missing or unexpected set-cookie header."));
+            console.error(colors.yellow(
+                'Error when calling /refreshtoken: Missing or unexpected set-cookie header.'));
         }
 
         return freshCookie;

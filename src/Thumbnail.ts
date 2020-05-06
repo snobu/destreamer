@@ -1,14 +1,10 @@
 import terminalImage from 'terminal-image';
-import axios from 'axios';
+import { ApiClient } from './ApiClient';
 
 
-export async function drawThumbnail(posterImage: string, accessToken: string) {
-    let thumbnail = await axios.get(posterImage,
-        {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            },
-            responseType: 'arraybuffer'
-        });
-    console.log(await terminalImage.buffer(thumbnail.data));
+export async function drawThumbnail(posterImage: string, cookie: string): Promise<void> {
+    const apiClient = ApiClient.getInstance();
+
+    let thumbnail = await apiClient.callUrl(posterImage, 'get', cookie, null, 'arraybuffer');
+    console.log(await terminalImage.buffer(thumbnail?.data));
 }
