@@ -79,6 +79,12 @@ export const argv = yargs.options({
         type: 'string',
         default: 'mkv',
         demandOption: false
+    },
+    skip: {
+        describe: 'Skip download if file already exists',
+        type: 'boolean',
+        default: false,
+        demandOption: false
     }
 })
 /**

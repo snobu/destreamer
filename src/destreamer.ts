@@ -218,7 +218,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         ]));
         const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
             argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
-            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec]
+            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
+            ['n', null]
         ]));
         const ffmpegCmd = new FFmpegCommand();
 
@@ -255,17 +256,23 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             }
         });
 
-        ffmpegCmd.on('error', (error: any) => {
-            cleanupFn();
-
-            console.log(`\nffmpeg returned an error: ${error.message}`);
-            process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
-        });
-
         process.on('SIGINT', cleanupFn);
 
         // let the magic begin...
         await new Promise((resolve: any, reject: any) => {
+            ffmpegCmd.on('error', (error: any) => {
+                if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
+                    pbar.update(video.totalChunks); // set progress bar to 100%
+                    console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
+                    resolve();
+                } else {
+                    cleanupFn();
+
+                    console.log(`\nffmpeg returned an error: ${error.message}`);
+                    process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
+                }
+            });
+
             ffmpegCmd.on('success', (data:any) => {
                 pbar.update(video.totalChunks); // set progress bar to 100%
                 console.log(colors.green(`\nDownload finished: ${outputPath}`));
