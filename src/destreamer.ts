@@ -261,7 +261,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // let the magic begin...
         await new Promise((resolve: any, reject: any) => {
             ffmpegCmd.on('error', (error: any) => {
-                if (argv.skip && error.message === `File '${outputPath}' already exists. Exiting.\n`) {
+                if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
                     pbar.update(video.totalChunks); // set progress bar to 100%
                     console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
                     resolve();
