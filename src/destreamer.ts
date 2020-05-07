@@ -60,11 +60,14 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.log('Navigating to login page...');
 
     await page.goto(url, { waitUntil: 'load' });
-    await page.waitForSelector('input[type="email"]');
 
     if (username) {
+        await page.waitForSelector('input[type="email"]');
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
+    } else {
+        // If a username was not provided we let the user take actions that
+        // lead up to the video page.
     }
 
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
