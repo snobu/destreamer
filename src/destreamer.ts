@@ -145,7 +145,6 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
-    let lastTokenRefresh: number;
 
     console.log('Fetching metadata...');
 
