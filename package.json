@@ -37,9 +37,9 @@
     "is-elevated": "^3.0.0",
     "iso8601-duration": "^1.2.0",
     "jwt-decode": "^2.2.0",
-    "puppeteer": "^2.1.1",
+    "puppeteer": "^3.0.4",
     "sanitize-filename": "^1.6.3",
-    "terminal-image": "^0.2.0",
+    "terminal-image": "^1.0.1",
     "typescript": "^3.8.3",
     "yargs": "^15.0.3"
   }

@@ -33,7 +33,7 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
     const apiClient = ApiClient.getInstance(session);
 
     await forEachAsync(videoGuids, async (guid: string) => {
-        let response = await apiClient.callApi('videos/' + guid);
+        let response = await apiClient.callApi('videos/' + guid, 'get');
 
         title = response?.data['name'];
         playbackUrl = response?.data['playbackUrls']

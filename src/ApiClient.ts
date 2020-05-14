@@ -50,14 +50,17 @@ export class ApiClient {
     public async callApi(
         path: string,
         method: AxiosRequestConfig['method'] = 'get',
-        cookie?: string,
         payload?: any): Promise<AxiosResponse | undefined> {
 
         const delimiter = path.split('?').length === 1 ? '?' : '&';
 
+        const headers: object = {
+            'Authorization': 'Bearer ' + this.session?.AccessToken
+        };
+
         return this.axiosInstance?.request({
             method: method,
-            headers: cookie ? { 'Cookie': cookie } : { 'Authorization': 'Bearer ' + this.session?.AccessToken },
+            headers: headers,
             data: payload ?? undefined,
             url: path + delimiter + 'api-version=' + this.session?.ApiGatewayVersion
         });
@@ -69,13 +72,16 @@ export class ApiClient {
     public async callUrl(
         url: string,
         method: AxiosRequestConfig['method'] = 'get',
-        cookie: string,
         payload?: any,
         responseType: AxiosRequestConfig['responseType'] = 'json'): Promise<AxiosResponse | undefined> {
+            
+        const headers: object = {
+            'Authorization': 'Bearer ' + this.session?.AccessToken
+        };
 
         return this.axiosInstance?.request({
             method: method,
-            headers: { 'Cookie': cookie },
+            headers: headers,
             data: payload ?? undefined,
             url: url,
             responseType: responseType

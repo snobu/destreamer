@@ -14,6 +14,7 @@ export const enum ERROR_CODE {
     INVALID_VIDEO_GUID,
     UNK_FFMPEG_ERROR,
     NO_SESSION_INFO,
+    BAD_REFRESH_TOKEN
 }
 
 // TODO: create better errors descriptions
@@ -42,8 +43,10 @@ export const Error: IError = {
 
     [ERROR_CODE.INVALID_VIDEO_GUID]:    'Unable to get video GUID from URL',
 
-    [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page'
-}
+    [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page',
+
+    [ERROR_CODE.BAD_REFRESH_TOKEN]:     'Could not refresh token.'
+};
 
 export const enum CLI_ERROR {
     GRACEFULLY_STOP           = ' ', // gracefully stop execution, yargs way

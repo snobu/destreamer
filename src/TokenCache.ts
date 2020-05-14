@@ -2,15 +2,13 @@ import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
-import { ApiClient } from './ApiClient';
-import colors from 'colors';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
 
     public Read(): Session | null {
         let j = null;
-        if(!fs.existsSync(this.tokenCacheFile)) {
+        if (!fs.existsSync(this.tokenCacheFile)) {
             console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
 
             return null;
@@ -54,23 +52,5 @@ export class TokenCache {
             }
             console.info(green('Fresh access token dropped into .token_cache'));
         });
-    }
-
-    public async RefreshToken(session: Session, cookie?: string): Promise<string | undefined> {
-        const apiClient = ApiClient.getInstance(session);
-
-        let response = await apiClient.callApi('refreshToken', 'get', cookie);
-        let freshCookie: string | undefined = undefined;
-        
-        try {
-            let cookie: string = response?.headers['set-cookie'].toString();
-            freshCookie = cookie.split(',Authorization_Api=')[0];
-        }
-        catch (e) {
-            console.error(colors.yellow(
-                'Error when calling /refreshtoken: Missing or unexpected set-cookie header.'));
-        }
-
-        return freshCookie;
     }
 }
