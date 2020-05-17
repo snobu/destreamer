@@ -22,6 +22,11 @@ export const argv = yargs.options({
         type: 'string',
         demandOption: false
     },
+    password: {
+        alias: 'p',
+        type: 'string',
+        demandOption: false
+    },
     outputDirectory: {
         alias: 'o',
         describe: 'The directory where destreamer will save your downloads [default: videos]',

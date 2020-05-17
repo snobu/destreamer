@@ -10,6 +10,8 @@ import { getVideoMetadata } from './Metadata';
 import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
+import {microsoftStreamAuth} from './authentification';
+
 
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
@@ -50,45 +52,23 @@ async function init() {
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
     const videoId = url.split("/").pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID)
 
-    console.log('Launching headless Chrome to perform the OpenID Connect dance...');
-    const browser = await puppeteer.launch({
-        executablePath: getPuppeteerChromiumPath(),
-        headless: false,
-        args: ['--disable-dev-shm-usage']
-    });
-    const page = (await browser.pages())[0];
-    console.log('Navigating to login page...');
-
-    await page.goto(url, { waitUntil: 'load' });
-
-    if (username) {
-        await page.waitForSelector('input[type="email"]');
-        await page.keyboard.type(username);
-        await page.click('input[type="submit"]');
-    } else {
-        // If a username was not provided we let the user take actions that
-        // lead up to the video page.
-    }
-
-    await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
-    console.info('We are logged in.');
-
-    let session = null;
     let tries: number = 1;
+    let session: any;
 
     while (!session) {
         try {
             let sessionInfo: any;
-            session = await page.evaluate(
-                () => {
-                    return {
-                        AccessToken: sessionInfo.AccessToken,
-                        ApiGatewayUri: sessionInfo.ApiGatewayUri,
-                        ApiGatewayVersion: sessionInfo.ApiGatewayVersion
-                    };
-                }
-            );
-        } catch (error) {
+            if (argv.username || argv.password) {
+                session = await microsoftStreamAuth({account: argv.username, pwd: argv.password}); //using .ts
+                JSON.stringify(session); //inside if
+            }
+            else {
+                console.error(colors.yellow("Error when calling session : Missing Username or Password , please verify username and password"));
+                process.exit(ERROR_CODE.NO_SESSION_INFO);
+            }
+            //JSON.stringify(session); // outside if
+            }
+            catch (error) {
             if (tries > 5)
                 process.exit(ERROR_CODE.NO_SESSION_INFO);
 
@@ -100,12 +80,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
     tokenCache.Write(session);
     console.log('Wrote access token to token cache.');
-    console.log("At this point Chromium's job is done, shutting it down...\n");
-
-    await browser.close();
+    console.log("succesfully connected...\n");
 
     return session;
 }
+
 
 function extractVideoGuid(videoUrls: string[]): string[] {
     const videoGuids: string[] = [];
