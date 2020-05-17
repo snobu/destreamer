@@ -60,13 +60,13 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
             let sessionInfo: any;
             if (argv.username || argv.password) {
                 session = await microsoftStreamAuth({account: argv.username, pwd: argv.password}); //using .ts
-                JSON.stringify(session); //inside if
+                JSON.stringify(session);
             }
             else {
                 console.error(colors.yellow("Error when calling session : Missing Username or Password , please verify username and password"));
                 process.exit(ERROR_CODE.NO_SESSION_INFO);
             }
-            //JSON.stringify(session); // outside if
+            
             }
             catch (error) {
             if (tries > 5)
