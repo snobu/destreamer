@@ -253,6 +253,19 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         // let the magic begin...
         await new Promise((resolve: any) => {
+            ffmpegCmd.on('error', (error: any) => {
+                if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
+                    pbar.update(video.totalChunks); // set progress bar to 100%
+                    console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
+                    resolve();
+                } else {
+                    cleanupFn();
+
+                    console.log(`\nffmpeg returned an error: ${error.message}`);
+                    process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
+                }
+            });
+
             ffmpegCmd.on('success', () => {
                 pbar.update(video.totalChunks); // set progress bar to 100%
                 console.log(colors.green(`\nDownload finished: ${outputPath}`));
@@ -261,7 +274,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             ffmpegCmd.spawn();
         });
-        
+
         process.removeListener('SIGINT', cleanupFn);
     }
 }
