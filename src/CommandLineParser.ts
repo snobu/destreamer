@@ -36,28 +36,28 @@ export const argv = yargs.options({
     },
     noExperiments: {
         alias: 'x',
-        describe: `Do not attempt to render video thumbnails in the console`,
+        describe: 'Do not attempt to render video thumbnails in the console',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     simulate: {
         alias: 's',
-        describe: `Disable video download and print metadata information to the console`,
+        describe: 'Disable video download and print metadata information to the console',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
         alias: 'v',
-        describe: `Print additional information to the console (use this before opening an issue on GitHub)`,
+        describe: 'Print additional information to the console (use this before opening an issue on GitHub)',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     noCleanup: {
         alias: 'nc',
-        describe: `Don't delete the downloaded video file when an FFmpeg error occurs`,
+        describe: 'Do not delete the downloaded video file when an FFmpeg error occurs',
         type: 'boolean',
         default: false,
         demandOption: false

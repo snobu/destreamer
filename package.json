@@ -10,7 +10,8 @@
   "bin": "build/src/destreamer.js",
   "scripts": {
     "build": "echo Transpiling TypeScript to JavaScript... && node node_modules/typescript/bin/tsc && echo Destreamer was built successfully.",
-    "test": "mocha build/test"
+    "test": "mocha build/test",
+    "lint": "eslint src/*.ts"
   },
   "keywords": [],
   "author": "snobu",
