@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 function sanitizeUrls(urls: string[]) {
+    // eslint-disable-next-line
     const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
     const sanitized: string[] = [];
 

@@ -11,6 +11,7 @@ export function getPuppeteerChromiumPath() {
     if (!isPkg)
         return puppeteer.executablePath();
 
-    return puppeteer.executablePath()
-                    .replace(replaceRegex, path.join(path.dirname(process.execPath), 'chromium'))
+    return puppeteer
+        .executablePath()
+        .replace(replaceRegex, path.join(path.dirname(process.execPath), 'chromium'));
 }
