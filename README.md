@@ -14,6 +14,10 @@ This release would not have been possible without the code and time contributed 
 
 [Politecnico di Milano][polisite] students may want to use this fork over at https://github.com/SamanFekri/destreamer which is a specialized implementation of this project with automatic logon.
 
+## Outstanding bugs
+
+- We couldn't yet find an elegant way to refresh the access token, so you'll need to perform an interactive logon every hour or so. We're still at the drawing board on this one.
+
 ## What's new
 
 - Major code refactoring
@@ -21,7 +25,6 @@ This release would not have been possible without the code and time contributed 
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
 - We removed the dependency on `youtube-dl`
 - Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
-- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list)
 - Fixed a major 2FA bug that would sometimes cause a timeout in our code
 - Fixed a wide variety of other bugs, maybe introduced a few new ones :)
 
