@@ -173,7 +173,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
 
         // Very experimental inline thumbnail rendering
         if (!argv.noExperiments)
