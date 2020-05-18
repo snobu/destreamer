@@ -61,6 +61,30 @@ export const argv = yargs.options({
         type: 'boolean',
         default: false,
         demandOption: false
+    },
+    vcodec: {
+        describe: 'Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.',
+        type: 'string',
+        default: 'copy',
+        demandOption: false
+    },
+    acodec: {
+        describe: 'Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.',
+        type: 'string',
+        default: 'copy',
+        demandOption: false
+    },
+    format: {
+        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports)',
+        type: 'string',
+        default: 'mkv',
+        demandOption: false
+    },
+    skip: {
+        describe: 'Skip download if file already exists',
+        type: 'boolean',
+        default: false,
+        demandOption: false
     }
 })
 /**

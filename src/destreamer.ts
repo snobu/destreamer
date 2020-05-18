@@ -182,7 +182,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j]);
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
 
         
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
@@ -200,13 +200,17 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             await drawThumbnail(video.posterImage, session);
         }
 
-        const outputPath = outputDirectories[j] + path.sep + video.title + '.mp4';
+        const outputPath = outputDirectories[j] + path.sep + video.title + '.' + argv.format;
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput = new FFmpegOutput(outputPath);
+        const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
+            argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
+            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
+            ['n', null]
+        ]));
         const ffmpegCmd = new FFmpegCommand();
-        
+
         const cleanupFn = (): void => {
             pbar.stop();
 
@@ -240,13 +244,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             if (!process.stdout.columns) {
                 process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
             }
-        });
-
-        ffmpegCmd.on('error', (error: any) => {
-            cleanupFn();
-
-            console.log(`\nffmpeg returned an error: ${error.message}`);
-            process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
         });
 
         process.on('SIGINT', cleanupFn);

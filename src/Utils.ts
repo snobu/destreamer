@@ -122,11 +122,11 @@ export function checkRequirements() {
 }
 
 
-export function makeUniqueTitle(title: string, outDir: string) {
+export function makeUniqueTitle(title: string, outDir: string, skip?: boolean, format?: string) {
     let ntitle = title;
     let k = 0;
 
-    while (fs.existsSync(outDir + path.sep + ntitle + '.mp4'))
+    while (!skip && fs.existsSync(outDir + path.sep + ntitle + '.' + format))
         ntitle = title + ' - ' + (++k).toString();
 
     return ntitle;
