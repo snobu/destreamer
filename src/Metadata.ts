@@ -1,8 +1,9 @@
 import { Metadata, Session } from './Types';
 import { forEachAsync } from './Utils';
+import { ApiClient } from './ApiClient';
 
 import { parse } from 'iso8601-duration';
-import axios from 'axios';
+
 
 function publishedDateToString(date: string) {
     const dateJs = new Date(date);
@@ -21,8 +22,7 @@ function durationToTotalChunks(duration: string) {
     return (hrs * 60) + mins + (secs / 60);
 }
 
-
-export async function getVideoMetadata(videoGuids: string[], session: Session, verbose: boolean): Promise<Metadata[]> {
+export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
     let metadata: Metadata[] = [];
     let title: string;
     let date: string;
@@ -30,28 +30,20 @@ export async function getVideoMetadata(videoGuids: string[], session: Session, v
     let playbackUrl: string;
     let posterImage: string;
 
+    const apiClient = ApiClient.getInstance(session);
+
     await forEachAsync(videoGuids, async (guid: string) => {
-        let apiUrl = `${session.ApiGatewayUri}videos/${guid}?api-version=${session.ApiGatewayVersion}`;
+        let response = await apiClient.callApi('videos/' + guid, 'get');
 
-        if (verbose)
-            console.info(`Calling ${apiUrl}`);
-
-        let response = await axios.get(apiUrl,
-            {
-                headers: {
-                    Authorization: `Bearer ${session.AccessToken}`
-                }
-            });
-
-        title = response.data['name'];
-        playbackUrl = response.data['playbackUrls']
+        title = response?.data['name'];
+        playbackUrl = response?.data['playbackUrls']
             .filter((item: { [x: string]: string; }) =>
                 item['mimeType'] == 'application/vnd.apple.mpegurl')
             .map((item: { [x: string]: string }) => { return item['playbackUrl']; })[0];
 
-        posterImage = response.data['posterImage']['medium']['url'];
-        date = publishedDateToString(response.data['publishedDate']);
-        totalChunks = durationToTotalChunks(response.data.media['duration']);
+        posterImage = response?.data['posterImage']['medium']['url'];
+        date = publishedDateToString(response?.data['publishedDate']);
+        totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
         metadata.push({
             date: date,

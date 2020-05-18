@@ -2,15 +2,13 @@ import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
-import axios from 'axios';
-import colors from 'colors';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
 
     public Read(): Session | null {
         let j = null;
-        if(!fs.existsSync(this.tokenCacheFile)) {
+        if (!fs.existsSync(this.tokenCacheFile)) {
             console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
 
             return null;
@@ -54,35 +52,5 @@ export class TokenCache {
             }
             console.info(green('Fresh access token dropped into .token_cache'));
         });
-    }
-
-    public async RefreshToken(session: Session, cookie?: string | null): Promise<string | null> {
-        let endpoint = `${session.ApiGatewayUri}refreshtoken?api-version=${session.ApiGatewayVersion}`;
-
-        let headers: Function = (): object => {
-            if (cookie) {
-                return {
-                    Cookie: cookie
-                };
-            }
-            else {
-                return {
-                    Authorization: 'Bearer ' + session.AccessToken
-                };
-            }
-        }
-
-        let response = await axios.get(endpoint, { headers: headers() });
-        let freshCookie: string | null = null;
-        
-        try {
-            let cookie: string = response.headers["set-cookie"].toString();
-            freshCookie = cookie.split(',Authorization_Api=')[0];
-        }
-        catch (e) {
-            console.error(colors.yellow("Error when calling /refreshtoken: Missing or unexpected set-cookie header."));
-        }
-
-        return freshCookie;
     }
 }

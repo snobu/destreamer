@@ -11,8 +11,8 @@ import { Metadata, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
 
-import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
+import isElevated from 'is-elevated';
 import colors from 'colors';
 import path from 'path';
 import fs from 'fs';
@@ -22,10 +22,6 @@ import cliProgress from 'cli-progress';
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 const tokenCache = new TokenCache();
-
-// The cookie lifetime is one hour,
-// let's refresh every 3000 seconds.
-const REFRESH_TOKEN_INTERVAL = 3000;
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -54,7 +50,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
-        args: ['--disable-dev-shm-usage']
+        args: [
+            '--disable-dev-shm-usage',
+            '--fast-start',
+            '--no-sandbox'
+        ]
     });
     const page = (await browser.pages())[0];
     console.log('Navigating to login page...');
@@ -103,6 +103,17 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.log("At this point Chromium's job is done, shutting it down...\n");
 
     await browser.close();
+    // --- Ignore all this for now ---
+    // --- hopefully we won't need it ----
+    // await sleep(1000);
+    // let banner = await page.evaluate(
+    //     () => {
+    //             let topbar = document.getElementsByTagName('body')[0];
+    //             topbar.innerHTML = 
+    //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
+    //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
+    //         });
+    // --------------------------------
 
     return session;
 }
@@ -134,11 +145,10 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
-    let lastTokenRefresh: number;
 
     console.log('Fetching metadata...');
 
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
 
     if (argv.simulate) {
         metadata.forEach(video => {
@@ -152,11 +162,10 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         return;
     }
 
-    if (argv.verbose)
+    if (argv.verbose) {
         console.log(outputDirectories);
+    }
 
-
-    let freshCookie: string | null = null;
     const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
 
     for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
@@ -175,45 +184,21 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
 
-        // Very experimental inline thumbnail rendering
-        if (!argv.noExperiments)
-            await drawThumbnail(video.posterImage, session.AccessToken);
-
+        
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
             console.info(colors.red('Unable to get number of columns from terminal.\n' +
-                'This happens sometimes in Cygwin/MSYS.\n' +
-                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
-                'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+            'This happens sometimes in Cygwin/MSYS.\n' +
+            'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+            'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
         }
 
-        // Try to get a fresh cookie, else gracefully fall back
-        // to our session access token (Bearer)
-        freshCookie = await tokenCache.RefreshToken(session, freshCookie);
+        const headers = 'Authorization: Bearer ' + session.AccessToken;
 
-        // Don't remove the "useless" escapes otherwise ffmpeg will
-        // not pick up the header
-        // eslint-disable-next-line no-useless-escape
-        let headers = 'Authorization:\ Bearer\ ' + session.AccessToken;
-        if (freshCookie) {
-            lastTokenRefresh = Date.now();
-            if (argv.verbose) {
-                console.info(colors.green('Using a fresh cookie.'));
-            }
-            // eslint-disable-next-line no-useless-escape
-            headers = 'Cookie:\ ' + freshCookie;
+        // Very experimental inline thumbnail rendering
+        if (!argv.noExperiments) {
+            await drawThumbnail(video.posterImage, session);
         }
-
-        const RefreshTokenMaybe = async (): Promise<void> => {
-            let elapsed = Date.now() - lastTokenRefresh;
-            if (elapsed > REFRESH_TOKEN_INTERVAL * 1000) {
-                if (argv.verbose) {
-                    console.info(colors.green('\nRefreshing access token...'));
-                }
-                lastTokenRefresh = Date.now();
-                freshCookie = await tokenCache.RefreshToken(session, freshCookie);
-            }
-        };
 
         const outputPath = outputDirectories[j] + path.sep + video.title + '.' + argv.format;
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
@@ -234,8 +219,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
             try {
                 fs.unlinkSync(outputPath);
-            } catch(e) {}
-        }
+            }
+            catch (e) {
+                // Future handling of an error maybe
+            }
+        };
 
         pbar.start(video.totalChunks, 0, {
             speed: '0'
@@ -247,7 +235,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         ffmpegCmd.on('update', (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
-            RefreshTokenMaybe();
 
             pbar.update(currentChunks, {
                 speed: data.bitrate
@@ -262,7 +249,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         process.on('SIGINT', cleanupFn);
 
         // let the magic begin...
-        await new Promise((resolve: any, reject: any) => {
+        await new Promise((resolve: any) => {
             ffmpegCmd.on('error', (error: any) => {
                 if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
                     pbar.update(video.totalChunks); // set progress bar to 100%
@@ -276,7 +263,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 }
             });
 
-            ffmpegCmd.on('success', (data:any) => {
+            ffmpegCmd.on('success', () => {
                 pbar.update(video.totalChunks); // set progress bar to 100%
                 console.log(colors.green(`\nDownload finished: ${outputPath}`));
                 resolve();
@@ -303,6 +290,5 @@ async function main() {
 
     downloadVideo(videoUrls, outDirs, session);
 }
-
 
 main();
