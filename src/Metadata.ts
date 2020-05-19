@@ -9,8 +9,9 @@ function publishedDateToString(date: string) {
     const dateJs = new Date(date);
     const day = dateJs.getDate().toString().padStart(2, '0');
     const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
+    const publishedDate = day + '-' + month + '-' + dateJs.getFullYear();
 
-    return day+'-'+month+'-'+dateJs.getFullYear();
+    return publishedDate;
 }
 
 function durationToTotalChunks(duration: string) {
@@ -39,7 +40,9 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
         playbackUrl = response?.data['playbackUrls']
             .filter((item: { [x: string]: string; }) =>
                 item['mimeType'] == 'application/vnd.apple.mpegurl')
-            .map((item: { [x: string]: string }) => { return item['playbackUrl']; })[0];
+            .map((item: { [x: string]: string }) => {
+                return item['playbackUrl'];
+            })[0];
 
         posterImage = response?.data['posterImage']['medium']['url'];
         date = publishedDateToString(response?.data['publishedDate']);

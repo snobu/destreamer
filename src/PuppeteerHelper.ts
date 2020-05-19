@@ -8,10 +8,12 @@ export function getPuppeteerChromiumPath() {
     const win32_rex = /^.*?\\node_modules\\puppeteer\\\.local-chromium/;
     const replaceRegex = process.platform === 'win32' ? win32_rex : macOS_Linux_rex;
 
-    if (!isPkg)
+    if (!isPkg) {
         return puppeteer.executablePath();
+    }
 
-    return puppeteer
-        .executablePath()
+    const browserPath = puppeteer.executablePath()
         .replace(replaceRegex, path.join(path.dirname(process.execPath), 'chromium'));
+
+    return browserPath;
 }
