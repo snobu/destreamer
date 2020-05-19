@@ -12,8 +12,9 @@ import colors from 'colors';
 export function setProcessEvents() {
     // set exit event first so that we can always print cute errors
     process.on('exit', (code) => {
-        if (code == 0)
+        if (code == 0) {
             return;
+        }
 
         const msg = code in Error ? `\n\n${Error[code]} \n` : `\n\nUnknown error: exit code ${code} \n`;
 

@@ -107,52 +107,62 @@ function hasNoArgs() {
 }
 
 function isShowHelpRequest() {
-    if (hasNoArgs())
+    if (hasNoArgs()) {
         throw new Error(CLI_ERROR.GRACEFULLY_STOP);
+    }
 
     return true;
 }
 
 function checkRequiredArgument(argv: any) {
-    if (hasNoArgs())
+    if (hasNoArgs()) {
         return true;
+    }
 
-    if (!argv.videoUrls && !argv.videoUrlsFile)
+    if (!argv.videoUrls && !argv.videoUrlsFile) {
         throw new Error(colors.red(CLI_ERROR.MISSING_REQUIRED_ARG));
+    }
 
     return true;
 }
 
 function checkVideoUrlsArgConflict(argv: any) {
-    if (hasNoArgs())
+    if (hasNoArgs()) {
         return true;
+    }
 
-    if (argv.videoUrls && argv.videoUrlsFile)
+    if (argv.videoUrls && argv.videoUrlsFile) {
         throw new Error(colors.red(CLI_ERROR.VIDEOURLS_ARG_CONFLICT));
+    }
 
     return true;
 }
 
 function checkOutputDirArgConflict(argv: any) {
-    if (hasNoArgs())
+    if (hasNoArgs()) {
         return true;
+    }
 
-    if (argv.outputDirectory && argv.outputDirectories)
+    if (argv.outputDirectory && argv.outputDirectories) {
         throw new Error(colors.red(CLI_ERROR.OUTPUTDIR_ARG_CONFLICT));
+    }
 
     return true;
 }
 
 function checkVideoUrlsInput(argv: any) {
-    if (hasNoArgs() || !argv.videoUrls)
+    if (hasNoArgs() || !argv.videoUrls) {
         return true;
+    }
 
-    if (!argv.videoUrls.length)
+    if (!argv.videoUrls.length) {
         throw new Error(colors.red(CLI_ERROR.MISSING_REQUIRED_ARG));
+    }
 
     const t = argv.videoUrls[0] as string;
-    if (t.substring(t.length-4) === '.txt')
+    if (t.substring(t.length-4) === '.txt') {
         throw new Error(colors.red(CLI_ERROR.FILE_INPUT_VIDEOURLS_ARG));
+    }
 
     return true;
 }
@@ -164,8 +174,9 @@ function checkVideoUrlsInput(argv: any) {
  * Optimize and make this transparent to destreamer
  */
 function mergeVideoUrlsArguments(argv: any) {
-    if (!argv.videoUrlsFile)
+    if (!argv.videoUrlsFile) {
         return true;
+    }
 
     argv.videoUrls = [argv.videoUrlsFile]; // noone will notice ;)
 
@@ -183,13 +194,16 @@ function mergeVideoUrlsArguments(argv: any) {
  * Optimize and make this transparent to destreamer
  */
 function mergeOutputDirArguments(argv: any) {
-    if (!argv.outputDirectories && argv.outputDirectory)
+    if (!argv.outputDirectories && argv.outputDirectory) {
         return true;
+    }
 
-    if (!argv.outputDirectory && !argv.outputDirectories)
+    if (!argv.outputDirectory && !argv.outputDirectories) {
         argv.outputDirectory = 'videos'; // default out dir
-    else if (argv.outputDirectories)
+    }
+    else if (argv.outputDirectories) {
         argv.outputDirectory = argv.outputDirectories;
+    }
 
     if (argv.outputDirectories) {
         // these are not valid anymore
@@ -202,14 +216,17 @@ function mergeOutputDirArguments(argv: any) {
 
 // yeah this is for windows, but lets check everyone, who knows...
 function windowsFileExtensionBadBehaviorFix(argv: any) {
-    if (hasNoArgs() || !argv.videoUrlsFile || !argv.outputDirectories)
+    if (hasNoArgs() || !argv.videoUrlsFile || !argv.outputDirectories) {
         return true;
+    }
 
     if (!fs.existsSync(argv.videoUrlsFile)) {
-        if (fs.existsSync(argv.videoUrlsFile + '.txt'))
+        if (fs.existsSync(argv.videoUrlsFile + '.txt')) {
             argv.videoUrlsFile += '.txt';
-        else
+        }
+        else {
             throw new Error(colors.red(CLI_ERROR.INPUT_URLS_FILE_NOT_FOUND));
+        }
     }
 
     return true;

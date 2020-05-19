@@ -26,16 +26,19 @@ const tokenCache = new TokenCache();
 async function init() {
     setProcessEvents(); // must be first!
 
-    if (await isElevated())
+    if (await isElevated()) {
         process.exit(ERROR_CODE.ELEVATED_SHELL);
+    }
 
     checkRequirements();
 
-    if (argv.username)
+    if (argv.username) {
         console.info('Username: %s', argv.username);
+    }
 
-    if (argv.simulate)
+    if (argv.simulate) {
         console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
+    }
 
     if (argv.verbose) {
         console.info('Video URLs:');
@@ -65,7 +68,8 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         await page.waitForSelector('input[type="email"]');
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
-    } else {
+    }
+    else {
         // If a username was not provided we let the user take actions that
         // lead up to the video page.
     }
@@ -88,9 +92,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
                     };
                 }
             );
-        } catch (error) {
-            if (tries > 5)
+        }
+        catch (error) {
+            if (tries > 5) {
                 process.exit(ERROR_CODE.NO_SESSION_INFO);
+            }
 
             session = null;
             tries++;
@@ -126,13 +132,15 @@ function extractVideoGuid(videoUrls: string[]): string[] {
         try {
             const urlObj = new URL(url);
             guid = urlObj.pathname.split('/').pop();
-        } catch (e) {
+        }
+        catch (e) {
             console.error(`Unrecognized URL format in ${url}: ${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
-        if (guid)
+        if (guid) {
             videoGuids.push(guid);
+        }
     }
 
     if (argv.verbose) {
@@ -183,7 +191,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
-
         
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
@@ -214,8 +221,9 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         const cleanupFn = (): void => {
             pbar.stop();
 
-           if (argv.noCleanup)
+           if (argv.noCleanup) {
                return;
+           }
 
             try {
                 fs.unlinkSync(outputPath);
@@ -255,7 +263,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                     pbar.update(video.totalChunks); // set progress bar to 100%
                     console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
                     resolve();
-                } else {
+                }
+                else {
                     cleanupFn();
 
                     console.log(`\nffmpeg returned an error: ${error.message}`);
