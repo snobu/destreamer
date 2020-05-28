@@ -14,6 +14,8 @@ This release would not have been possible without the code and time contributed 
 
 [Politecnico di Milano][polisite] students may want to use this fork over at https://github.com/SamanFekri/destreamer which is a specialized implementation of this project with automatic logon.
 
+Another specialized implementation (for University of Pisa this time) is available at https://github.com/Guray00/destreamer-unipi.
+
 ## Outstanding bugs
 
 - We couldn't yet find an elegant way to refresh the access token, so you'll need to perform an interactive logon every hour or so. We're still at the drawing board on this one.
