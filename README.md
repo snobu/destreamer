@@ -12,14 +12,21 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
+[Politecnico di Milano][polisite] students may want to use this fork over at https://github.com/SamanFekri/destreamer which is a specialized implementation of this project with automatic logon.
+
+Another specialized implementation (for University of Pisa this time) is available at https://github.com/Guray00/destreamer-unipi.
+
+## Outstanding bugs
+
+- We couldn't yet find an elegant way to refresh the access token, so you'll need to perform an interactive logon every hour or so. We're still at the drawing board on this one.
+
 ## What's new
 
 - Major code refactoring
 - Dramatically improved error handling
 - We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
-- We removed the dependency on `youtube-dl`.
+- We removed the dependency on `youtube-dl`
 - Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
-- Fixed access token lifetime bugs (you no longer get a 403 Forbidden midway though your download list). Still one outstanding edge case here, see _Found a bug_ at the bottom for more.
 - Fixed a major 2FA bug that would sometimes cause a timeout in our code
 - Fixed a wide variety of other bugs, maybe introduced a few new ones :)
 
@@ -29,7 +36,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 
 ## Prereqs
 
-- [**Node.js**][node]: You'll need Node.js version 8.0 or higher. A GitHub Action runs tests on all major Node versions on every commit.
+- [**Node.js**][node]: You'll need Node.js version 8.0 or higher. A GitHub Action runs tests on all major Node versions on every commit. One caveat for Node 8, if you get a `Parse Error` with `code: HPE_HEADER_OVERFLOW` you're out of luck and you'll need to upgrade to Node 10+.
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 - [**git**][git]: one or more npm dependencies require git.
@@ -78,11 +85,30 @@ Options:
   --verbose, -v            Print additional information to the console (use this
                            before opening an issue on GitHub)
                                                       [boolean] [default: false]
+  --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
+                           error occurs               [boolean] [default: false]
+  --vcodec                 Re-encode video track. Specify FFmpeg codec (e.g.
+                           libx265) or set to "none" to disable video.
+                                                      [string] [default: "copy"]
+  --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
+                           libopus) or set to "none" to disable audio.
+                                                      [string] [default: "copy"]
+  --format                 Output container format (mkv, mp4, mov, anything that
+                           FFmpeg supports)            [string] [default: "mkv"]
+  --skip                   Skip download if file already exists
+                                                      [boolean] [default: false]
 ```
+
+We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
 
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
+```
+
+Download a video and re-encode with HEVC (libx265):
+```sh
+$ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" --vcodec libx265
 ```
 
 Download a video and speed up the interactive login by automagically filling in the username -
@@ -130,9 +156,7 @@ Contributions are welcome. Open an issue first before sending in a pull request.
 
 ## Found a bug?
 
-There is one outstanding bug that you may hit: if you download two or more videos in one go, if one of the videos take more than one hour to complete, the next download will fail as the cookie is now expired. We'll patch this soon.
-
-For other bugs, please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
+Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll look into it.
 
 
 [ffmpeg]: https://www.ffmpeg.org/download.html
@@ -140,3 +164,4 @@ For other bugs, please open an [issue](https://github.com/snobu/destreamer/issue
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
 [wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
+[polisite]: https://www.polimi.it

@@ -14,8 +14,9 @@ import { argv } from './CommandLineParser';
 export function setProcessEvents() {
     // set exit event first so that we can always print cute errors
     process.on('exit', (code) => {
-        if (code == 0)
+        if (code == 0) {
             return;
+        }
 
         if (code !== ERROR_CODE.INVALID_TMP_DIR)
             fs.removeSync(argv.tmpDirectory);

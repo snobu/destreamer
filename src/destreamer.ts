@@ -15,6 +15,7 @@ import { argv, askUserChoiche } from './CommandLineParser';
 import isElevated from 'is-elevated';
 import axios from 'axios';
 import puppeteer from 'puppeteer';
+import isElevated from 'is-elevated';
 import colors from 'colors';
 import path from 'path';
 import fs from 'fs-extra';
@@ -32,16 +33,19 @@ const tokenCache = new TokenCache();
 async function init() {
     setProcessEvents();
 
-    if (await isElevated())
+    if (await isElevated()) {
         process.exit(ERROR_CODE.ELEVATED_SHELL);
+    }
 
     checkRequirements();
 
-    if (argv.username)
+    if (argv.username) {
         console.info('Username: %s', argv.username);
+    }
 
-    if (argv.simulate)
+    if (argv.simulate) {
         console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
+    }
 
     if (argv.verbose) {
         console.info('Video URLs:');
@@ -56,17 +60,25 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
-        args: ['--disable-dev-shm-usage']
+        args: [
+            '--disable-dev-shm-usage',
+            '--fast-start',
+            '--no-sandbox'
+        ]
     });
     const page = (await browser.pages())[0];
     console.log('Navigating to login page...');
 
     await page.goto(url, { waitUntil: 'load' });
-    await page.waitForSelector('input[type="email"]');
 
     if (username) {
+        await page.waitForSelector('input[type="email"]');
         await page.keyboard.type(username);
         await page.click('input[type="submit"]');
+    }
+    else {
+        // If a username was not provided we let the user take actions that
+        // lead up to the video page.
     }
 
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
@@ -87,9 +99,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
                     };
                 }
             );
-        } catch (error) {
-            if (tries > 5)
+        }
+        catch (error) {
+            if (tries > 5) {
                 process.exit(ERROR_CODE.NO_SESSION_INFO);
+            }
 
             session = null;
             tries++;
@@ -102,6 +116,17 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.log("At this point Chromium's job is done, shutting it down...\n");
 
     await browser.close();
+    // --- Ignore all this for now ---
+    // --- hopefully we won't need it ----
+    // await sleep(1000);
+    // let banner = await page.evaluate(
+    //     () => {
+    //             let topbar = document.getElementsByTagName('body')[0];
+    //             topbar.innerHTML =
+    //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
+    //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
+    //         });
+    // --------------------------------
 
     return session;
 }
@@ -114,13 +139,15 @@ function extractVideoGuid(videoUrls: string[]): string[] {
         try {
             const urlObj = new URL(url);
             guid = urlObj.pathname.split('/').pop();
-        } catch (e) {
+        }
+        catch (e) {
             console.error(`Unrecognized URL format in ${url}: ${e.message}`);
             process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
         }
 
-        if (guid)
+        if (guid) {
             videoGuids.push(guid);
+        }
     }
 
     if (argv.verbose) {
@@ -273,6 +300,5 @@ async function main() {
 
     downloadVideo(videoUrls, outDirs, session);
 }
-
 
 main();

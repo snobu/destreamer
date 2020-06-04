@@ -7,12 +7,13 @@
 
         {
             "type": "node",
+            "runtimeArgs": ["--max-http-header-size", "32768"],
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/destreamer.js",
+            "program": "${workspaceFolder}/build/src/destreamer.js",
             "args": [
-                "--videoUrls",
-                "https://web.microsoftstream.com/video/6f1a382b-e20c-44c0-98fc-5608286e48bc"
+                "-i",
+                "https://web.microsoftstream.com/video/ce4da1ff-0400-86ec-2ad6-f1ea83412074" // Bacon and Eggs
             ]
         }
     ]

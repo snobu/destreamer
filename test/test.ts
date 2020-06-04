@@ -7,27 +7,19 @@ import fs from 'fs';
 let browser: any;
 let page: any;
 
-before(async () => {
-    browser = await puppeteer.launch({
-        headless: true,
-        args: ['--disable-dev-shm-usage']
-    });
-    page = await browser.newPage();
-});
-
 describe('Puppeteer', () => {
     it('should grab GitHub page title', async () => {
-        await page.goto("https://github.com/", { waitUntil: 'networkidle2' });
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--disable-dev-shm-usage', '--fast-start', '--no-sandbox']
+        });
+        page = await browser.newPage();
+        await page.goto("https://github.com/", { waitUntil: 'load' });
         let pageTitle = await page.title();
         assert.equal(true, pageTitle.includes('GitHub'));
-
-    }).timeout(15000); // yeah, this may take a while...
+        await browser.close();
+    }).timeout(25000); // yeah, this may take a while...
 });
-
-after(async () => {
-    await browser.close();
-});
-
 
 describe('Destreamer', () => {
     it('should parse and sanitize URL list from file', () => {
@@ -45,8 +37,8 @@ describe('Destreamer', () => {
         const expectedOut: string[] = [
             "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
             "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
-            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd?a=b&c",
-            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd?a"
+            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd",
+            "https://web.microsoftstream.com/video/xxxxxxxx-zzzz-hhhh-rrrr-dddddddddddd"
         ];
         const tmpFile = tmp.fileSync({ postfix: '.txt' });
         let testOut: string[];

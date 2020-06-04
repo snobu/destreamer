@@ -19,7 +19,7 @@ export const enum ERROR_CODE {
     INVALID_VIDEO_ID,
     INVALID_VIDEO_GUID,
     UNK_FFMPEG_ERROR,
-    NO_SESSION_INFO,
+    NO_SESSION_INFO
 }
 
 // TODO: create better errors descriptions

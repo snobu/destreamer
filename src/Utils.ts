@@ -6,27 +6,31 @@ import fs from 'fs-extra';
 import path from 'path';
 
 function sanitizeUrls(urls: string[]) {
-    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}-){3}[a-z0-9]{12}$/, 'i');
+    // eslint-disable-next-line
+    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
     const sanitized: string[] = [];
 
-    for (let i=0, l=urls.length; i<l; ++i) {
+    for (let i = 0, l = urls.length; i < l; ++i) {
         let url = urls[i].split('?')[0];
 
         if (!rex.test(url)) {
-            if (url !== '')
-                console.warn(colors.yellow('Invalid URL at line ' + (i+1) + ', skip..'));
+            if (url !== '') {
+                console.warn(colors.yellow('Invalid URL at line ' + (i + 1) + ', skip..'));
+            }
 
             continue;
         }
 
-        if (url.substring(0, 8) !== 'https://')
-            url = 'https://'+url;
+        if (url.substring(0, 8) !== 'https://') {
+            url = 'https://' + url;
+        }
 
         sanitized.push(url);
     }
 
-    if (!sanitized.length)
+    if (!sanitized.length) {
         process.exit(ERROR_CODE.INVALID_INPUT_URLS);
+    }
 
     return sanitized;
 }
@@ -35,8 +39,9 @@ function sanitizeOutDirsList(dirsList: string[]) {
     const sanitized: string[] = [];
 
     dirsList.forEach(dir => {
-        if (dir !== '')
+        if (dir !== '') {
             sanitized.push(dir);
+        }
     });
 
     return sanitized;
@@ -46,29 +51,37 @@ function readFileToArray(path: string) {
     return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
 }
 
+export async function forEachAsync(array: any, callback: any) {
+    for (let i = 0, l = array.length; i < l; ++i) {
+        await callback(array[i], i, array);
+    }
+}
 
 export function parseVideoUrls(videoUrls: any) {
-    let t = videoUrls[0] as string;
-    const isPath = t.substring(t.length-4) === '.txt';
+    let input = videoUrls[0] as string;
+    const isPath = input.substring(input.length - 4) === '.txt';
     let urls: string[];
 
-    if (isPath)
-        urls = readFileToArray(t);
-    else
+    if (isPath) {
+        urls = readFileToArray(input);
+    }
+    else {
         urls = videoUrls as string[];
+    }
 
     return sanitizeUrls(urls);
 }
 
-
 export function getOutputDirectoriesList(outDirArg: string) {
-    const isList = outDirArg.substring(outDirArg.length-4) === '.txt';
+    const isList = outDirArg.substring(outDirArg.length - 4) === '.txt';
     let dirsList: string[];
 
-    if (isList)
+    if (isList) {
         dirsList = sanitizeOutDirsList(readFileToArray(outDirArg));
-    else
+    }
+    else {
         dirsList = [outDirArg];
+    }
 
     return dirsList;
 }
@@ -110,7 +123,7 @@ export function makeOutputDirectories(dirsList: string[]) {
     dirsList.forEach(dir => {
         if (!fs.existsSync(dir)) {
             console.info(colors.yellow('Creating output directory:'));
-            console.info(colors.green(dir)+'\n');
+            console.info(colors.green(dir) + '\n');
 
             try {
                 fs.mkdirSync(dir, { recursive: true });
@@ -123,29 +136,30 @@ export function makeOutputDirectories(dirsList: string[]) {
     });
 }
 
-
 export function checkOutDirsUrlsMismatch(dirsList: string[], urlsList: string[]) {
     const dirsListL = dirsList.length;
     const urlsListL = urlsList.length;
 
-    if (dirsListL == 1) // one out dir, treat this as the chosen one for all
+    // single out dir, treat this as the chosen one for all
+    if (dirsListL == 1) {
         return;
-    else if (dirsListL != urlsListL)
+    }
+    else if (dirsListL != urlsListL) {
         process.exit(ERROR_CODE.OUTDIRS_URLS_MISMATCH);
+    }
 }
-
 
 export function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 
 export function checkRequirements() {
     try {
         const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];
         console.info(colors.green(`Using ${ffmpegVer}\n`));
 
-    } catch (e) {
+    }
+    catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
 
@@ -158,17 +172,16 @@ export function checkRequirements() {
     }
 }
 
-
-export function makeUniqueTitle(title: string, outDir: string) {
+export function makeUniqueTitle(title: string, outDir: string, skip?: boolean, format?: string) {
     let ntitle = title;
     let k = 0;
 
-    while (fs.existsSync(outDir + path.sep + ntitle + '.mp4'))
+    while (!skip && fs.existsSync(outDir + path.sep + ntitle + '.' + format)) {
         ntitle = title + ' - ' + (++k).toString();
+    }
 
     return ntitle;
 }
-
 
 export function ffmpegTimemarkToChunk(timemark: string) {
     const timeVals: string[] = timemark.split(':');

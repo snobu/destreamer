@@ -9,8 +9,9 @@
   "main": "build/src/destreamer.js",
   "bin": "build/src/destreamer.js",
   "scripts": {
-    "build": "echo Transpiling TypeScript to JavaScript... & node node_modules/typescript/bin/tsc --listEmittedFiles",
-    "test": "mocha build/test"
+    "build": "echo Transpiling TypeScript to JavaScript... && node node_modules/typescript/bin/tsc && echo Destreamer was built successfully.",
+    "test": "mocha build/test",
+    "lint": "eslint src/*.ts"
   },
   "keywords": [],
   "author": "snobu",
@@ -33,6 +34,7 @@
     "@types/jwt-decode": "^2.2.1",
     "@types/readline-sync": "^1.4.3",
     "axios": "^0.19.2",
+    "axios-retry": "^3.1.8",
     "cli-progress": "^3.7.0",
     "colors": "^1.4.0",
     "fs-extra": "^9.0.0",
@@ -43,7 +45,7 @@
     "puppeteer": "^2.1.1",
     "readline-sync": "^1.4.10",
     "sanitize-filename": "^1.6.3",
-    "terminal-image": "^0.2.0",
+    "terminal-image": "^1.0.1",
     "typescript": "^3.8.3",
     "yargs": "^15.0.3"
   }

@@ -8,5 +8,4 @@ tmp
 node_modules
 videos
 release
-swagger.json
-cc.json
+build

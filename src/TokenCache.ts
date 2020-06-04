@@ -2,15 +2,13 @@ import * as fs from 'fs-extra';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
-import axios from 'axios';
-import colors from 'colors';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
 
     public Read(): Session | null {
         let j = null;
-        if(!fs.existsSync(this.tokenCacheFile)) {
+        if (!fs.existsSync(this.tokenCacheFile)) {
             console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
 
             return null;
