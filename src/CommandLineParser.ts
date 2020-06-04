@@ -34,6 +34,12 @@ export const argv = yargs.options({
         type: 'string',
         demandOption: false
     },
+    keepLoginData: {
+        alias: 'k',
+        describe: 'Let chrome save cache data so that you can use the "remember me" option during login',
+        type: 'boolean',
+        demandOption: false
+    },
     noExperiments: {
         alias: 'x',
         describe: 'Do not attempt to render video thumbnails in the console',
