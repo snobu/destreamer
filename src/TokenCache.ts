@@ -1,4 +1,6 @@
 import * as fs from 'fs-extra';
+import axios from 'axios';
+import colors from 'colors';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';

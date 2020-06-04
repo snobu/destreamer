@@ -245,8 +245,9 @@ function windowsFileExtensionBadBehaviorFix(argv: any) {
 export function askUserChoiche(options: Array<string>): number {
     let index = readlineSync.keyInSelect(options, 'Which resolution/format do you prefer?');
 
-    if (index === -1)
+    if (index === -1) {
         process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
+    }
 
     return index;
 }

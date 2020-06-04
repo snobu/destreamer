@@ -12,7 +12,6 @@ import { Metadata, Session, PlaylistType } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv, askUserChoiche } from './CommandLineParser';
 
-import isElevated from 'is-elevated';
 import axios from 'axios';
 import puppeteer from 'puppeteer';
 import isElevated from 'is-elevated';
@@ -194,7 +193,7 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
 
     const videoGuids = extractVideoGuid(videoUrls);
     console.log('Fetching metadata...');
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.verbose);
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
 
     if (argv.simulate) {
         metadata.forEach(video => {
@@ -206,8 +205,9 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
         });
     }
 
-    if (argv.verbose)
+    if (argv.verbose) {
         console.log(`outputDirectories: ${outDirs}`);
+    }
 
     const outDirsIdxInc = outDirs.length > 1 ? 1:0;
     for (let i=0, j=0; i < metadata.length; ++i, j+=outDirsIdxInc) {
@@ -220,8 +220,9 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outDirs[j]);
         const outputPath = outDirs[j] + path.sep + video.title + '.mp4';
 
-        if (!argv.noExperiments)
-            await drawThumbnail(video.posterImage, session.AccessToken);
+        if (!argv.noExperiments) {
+            await drawThumbnail(video.posterImage, session);
+        }
 
         let master = await axios.get(video.playbackUrl,
             {
@@ -244,17 +245,20 @@ async function downloadVideo(videoUrls: string[], outDirs: string[], session: Se
                     `${playlist.attributes.RESOLUTION.width}x${playlist.attributes.RESOLUTION.height}`);
             }
         }
-        if (videoResolutions.length === 1)
+        if (videoResolutions.length === 1) {
             videoUrl = masterParser.manifest.playlists[0].uri;
-        else
+        }
+        else {
             videoUrl = masterParser.manifest.playlists[askUserChoiche(videoResolutions)].uri;
+        }
 
         let audioUrl: string = '';
         let audioChoiches = Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
         if (audioChoiches.length === 1){
             audioUrl = masterParser.manifest.mediaGroups.AUDIO
                 .audio[audioChoiches[0]].uri;
-        } else {
+        }
+        else {
             audioUrl = masterParser.manifest.mediaGroups.AUDIO
                 .audio[audioChoiches[askUserChoiche(audioChoiches)]].uri;
         }

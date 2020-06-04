@@ -95,7 +95,8 @@ export function createTmpDirectory(dir: string) {
     else {
         try {
             fs.mkdirSync(dir, { recursive: true });
-        } catch(e) {
+        }
+        catch(e) {
             console.log('CANNOT CREATE TEMP DIRECTORY');
             process.exit(ERROR_CODE.CANNOT_CREATE_DIR);
         }
@@ -111,7 +112,8 @@ export function removeDirectory(dir: string) {
     else {
         try {
             fs.removeSync(dir);
-        } catch(e) {
+        }
+        catch(e) {
             console.log(e);
             process.exit(ERROR_CODE.CANNOT_REMOVE_DIR);
         }
@@ -128,7 +130,8 @@ export function makeOutputDirectories(dirsList: string[]) {
             try {
                 fs.mkdirSync(dir, { recursive: true });
 
-            } catch(e) {
+            }
+            catch(e) {
                 console.log(`Cannot create ${dir}`);
                 process.exit(ERROR_CODE.CANNOT_CREATE_DIR);
             }
@@ -167,7 +170,8 @@ export function checkRequirements() {
         const aria2cVer = execSync('aria2c --version').toString().split('\n')[0];
         console.info(colors.green(`Using ${aria2cVer}\n`));
 
-    } catch (e) {
+    }
+    catch (e) {
         process.exit(ERROR_CODE.MISSING_ARIA2C);
     }
 }

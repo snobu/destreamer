@@ -18,8 +18,9 @@ export function setProcessEvents() {
             return;
         }
 
-        if (code !== ERROR_CODE.INVALID_TMP_DIR)
+        if (code !== ERROR_CODE.INVALID_TMP_DIR) {
             fs.removeSync(argv.tmpDirectory);
+        }
 
         const msg = code in Error ? `\n\n${Error[code]} \n` : `\n\nUnknown error: exit code ${code} \n`;
 
