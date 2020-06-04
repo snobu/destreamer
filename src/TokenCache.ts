@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import { Session } from './Types';
 import { bgGreen, bgYellow, green } from 'colors';
 import jwtDecode from 'jwt-decode';
+import puppeteer from 'puppeteer';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
+import { ERROR_CODE } from './Errors';
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
@@ -59,4 +62,56 @@ export class TokenCache {
 
         return true;
     }
+}
+
+
+export async function refreshSession(url: string) {
+    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
+
+    console.log('Trying to refresh token...');
+    const browser = await puppeteer.launch({
+        executablePath: getPuppeteerChromiumPath(),
+        headless: false,            // NEVER TRUE OR IT DOES NOT WORK
+        userDataDir: './user_data',
+        args: [
+            '--disable-dev-shm-usage',
+            '--fast-start',
+            '--no-sandbox'
+        ]
+    });
+
+    const page = (await browser.pages())[0];
+    await page.goto(url, { waitUntil: 'load' });
+
+    await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 30000 });
+
+    let session = null;
+    let tries: number = 1;
+
+    while (!session) {
+        try {
+            let sessionInfo: any;
+            session = await page.evaluate(
+                () => {
+                    return {
+                        AccessToken: sessionInfo.AccessToken,
+                        ApiGatewayUri: sessionInfo.ApiGatewayUri,
+                        ApiGatewayVersion: sessionInfo.ApiGatewayVersion
+                    };
+                }
+            );
+        }
+        catch (error) {
+            if (tries > 5) {
+                process.exit(ERROR_CODE.NO_SESSION_INFO);
+            }
+
+            session = null;
+            tries++;
+            await page.waitFor(3000);
+        }
+    }
+    browser.close();
+
+    return session;
 }
