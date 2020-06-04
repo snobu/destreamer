@@ -7,41 +7,30 @@ export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
 
     public Read(): Session | null {
-        let j = null;
+        let json = null;
         if (!fs.existsSync(this.tokenCacheFile)) {
             console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
 
             return null;
         }
-        let f = fs.readFileSync(this.tokenCacheFile, 'utf8');
-        j = JSON.parse(f);
-
-        interface Jwt {
-            [key: string]: any
-        }
-
-        const decodedJwt: Jwt = jwtDecode(j.AccessToken);
-
-        let now = Math.floor(Date.now() / 1000);
-        let exp = decodedJwt['exp'];
-        let timeLeft = exp - now;
-
-        let timeLeftInMinutes = Math.floor(timeLeft / 60);
-        if (timeLeft < 120) {
-            console.warn(bgYellow.black('\nAccess token has expired.'));
-
-            return null;
-        }
-
-        console.info(bgGreen.black(`\nAccess token still good for ${timeLeftInMinutes} minutes.\n`));
+        let file = fs.readFileSync(this.tokenCacheFile, 'utf8');
+        json = JSON.parse(file);
 
         let session: Session = {
-            AccessToken: j.AccessToken,
-            ApiGatewayUri: j.ApiGatewayUri,
-            ApiGatewayVersion: j.ApiGatewayVersion
+            AccessToken: json.AccessToken,
+            ApiGatewayUri: json.ApiGatewayUri,
+            ApiGatewayVersion: json.ApiGatewayVersion
         };
 
-        return session;
+        if (this.checkValid(session)) {
+            // TODO: reimplement timeleft without another decode of the jwt
+            console.info(bgGreen.black('\nAccess token still good!')); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
+
+            return session;
+        }
+        console.warn(bgYellow.black('\nAccess token has expired.'));
+
+        return null;
     }
 
     public Write(session: Session): void {
@@ -52,5 +41,22 @@ export class TokenCache {
             }
             console.info(green('Fresh access token dropped into .token_cache'));
         });
+    }
+
+    public checkValid(session: Session): boolean {
+        interface Jwt {
+            [key: string]: any
+        }
+        const decodedJwt: Jwt = jwtDecode(session.AccessToken);
+
+        let now = Math.floor(Date.now() / 1000);
+        let exp = decodedJwt['exp'];
+        let timeLeft = exp - now;
+
+        if (timeLeft < 120) {
+            return false;
+        }
+
+        return true;
     }
 }
