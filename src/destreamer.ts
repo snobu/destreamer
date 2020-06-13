@@ -78,7 +78,6 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         }
     }
     catch (e) {
-        console.log('no email');
         /* If there is no email input we are not in the login module
         we are probably logging in automaticly or we didn't say yes
         to save the credentials the first time */
