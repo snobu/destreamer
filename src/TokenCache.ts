@@ -72,7 +72,7 @@ export async function refreshSession(url: string) {
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,            // NEVER TRUE OR IT DOES NOT WORK
-        userDataDir: './user_data',
+        userDataDir: './chrome_data',
         args: [
             '--disable-dev-shm-usage',
             '--fast-start',
