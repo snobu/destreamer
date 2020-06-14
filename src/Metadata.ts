@@ -23,18 +23,35 @@ function durationToTotalChunks(duration: string) {
     return (hrs * 60) + mins + (secs / 60);
 }
 
-export async function getVideoMetadata(videoGuids: string[], session: Session): Promise<Metadata[]> {
+export async function getVideoMetadata(videoGuids: string[], session: Session, subtitles: boolean): Promise<Metadata[]> {
     let metadata: Metadata[] = [];
     let title: string;
     let date: string;
     let totalChunks: number;
     let playbackUrl: string;
     let posterImage: string;
+    let captionsUrl: string | undefined;
 
     const apiClient = ApiClient.getInstance(session);
 
     await forEachAsync(videoGuids, async (guid: string) => {
-        let response = await apiClient.callApi('videos/' + guid, 'get');
+        let response = await apiClient.callApi(`videos/${guid}`, 'get');
+
+        if (subtitles) {
+            let captions = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
+
+            if (!captions?.data.value.length) {
+                captionsUrl = undefined;
+            }
+            else if (captions?.data.value.length === 1) {
+                captionsUrl = captions?.data.value.pop().url;
+            }
+            else if (captions?.data.value.length > 1) {
+                console.log('Let user choose');
+                captionsUrl = undefined;
+                //TODO: implement user choice (see aria2c branc for userInput function)
+            }
+        }
 
         title = response?.data['name'];
         playbackUrl = response?.data['playbackUrls']
@@ -53,7 +70,8 @@ export async function getVideoMetadata(videoGuids: string[], session: Session): 
             totalChunks: totalChunks,
             title: title,
             playbackUrl: playbackUrl,
-            posterImage: posterImage
+            posterImage: posterImage,
+            captionsUrl: captionsUrl
         });
     });
 
