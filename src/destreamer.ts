@@ -241,7 +241,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // prepare ffmpeg command line
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
-        if (argv.closedCaptions) {
+        if (argv.closedCaptions && video.captionsUrl) {
             const captionsInpt = new FFmpegInput(video.captionsUrl, new Map([
                 ['headers', headers]
             ]));
