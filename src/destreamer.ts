@@ -161,6 +161,7 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 }
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
+    let isRefreshingSession: boolean = false;
     const videoGuids = extractVideoGuid(videoUrls);
 
     console.log('Fetching metadata...');
@@ -257,9 +258,11 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 speed: data.bitrate
             });
 
-            if (!tokenCache.checkValid(session) && argv.keepLoginData) {
+            if (!tokenCache.checkValid(session) && argv.keepLoginData && !isRefreshingSession) {
+                isRefreshingSession = true;
                 console.log('Trying to refresh token...');
                 session = await refreshSession(videoUrls[i]);
+                isRefreshingSession = false;
             }
 
             // Graceful fallback in case we can't get columns (Cygwin/MSYS)

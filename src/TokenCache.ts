@@ -56,7 +56,7 @@ export class TokenCache {
         let exp = decodedJwt['exp'];
         let timeLeft = exp - now;
 
-        if (timeLeft < 120) {
+        if (timeLeft < 3300) {
             return false;
         }
 
@@ -68,7 +68,6 @@ export class TokenCache {
 export async function refreshSession(url: string) {
     const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
 
-    console.log('Trying to refresh token...');
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,            // NEVER TRUE OR IT DOES NOT WORK
