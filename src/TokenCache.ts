@@ -56,7 +56,7 @@ export class TokenCache {
         let exp = decodedJwt['exp'];
         let timeLeft = exp - now;
 
-        if (timeLeft < 3300) {
+        if (timeLeft < 120) {
             return false;
         }
 
