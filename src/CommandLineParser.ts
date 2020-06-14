@@ -1,5 +1,6 @@
-import { CLI_ERROR } from './Errors';
+import { CLI_ERROR, ERROR_CODE } from './Errors';
 
+import readlineSync from 'readline-sync';
 import yargs from 'yargs';
 import colors from 'colors';
 import fs from 'fs';
@@ -237,4 +238,15 @@ function windowsFileExtensionBadBehaviorFix(argv: any) {
     }
 
     return true;
+}
+
+
+export function askUserChoiche(choiches: Array<string>): number {
+    let index = readlineSync.keyInSelect(choiches, 'Which resolution/format do you prefer?');
+
+    if (index === -1) {
+        process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
+    }
+
+    return index;
 }

@@ -7,6 +7,7 @@ export const enum ERROR_CODE {
     UNHANDLED_ERROR,
     MISSING_FFMPEG,
     ELEVATED_SHELL,
+    CANCELLED_USER_INPUT,
     INVALID_OUTPUT_DIR,
     INVALID_INPUT_URLS,
     OUTDIRS_URLS_MISMATCH,
@@ -25,6 +26,8 @@ export const Error: IError = {
 
     [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
                                         'Please run in a regular, non-elevated window.',
+
+    [ERROR_CODE.CANCELLED_USER_INPUT]:  'Input was cancelled by user',
 
     [ERROR_CODE.INVALID_OUTPUT_DIR]:    'Unable to create output directory',
 
