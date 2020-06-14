@@ -69,6 +69,7 @@ $ npm run build
 $ ./destreamer.sh
 
 Options:
+Options:
   --help                   Show help                                   [boolean]
   --version                Show version number                         [boolean]
   --videoUrls, -i          List of video urls                            [array]
@@ -85,8 +86,11 @@ Options:
   --verbose, -v            Print additional information to the console (use this
                            before opening an issue on GitHub)
                                                       [boolean] [default: false]
-  --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
-                           error occurs               [boolean] [default: false]
+  --closedCaptions, --cc   Check if closed captions are aviable and let the user
+                           choose which one to download (will not ask if only 1
+                           aviable)                   [boolean] [default: false]
+  --noCleanup, --nc        Do not delete the downloaded video file when an
+                           FFmpeg error occurs        [boolean] [default: false]
   --vcodec                 Re-encode video track. Specify FFmpeg codec (e.g.
                            libx265) or set to "none" to disable video.
                                                       [string] [default: "copy"]
