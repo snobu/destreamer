@@ -10,4 +10,5 @@ export type Metadata = {
     title: string;
     playbackUrl: string;
     posterImage: string;
+    captionsUrl?: string
 }

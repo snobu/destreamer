@@ -115,7 +115,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     // let banner = await page.evaluate(
     //     () => {
     //             let topbar = document.getElementsByTagName('body')[0];
-    //             topbar.innerHTML = 
+    //             topbar.innerHTML =
     //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
     //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
     //         });
@@ -156,14 +156,15 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     console.log('Fetching metadata...');
 
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session, argv.closedCaptions);
 
     if (argv.simulate) {
         metadata.forEach(video => {
             console.log(
                 colors.yellow('\n\nTitle: ') + colors.green(video.title) +
                 colors.yellow('\nPublished Date: ') + colors.green(video.date) +
-                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
+                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl) +
+                ((video.captionsUrl) ? (colors.yellow('\nCC URL: ') + colors.green(video.captionsUrl)) : '')
             );
         });
 
@@ -191,7 +192,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
         video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
-        
+
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
             console.info(colors.red('Unable to get number of columns from terminal.\n' +
@@ -240,6 +241,13 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // prepare ffmpeg command line
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
+        if (argv.closedCaptions) {
+            const captionsInpt = new FFmpegInput(video.captionsUrl, new Map([
+                ['headers', headers]
+            ]));
+
+            ffmpegCmd.addInput(captionsInpt);
+        }
 
         ffmpegCmd.on('update', (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
