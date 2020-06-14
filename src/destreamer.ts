@@ -161,7 +161,6 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 }
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
-    let isRefreshingSession: boolean = false;
     const videoGuids = extractVideoGuid(videoUrls);
 
     console.log('Fetching metadata...');
@@ -188,6 +187,12 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     for (let i=0, j=0; i < metadata.length; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
+
+        if (argv.keepLoginData) {
+            console.log(colors.yellow('Trying to refresh token...'));
+            session = await refreshSession(videoUrls[i]);
+        }
+
         const pbar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
@@ -257,13 +262,6 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             pbar.update(currentChunks, {
                 speed: data.bitrate
             });
-
-            if (!tokenCache.checkValid(session) && argv.keepLoginData && !isRefreshingSession) {
-                isRefreshingSession = true;
-                console.log('Trying to refresh token...');
-                session = await refreshSession(videoUrls[i]);
-                isRefreshingSession = false;
-            }
 
             // Graceful fallback in case we can't get columns (Cygwin/MSYS)
             if (!process.stdout.columns) {
