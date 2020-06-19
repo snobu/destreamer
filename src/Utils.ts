@@ -109,10 +109,6 @@ export function checkOutDirsUrlsMismatch(dirsList: string[], urlsList: string[])
     }
 }
 
-export function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export function checkRequirements() {
     try {
         const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];

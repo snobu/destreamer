@@ -1,5 +1,5 @@
 import {
-    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
+    parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
     makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
 } from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
@@ -109,7 +109,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
             session = null;
             tries++;
-            await sleep(3000);
+            await page.waitFor(3000);
         }
     }
 
