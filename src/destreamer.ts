@@ -5,7 +5,7 @@ import {
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
-import { TokenCache } from './TokenCache';
+import { TokenCache, refreshSession } from './TokenCache';
 import { getVideoInfo } from './VideoUtils';
 import { Video, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
@@ -50,9 +50,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
 
     console.log('Launching headless Chrome to perform the OpenID Connect dance...');
+
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
+        userDataDir: (argv.keepLoginData) ? './chrome_data' : undefined,
         args: [
             '--disable-dev-shm-usage',
             '--fast-start',
@@ -64,14 +66,21 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
     await page.goto(url, { waitUntil: 'load' });
 
-    if (username) {
-        await page.waitForSelector('input[type="email"]');
-        await page.keyboard.type(username);
-        await page.click('input[type="submit"]');
+    try {
+        if (username) {
+            await page.waitForSelector('input[type="email"]', {timeout: 3000});
+            await page.keyboard.type(username);
+            await page.click('input[type="submit"]');
+        }
+        else {
+            // If a username was not provided we let the user take actions that
+            // lead up to the video page.
+        }
     }
-    else {
-        // If a username was not provided we let the user take actions that
-        // lead up to the video page.
+    catch (e) {
+        /* If there is no email input we are not in the login module
+        we are probably logging in automaticly or we didn't say yes
+        to save the credentials the first time */
     }
 
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
@@ -175,10 +184,16 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         console.log(outputDirectories);
     }
 
-    const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+    const outDirsIdxInc = (outputDirectories.length > 1) ? 1 : 0;
 
-    for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
+    for (let i=0, j=0; i < metadata.length; ++i, j+=outDirsIdxInc) {
         const video = metadata[i];
+
+        if (argv.keepLoginData) {
+            console.log(colors.yellow('Trying to refresh token...'));
+            session = await refreshSession(videoUrls[i]);
+        }
+
         const pbar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
@@ -230,7 +245,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
                 fs.unlinkSync(outputPath);
             }
             catch (e) {
-                // Future handling of an error maybe
+                // Future handling of an error (maybe)
             }
         };
 
@@ -249,7 +264,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             ffmpegCmd.addInput(captionsInpt);
         }
 
-        ffmpegCmd.on('update', (data: any) => {
+        ffmpegCmd.on('update', async (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
 
             pbar.update(currentChunks, {
