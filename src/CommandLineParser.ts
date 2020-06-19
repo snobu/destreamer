@@ -1,37 +1,33 @@
 import { CLI_ERROR } from './Errors';
 
 import yargs from 'yargs';
-import colors from 'colors';
 import fs from 'fs';
 
+
 export const argv = yargs.options({
+    username: {
+        alias: 'u',
+        type: 'string',
+        describe: 'The username used to log into MS (enabling this will fill in the email field for you)',
+        demandOption: false
+    },
     videoUrls: {
         alias: 'i',
         describe: 'List of video urls',
         type: 'array',
         demandOption: false
     },
-    videoUrlsFile: {
+    inputFile: {
         alias: 'f',
-        describe: 'Path to txt file containing the urls',
-        type: 'string',
-        demandOption: false
-    },
-    username: {
-        alias: 'u',
+        describe: 'Path to txt file containing the urls (and optionals outDirs)',
         type: 'string',
         demandOption: false
     },
     outputDirectory: {
         alias: 'o',
-        describe: 'The directory where destreamer will save your downloads [default: videos]',
+        describe: 'The directory where destreamer will save your downloads',
         type: 'string',
-        demandOption: false
-    },
-    outputDirectories: {
-        alias: 'O',
-        describe: 'Path to a txt file containing one output directory per video',
-        type: 'string',
+        default: 'videos',
         demandOption: false
     },
     noExperiments: {
@@ -87,145 +83,39 @@ export const argv = yargs.options({
         demandOption: false
     }
 })
-/**
- * Do our own argv magic before destreamer starts.
- * ORDER IS IMPORTANT!
- * Do not mess with this.
- */
-.check(() => isShowHelpRequest())
-.check(argv => checkRequiredArgument(argv))
-.check(argv => checkVideoUrlsArgConflict(argv))
-.check(argv => checkOutputDirArgConflict(argv))
-.check(argv => checkVideoUrlsInput(argv))
-.check(argv => windowsFileExtensionBadBehaviorFix(argv))
-.check(argv => mergeVideoUrlsArguments(argv))
-.check(argv => mergeOutputDirArguments(argv))
+.wrap(120)
+.check(() => noArguments())
+.check((argv) => inputConflicts(argv))
 .argv;
 
-function hasNoArgs() {
-    return process.argv.length === 2;
-}
 
-function isShowHelpRequest() {
-    if (hasNoArgs()) {
-        throw new Error(CLI_ERROR.GRACEFULLY_STOP);
+function noArguments(): boolean {
+    // if only 2 args no other args (0: node path, 1: js script path)
+    if (process.argv.length === 2) {
+        throw new Error(CLI_ERROR.MISSING_INPUT_ARG.red);
     }
 
     return true;
 }
 
-function checkRequiredArgument(argv: any) {
-    if (hasNoArgs()) {
-        return true;
+
+function inputConflicts(argv: any): boolean {
+    // check if both inputs are declared
+    if ((argv.videoUrls !== undefined) && (argv.inputFile !== undefined)) {
+        throw new Error(CLI_ERROR.INPUT_ARG_CONFLICT.red);
     }
-
-    if (!argv.videoUrls && !argv.videoUrlsFile) {
-        throw new Error(colors.red(CLI_ERROR.MISSING_REQUIRED_ARG));
+    // check if no input is declared or if they are declared but empty
+    else if (!(argv.videoUrls || argv.inputFile) || (argv.videoUrls?.length === 0) || (argv.inputFile?.length === 0)) {
+        throw new Error(CLI_ERROR.MISSING_INPUT_ARG.red);
     }
-
-    return true;
-}
-
-function checkVideoUrlsArgConflict(argv: any) {
-    if (hasNoArgs()) {
-        return true;
-    }
-
-    if (argv.videoUrls && argv.videoUrlsFile) {
-        throw new Error(colors.red(CLI_ERROR.VIDEOURLS_ARG_CONFLICT));
-    }
-
-    return true;
-}
-
-function checkOutputDirArgConflict(argv: any) {
-    if (hasNoArgs()) {
-        return true;
-    }
-
-    if (argv.outputDirectory && argv.outputDirectories) {
-        throw new Error(colors.red(CLI_ERROR.OUTPUTDIR_ARG_CONFLICT));
-    }
-
-    return true;
-}
-
-function checkVideoUrlsInput(argv: any) {
-    if (hasNoArgs() || !argv.videoUrls) {
-        return true;
-    }
-
-    if (!argv.videoUrls.length) {
-        throw new Error(colors.red(CLI_ERROR.MISSING_REQUIRED_ARG));
-    }
-
-    const t = argv.videoUrls[0] as string;
-    if (t.substring(t.length-4) === '.txt') {
-        throw new Error(colors.red(CLI_ERROR.FILE_INPUT_VIDEOURLS_ARG));
-    }
-
-    return true;
-}
-
-/**
- * Users see 2 separate options, but we don't really care
- * cause both options have no difference in code.
- *
- * Optimize and make this transparent to destreamer
- */
-function mergeVideoUrlsArguments(argv: any) {
-    if (!argv.videoUrlsFile) {
-        return true;
-    }
-
-    argv.videoUrls = [argv.videoUrlsFile]; // noone will notice ;)
-
-    // these are not valid anymore
-    delete argv.videoUrlsFile;
-    delete argv.F;
-
-    return true;
-}
-
-/**
- * Users see 2 separate options, but we don't really care
- * cause both options have no difference in code.
- *
- * Optimize and make this transparent to destreamer
- */
-function mergeOutputDirArguments(argv: any) {
-    if (!argv.outputDirectories && argv.outputDirectory) {
-        return true;
-    }
-
-    if (!argv.outputDirectory && !argv.outputDirectories) {
-        argv.outputDirectory = 'videos'; // default out dir
-    }
-    else if (argv.outputDirectories) {
-        argv.outputDirectory = argv.outputDirectories;
-    }
-
-    if (argv.outputDirectories) {
-        // these are not valid anymore
-        delete argv.outputDirectories;
-        delete argv.O;
-    }
-
-    return true;
-}
-
-// yeah this is for windows, but lets check everyone, who knows...
-function windowsFileExtensionBadBehaviorFix(argv: any) {
-    if (hasNoArgs() || !argv.videoUrlsFile || !argv.outputDirectories) {
-        return true;
-    }
-
-    if (!fs.existsSync(argv.videoUrlsFile)) {
-        if (fs.existsSync(argv.videoUrlsFile + '.txt')) {
-            argv.videoUrlsFile += '.txt';
+    else if (argv.inputFile) {
+        // check if inputFile doesn't end in '.txt'
+        if (argv.inputFile.substring(argv.inputFile.length - 4) !== '.txt') {
+            throw new Error(CLI_ERROR.INPUTFILE_WRONG_EXTENSION.red);
         }
-        else {
-            throw new Error(colors.red(CLI_ERROR.INPUT_URLS_FILE_NOT_FOUND));
+        // check if the inputFile exists
+        else if (!fs.existsSync(argv.inputFile)) {
+            throw new Error(CLI_ERROR.INPUTFILE_DOESNT_EXISTS.red);
         }
     }
 

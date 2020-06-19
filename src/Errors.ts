@@ -45,20 +45,17 @@ export const Error: IError = {
     [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page'
 };
 
+
 export const enum CLI_ERROR {
-    GRACEFULLY_STOP           = ' ', // gracefully stop execution, yargs way
+    MISSING_INPUT_ARG           = 'You must specify a URLs source.\n' +
+                                'Valid options are -i for one or more URLs separated by space or -f for input file.',
 
-    MISSING_REQUIRED_ARG      = 'You must specify a URLs source.\n' +
-                                'Valid options are -i for one or more URLs separated by space or -f for URLs from file.',
+    INPUT_ARG_CONFLICT          = 'Too many URLs sources specified!\n' +
+                                'Please specify a single source, either -i or -f',
 
-    VIDEOURLS_ARG_CONFLICT    = 'Too many URLs sources specified!\n' +
-                                'Please specify a single source, either -i or -f (URLs from file)',
+    INPUTFILE_WRONG_EXTENSION   = 'The specified inputFile has the wrong extension\n' +
+                                'Please make sure to use path/to/filename.txt when useing the -f option',
 
-    OUTPUTDIR_ARG_CONFLICT    = 'Too many output arguments specified!\n' +
-                                'Please specify a single output argument, either -o or --outputDirectories.',
-
-    FILE_INPUT_VIDEOURLS_ARG  = 'Wrong input for option --videoUrls.\n' +
-                                'To read URLs from file, use --videoUrlsFile option.',
-
-    INPUT_URLS_FILE_NOT_FOUND = 'Input URL list file not found.'
+    INPUTFILE_DOESNT_EXISTS     = 'The specified inputFile does not exists\n'+
+                                'Please check the filename and the path you provided',
 }
