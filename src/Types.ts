@@ -11,4 +11,5 @@ export type Video = {
     outDir?: string;
     playbackUrl: string;
     posterImage: string;
+    captionsUrl?: string
 }

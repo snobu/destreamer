@@ -1,5 +1,6 @@
-import { CLI_ERROR } from './Errors';
+import { CLI_ERROR, ERROR_CODE } from './Errors';
 
+import readlineSync from 'readline-sync';
 import yargs from 'yargs';
 import fs from 'fs';
 
@@ -47,6 +48,13 @@ export const argv = yargs.options({
     verbose: {
         alias: 'v',
         describe: 'Print additional information to the console (use this before opening an issue on GitHub)',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
+    closedCaptions: {
+        alias: 'cc',
+        describe: 'Check if closed captions are aviable and let the user choose which one to download (will not ask if only 1 aviable)',
         type: 'boolean',
         default: false,
         demandOption: false
@@ -120,4 +128,15 @@ function inputConflicts(argv: any): boolean {
     }
 
     return true;
+}
+
+
+export function askUserChoiche(choiches: Array<string>): number {
+    let index = readlineSync.keyInSelect(choiches, 'Which resolution/format do you prefer?');
+
+    if (index === -1) {
+        process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
+    }
+
+    return index;
 }

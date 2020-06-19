@@ -156,14 +156,15 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     console.log('Fetching metadata...');
 
-    const metadata: Video[] = await getVideoInfo(videoGuids, session);
+    const metadata: Video[] = await getVideoInfo(videoGuids, session, argv.closedCaptions);
 
     if (argv.simulate) {
         metadata.forEach(video => {
             console.log(
                 colors.yellow('\n\nTitle: ') + colors.green(video.title) +
                 colors.yellow('\nPublished Date: ') + colors.green(video.date) +
-                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
+                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl) +
+                ((video.captionsUrl) ? (colors.yellow('\nCC URL: ') + colors.green(video.captionsUrl)) : '')
             );
         });
 
@@ -240,6 +241,13 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // prepare ffmpeg command line
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
+        if (argv.closedCaptions && video.captionsUrl) {
+            const captionsInpt = new FFmpegInput(video.captionsUrl, new Map([
+                ['headers', headers]
+            ]));
+
+            ffmpegCmd.addInput(captionsInpt);
+        }
 
         ffmpegCmd.on('update', (data: any) => {
             const currentChunks = ffmpegTimemarkToChunk(data.out_time);
