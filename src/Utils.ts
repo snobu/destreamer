@@ -51,12 +51,6 @@ function readFileToArray(path: string) {
     return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
 }
 
-export async function forEachAsync(array: any, callback: any) {
-    for (let i = 0, l = array.length; i < l; ++i) {
-        await callback(array[i], i, array);
-    }
-}
-
 export function parseVideoUrls(videoUrls: any) {
     let input = videoUrls[0] as string;
     const isPath = input.substring(input.length - 4) === '.txt';
@@ -130,7 +124,7 @@ export function checkRequirements() {
     }
 }
 
-export function makeUniqueTitle(title: string, outDir: string, skip?: boolean, format?: string) {
+export function makeUniqueTitle(title: string, outDir: string, format: string, skip?: boolean) {
     let ntitle = title;
     let k = 0;
 

@@ -6,8 +6,8 @@ import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
 import { TokenCache } from './TokenCache';
-import { getVideoMetadata } from './Metadata';
-import { Metadata, Session } from './Types';
+import { getVideoInfo } from './VideoUtils';
+import { Video, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
 
@@ -115,7 +115,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     // let banner = await page.evaluate(
     //     () => {
     //             let topbar = document.getElementsByTagName('body')[0];
-    //             topbar.innerHTML = 
+    //             topbar.innerHTML =
     //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
     //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
     //         });
@@ -156,7 +156,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
     console.log('Fetching metadata...');
 
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    const metadata: Video[] = await getVideoInfo(videoGuids, session);
 
     if (argv.simulate) {
         metadata.forEach(video => {
@@ -190,8 +190,8 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 
         console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
-        
+        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.format, argv.skip);
+
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
             console.info(colors.red('Unable to get number of columns from terminal.\n' +
@@ -288,7 +288,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 async function main() {
     await init(); // must be first
 
-    const outDirs: string[] = getOutputDirectoriesList(argv.outputDirectory as string);
+    const outDirs: string | string[] = getOutputDirectoriesList(argv.outputDirectory as string);
     const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
     let session: Session;
 
