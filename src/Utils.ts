@@ -3,7 +3,6 @@ import { ERROR_CODE } from './Errors';
 import { execSync } from 'child_process';
 import colors from 'colors';
 import fs from 'fs';
-import path from 'path';
 
 
 export function sanitizeUrls(urls: string[]): string[] {
@@ -103,18 +102,6 @@ export function checkRequirements() {
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
-}
-
-
-export function makeUniqueTitle(title: string, outDir: string, format: string, skip?: boolean) {
-    let ntitle = title;
-    let k = 0;
-
-    while (!skip && fs.existsSync(outDir + path.sep + ntitle + '.' + format)) {
-        ntitle = title + ' - ' + (++k).toString();
-    }
-
-    return ntitle;
 }
 
 
