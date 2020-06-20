@@ -6,9 +6,9 @@ export type Session = {
 
 export type Video = {
     date: string;
-    totalChunks: number; // Abstraction of FFmpeg timemark
     title: string;
-    outDir?: string;
+    outPath: string;
+    totalChunks: number;    // Abstraction of FFmpeg timemark
     playbackUrl: string;
     posterImage: string;
     captionsUrl?: string

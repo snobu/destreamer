@@ -1,10 +1,10 @@
-import { checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
+import { checkRequirements, ffmpegTimemarkToChunk,
     parseInputFile, sanitizeUrls } from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
 import { TokenCache, refreshSession } from './TokenCache';
-import { getVideoInfo } from './VideoUtils';
+import { getVideoInfo, createUniquePath } from './VideoUtils';
 import { Video, Session } from './Types';
 import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
@@ -12,16 +12,15 @@ import { argv } from './CommandLineParser';
 import puppeteer from 'puppeteer';
 import isElevated from 'is-elevated';
 import colors from 'colors';
-import path from 'path';
 import fs from 'fs';
 import { URL } from 'url';
-import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 const tokenCache = new TokenCache();
 
 // TODO: better verbose logging (maybe implement a logger?)
+
 
 async function init() {
     setProcessEvents(); // must be first!
@@ -39,12 +38,8 @@ async function init() {
     if (argv.simulate) {
         console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
     }
-
-    if (argv.verbose) {
-        console.info('Video URLs:');
-        console.info(argv.videoUrls);
-    }
 }
+
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
     const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
@@ -123,8 +118,9 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     return session;
 }
 
+
 function extractVideoGuid(videoUrls: string[]): string[] {
-    const videoGuids: string[] = [];
+    const videoGuids: Array<string> = [];
     let guid: string | undefined = '';
 
     for (const url of videoUrls) {
@@ -142,46 +138,44 @@ function extractVideoGuid(videoUrls: string[]): string[] {
         }
     }
 
-    if (argv.verbose) {
-        console.info('Video GUIDs:');
-        console.info(videoGuids);
-    }
-
     return videoGuids;
 }
+
 
 async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
     const videoGuids = extractVideoGuid(videoUrls);
 
-    console.log('Fetching metadata...');
+    console.log('Fetching videos info...');
 
-    const metadata: Video[] = await getVideoInfo(videoGuids, session, argv.closedCaptions);
+    const videos: Array<Video> = createUniquePath (
+        await getVideoInfo(videoGuids, session, argv.closedCaptions),
+        outputDirectories, argv.format, argv.skip
+        );
 
     if (argv.simulate) {
-        metadata.forEach(video => {
+        videos.forEach(video => {
             console.log(
-                colors.yellow('\n\nTitle: ') + colors.green(video.title) +
-                colors.yellow('\nPublished Date: ') + colors.green(video.date) +
-                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl) +
-                ((video.captionsUrl) ? (colors.yellow('\nCC URL: ') + colors.green(video.captionsUrl)) : '')
+                '\nTitle: '.green           + video.title +
+                '\nOutPath: '.green         + video.outPath +
+                '\nPublished Date: '.green  + video.date +
+                '\nPlayback URL: '.green    + video.playbackUrl +
+                ((video.captionsUrl) ? ('\nCC URL: '.green + video.captionsUrl) : '')
             );
         });
 
         return;
     }
 
-    if (argv.verbose) {
-        console.log(outputDirectories);
-    }
+    for (const video of videos) {
 
-    const outDirsIdxInc = (outputDirectories.length > 1) ? 1 : 0;
-
-    for (let i=0, j=0; i < metadata.length; ++i, j+=outDirsIdxInc) {
-        const video = metadata[i];
+        if (argv.skip && fs.existsSync(video.outPath)) {
+            console.log(`\nFile already exists, skipping: ${video.outPath}`.cyan);
+            continue;
+        }
 
         if (argv.keepLoginData) {
             console.log(colors.yellow('Trying to refresh token...'));
-            session = await refreshSession(videoUrls[i]);
+            session = await refreshSession(videoUrls[0]);
         }
 
         const pbar = new cliProgress.SingleBar({
@@ -194,30 +188,27 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             hideCursor: true,
         });
 
-        console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
-
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.format, argv.skip);
-
+        console.log('\nDownloading Video: '.yellow + video.title + '\n');
         console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
-            console.info(colors.red('Unable to get number of columns from terminal.\n' +
+            console.info(colors.red(
+            'Unable to get number of columns from terminal.\n' +
             'This happens sometimes in Cygwin/MSYS.\n' +
             'No progress bar can be rendered, however the download process should not be affected.\n\n' +
-            'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+            'Please use PowerShell or cmd.exe to run destreamer on Windows.'
+            ));
         }
 
         const headers = 'Authorization: Bearer ' + session.AccessToken;
 
-        // Very experimental inline thumbnail rendering
         if (!argv.noExperiments) {
             await drawThumbnail(video.posterImage, session);
         }
 
-        const outputPath = outputDirectories[j] + path.sep + video.title + '.' + argv.format;
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
+        const ffmpegOutput = new FFmpegOutput(video.outPath, new Map([
             argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
             argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
             ['n', null]
@@ -232,7 +223,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
            }
 
             try {
-                fs.unlinkSync(outputPath);
+                fs.unlinkSync(video.outPath);
             }
             catch (e) {
                 // Future handling of an error (maybe)
@@ -272,22 +263,15 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // let the magic begin...
         await new Promise((resolve: any) => {
             ffmpegCmd.on('error', (error: any) => {
-                if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
-                    pbar.update(video.totalChunks); // set progress bar to 100%
-                    console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
-                    resolve();
-                }
-                else {
-                    cleanupFn();
+                cleanupFn();
 
-                    console.log(`\nffmpeg returned an error: ${error.message}`);
-                    process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
-                }
+                console.log(`\nffmpeg returned an error: ${error.message}`);
+                process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
             });
 
             ffmpegCmd.on('success', () => {
                 pbar.update(video.totalChunks); // set progress bar to 100%
-                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+                console.log(colors.green(`\nDownload finished: ${video.outPath}`));
                 resolve();
             });
 
@@ -297,6 +281,7 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         process.removeListener('SIGINT', cleanupFn);
     }
 }
+
 
 async function main() {
     await init(); // must be first
