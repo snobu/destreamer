@@ -21,6 +21,8 @@ import cliProgress from 'cli-progress';
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 const tokenCache = new TokenCache();
 
+// TODO: better verbose logging (maybe implement a logger?)
+
 async function init() {
     setProcessEvents(); // must be first!
 
@@ -71,14 +73,15 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
             await page.click('input[type="submit"]');
         }
         else {
-            // If a username was not provided we let the user take actions that
-            // lead up to the video page.
+            /* If a username was not provided we let the user take actions that
+            lead up to the video page. */
         }
     }
     catch (e) {
-        /* If there is no email input we are not in the login module
-        we are probably logging in automaticly or we didn't say yes
-        to save the credentials the first time */
+        /* If there is no email input selector we aren't in the login module,
+        we are probably using the cache to aid the login.
+        It could finish the login on its own if the user said 'yes' when asked to
+        remember the credentials or it could still prompt the user for a password */
     }
 
     await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
@@ -116,17 +119,6 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     console.log("At this point Chromium's job is done, shutting it down...\n");
 
     await browser.close();
-    // --- Ignore all this for now ---
-    // --- hopefully we won't need it ----
-    // await sleep(1000);
-    // let banner = await page.evaluate(
-    //     () => {
-    //             let topbar = document.getElementsByTagName('body')[0];
-    //             topbar.innerHTML =
-    //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
-    //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
-    //         });
-    // --------------------------------
 
     return session;
 }
