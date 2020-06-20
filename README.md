@@ -133,12 +133,13 @@ You can create a `.txt` file containing your video URLs, one video per line. The
 Additionally, you can be specify the '-dir' option after each line of URIs, deastreamer will download there the video (it will fall back to the default folder specified with -o if it can't be created).
 These optional lines must start with white space(s).
 
-Usage:
+Usage -
+```
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
  -dir='path/to/folder'
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
         -dir = "/absolute/path/to/folder/"
-
+```
 
 
 ## Expected output
