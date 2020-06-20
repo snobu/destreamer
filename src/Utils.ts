@@ -80,34 +80,24 @@ export function getOutputDirectoriesList(outDirArg: string) {
     return dirsList;
 }
 
-export function makeOutputDirectories(dirsList: string[]) {
-    dirsList.forEach(dir => {
-        if (!fs.existsSync(dir)) {
-            console.info(colors.yellow('Creating output directory:'));
-            console.info(colors.green(dir) + '\n');
 
-            try {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-            catch (e) {
-                process.exit(ERROR_CODE.INVALID_OUTPUT_DIR);
-            }
+export function checkOutDir(directory: string): boolean {
+    if (!fs.existsSync(directory)) {
+        try {
+            fs.mkdirSync(directory);
+            console.log('Created directory: '.yellow + directory);
         }
-    });
+        catch (e) {
+            console.log('Cannot create directory: '.red + directory +
+                '\nFalling back to default directory..');
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
-export function checkOutDirsUrlsMismatch(dirsList: string[], urlsList: string[]) {
-    const dirsListL = dirsList.length;
-    const urlsListL = urlsList.length;
-
-    // single out dir, treat this as the chosen one for all
-    if (dirsListL == 1) {
-        return;
-    }
-    else if (dirsListL != urlsListL) {
-        process.exit(ERROR_CODE.OUTDIRS_URLS_MISMATCH);
-    }
-}
 
 export function checkRequirements() {
     try {
@@ -120,6 +110,7 @@ export function checkRequirements() {
     }
 }
 
+
 export function makeUniqueTitle(title: string, outDir: string, format: string, skip?: boolean) {
     let ntitle = title;
     let k = 0;
@@ -130,6 +121,7 @@ export function makeUniqueTitle(title: string, outDir: string, format: string, s
 
     return ntitle;
 }
+
 
 export function ffmpegTimemarkToChunk(timemark: string) {
     const timeVals: string[] = timemark.split(':');

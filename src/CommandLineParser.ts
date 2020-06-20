@@ -1,8 +1,10 @@
 import { CLI_ERROR, ERROR_CODE } from './Errors';
+import { checkOutDir } from './Utils';
 
 import readlineSync from 'readline-sync';
 import yargs from 'yargs';
 import fs from 'fs';
+
 
 
 export const argv = yargs.options({
@@ -99,7 +101,15 @@ export const argv = yargs.options({
 })
 .wrap(120)
 .check(() => noArguments())
-.check((argv) => inputConflicts(argv))
+.check(argv => inputConflicts(argv.videoUrls, argv.inputFile))
+.check(argv => {
+    if (checkOutDir(argv.outputDirectory)) {
+        return true;
+    }
+    else {
+        throw new Error(CLI_ERROR.INVALID_OUTDIR.red);
+    }
+})
 .argv;
 
 
@@ -113,22 +123,23 @@ function noArguments(): boolean {
 }
 
 
-function inputConflicts(argv: any): boolean {
+function inputConflicts(videoUrls: Array<string | number> | undefined,
+    inputFile: string | undefined): boolean {
     // check if both inputs are declared
-    if ((argv.videoUrls !== undefined) && (argv.inputFile !== undefined)) {
+    if ((videoUrls !== undefined) && (inputFile !== undefined)) {
         throw new Error(CLI_ERROR.INPUT_ARG_CONFLICT.red);
     }
     // check if no input is declared or if they are declared but empty
-    else if (!(argv.videoUrls || argv.inputFile) || (argv.videoUrls?.length === 0) || (argv.inputFile?.length === 0)) {
+    else if (!(videoUrls || inputFile) || (videoUrls?.length === 0) || (inputFile?.length === 0)) {
         throw new Error(CLI_ERROR.MISSING_INPUT_ARG.red);
     }
-    else if (argv.inputFile) {
+    else if (inputFile) {
         // check if inputFile doesn't end in '.txt'
-        if (argv.inputFile.substring(argv.inputFile.length - 4) !== '.txt') {
+        if (inputFile.substring(inputFile.length - 4) !== '.txt') {
             throw new Error(CLI_ERROR.INPUTFILE_WRONG_EXTENSION.red);
         }
         // check if the inputFile exists
-        else if (!fs.existsSync(argv.inputFile)) {
+        else if (!fs.existsSync(inputFile)) {
             throw new Error(CLI_ERROR.INPUTFILE_DOESNT_EXISTS.red);
         }
     }

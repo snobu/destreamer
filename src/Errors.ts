@@ -61,4 +61,7 @@ export const enum CLI_ERROR {
 
     INPUTFILE_DOESNT_EXISTS     = 'The specified inputFile does not exists\n'+
                                 'Please check the filename and the path you provided',
+
+    INVALID_OUTDIR              = 'Could not create the default/specified output directory\n' +
+                                'Pleace check th e directory and permissions and try again'
 }
