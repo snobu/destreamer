@@ -69,47 +69,41 @@ $ npm run build
 $ ./destreamer.sh
 
 Options:
-  --help                   Show help                                   [boolean]
-  --version                Show version number                         [boolean]
-  --videoUrls, -i          List of video urls                            [array]
-  --videoUrlsFile, -f      Path to txt file containing the urls         [string]
-  --username, -u                                                        [string]
-  --outputDirectory, -o    The directory where destreamer will save your
-                           downloads [default: videos]                  [string]
-  --outputDirectories, -O  Path to a txt file containing one output directory
-                           per video                                    [string]
-  --noExperiments, -x      Do not attempt to render video thumbnails in the
-                           console                    [boolean] [default: false]
-  --simulate, -s           Disable video download and print metadata information
-                           to the console             [boolean] [default: false]
-  --verbose, -v            Print additional information to the console (use this
-                           before opening an issue on GitHub)
-                                                      [boolean] [default: false]
-  --closedCaptions, --cc   Check if closed captions are aviable and let the user
-                           choose which one to download (will not ask if only 1
-                           aviable)                   [boolean] [default: false]
-  --noCleanup, --nc        Do not delete the downloaded video file when an
-                           FFmpeg error occurs        [boolean] [default: false]
-  --vcodec                 Re-encode video track. Specify FFmpeg codec (e.g.
-                           libx265) or set to "none" to disable video.
-                                                      [string] [default: "copy"]
-  --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
-                           libopus) or set to "none" to disable audio.
-                                                      [string] [default: "copy"]
-  --format                 Output container format (mkv, mp4, mov, anything that
-                           FFmpeg supports)            [string] [default: "mkv"]
-  --skip                   Skip download if file already exists
-                                                      [boolean] [default: false]
+  --help                  Show help                                                                            [boolean]
+  --version               Show version number                                                                  [boolean]
+  --username, -u          The username used to log into MS (enabling this will fill in the email field for you) [string]
+  --videoUrls, -i         List of video urls                                                                     [array]
+  --inputFile, -f         Path to txt file containing the urls (and optionals outDirs)                          [string]
+  --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
+  --keepLoginData, -k     Let chrome save cache data so that you can use the "remember me" option during login [boolean]
+  --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
+  --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
+  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
+                                                                                              [boolean] [default: false]
+  --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
+                          ask if only 1 aviable)                                              [boolean] [default: false]
+  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
+  --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
+                                                                                              [string] [default: "copy"]
+  --acodec                Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.
+                                                                                              [string] [default: "copy"]
+  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports)
+                                                                                               [string] [default: "mkv"]
+  --skip                  Skip download if file already exists                                [boolean] [default: false]
 ```
 
-We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
+- Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
+
+- You can use an absolute path for `-o` (output directory), for example `/mnt/videos`.
+
+- We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
 
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
-Download a video and re-encode with HEVC (libx265):
+Download a video and re-encode with HEVC (libx265) -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" --vcodec libx265
 ```
@@ -134,12 +128,18 @@ Download many videos but read URLs from a file -
 ```sh
 $ ./destreamer.sh -f list.txt
 ```
-
+### Input file
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
+Additionally, you can be specify the '-dir' option after each line of URIs, deastreamer will download there the video (it will fall back to the default folder specified with -o if it can't be created).
+These optional lines must start with white space(s).
 
-Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
+Usage:
+https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
+ -dir='path/to/folder'
+https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
+        -dir = "/absolute/path/to/folder/"
 
-You can use an absolute path for `-o` (output directory), for example `/mnt/videos`.
+
 
 ## Expected output
 
