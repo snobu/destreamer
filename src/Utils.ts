@@ -5,79 +5,74 @@ import colors from 'colors';
 import fs from 'fs';
 import path from 'path';
 
-function sanitizeUrls(urls: string[]) {
-    // eslint-disable-next-line
-    const rex = new RegExp(/(?:https:\/\/)?.*\/video\/[a-z0-9]{8}-(?:[a-z0-9]{4}\-){3}[a-z0-9]{12}$/, 'i');
-    const sanitized: string[] = [];
 
-    for (let i = 0, l = urls.length; i < l; ++i) {
-        let url = urls[i].split('?')[0];
+export function sanitizeUrls(urls: string[]): string[] {
+    const URLregex = new RegExp(/(https:\/\/.*\/video\/\w{8}-(?:\w{4}-){3}\w{12})/);
+    const sanitized: Set<string> = new Set<string>();
 
-        if (!rex.test(url)) {
-            if (url !== '') {
-                console.warn(colors.yellow('Invalid URL at line ' + (i + 1) + ', skip..'));
-            }
 
-            continue;
+    urls.forEach((url, index) =>{
+        const match: RegExpExecArray | null = URLregex.exec(url);
+
+        if (!match) {
+            console.warn(`Invalid URL at line ${index + 1}, skipping..`);
         }
-
-        if (url.substring(0, 8) !== 'https://') {
-            url = 'https://' + url;
-        }
-
-        sanitized.push(url);
-    }
-
-    if (!sanitized.length) {
-        process.exit(ERROR_CODE.INVALID_INPUT_URLS);
-    }
-
-    return sanitized;
-}
-
-function sanitizeOutDirsList(dirsList: string[]) {
-    const sanitized: string[] = [];
-
-    dirsList.forEach(dir => {
-        if (dir !== '') {
-            sanitized.push(dir);
+        else {
+            // we add the first (and only) match from the regex
+            sanitized.add(match[1]);
         }
     });
 
-    return sanitized;
+    if (!sanitized.size) {
+        process.exit(ERROR_CODE.INVALID_INPUT_URLS);
+    }
+
+    return Array.from(sanitized);
 }
 
-function readFileToArray(path: string) {
-    return fs.readFileSync(path).toString('utf-8').split(/[\r\n]/);
+
+export function parseInputFile(inputFile: string, defaultOutDir: string): [string[], string[]] {
+
+    // rawContent is a list of each line of the file that has content
+    const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
+        .split(/\r?\n/).filter(item => item !== '');
+
+    console.info('\nParsing and sanitizing URLs...\n');
+    const urlList: Array<string> = sanitizeUrls(rawContent);
+        // .filter(item => !item.startsWith(' ')));
+
+    console.info('\nParsing and creating directories...\n');
+    let outList: Array<string> = [];
+
+    for (let i = 0, j = 0; i < urlList.length; i++, j++) {
+        let outDir: string = parseOption('-dir', rawContent[j + 1]);
+
+        if (outDir) {
+            // check if the directory in the file is ok
+            if (checkOutDir(outDir)) {
+                outList.push(outDir);
+            }
+            // if not ok we fall back to default directory
+            else {
+                outList.push(defaultOutDir);
+            }
+            j++;
+        }
+        else {
+            outList.push(defaultOutDir);
+        }
+    }
+
+    return [urlList, outList];
 }
 
-export function parseVideoUrls(videoUrls: any) {
-    let input = videoUrls[0] as string;
-    const isPath = input.substring(input.length - 4) === '.txt';
-    let urls: string[];
 
-    if (isPath) {
-        urls = readFileToArray(input);
-    }
-    else {
-        urls = videoUrls as string[];
-    }
+function parseOption(optionSyntax: string, item: string): string {
+    const match = item.match(
+        RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)
+        );
 
-    return sanitizeUrls(urls);
-}
-
-export function getOutputDirectoriesList(outDirArg: string) {
-    const isList = outDirArg.substring(outDirArg.length - 4) === '.txt';
-    let dirsList: string[];
-
-    if (isList) {
-        dirsList = sanitizeOutDirsList(readFileToArray(outDirArg));
-    }
-    else {
-        dirsList = [outDirArg];
-    }
-
-    return dirsList;
+    return match ? match[1] : '';
 }
 
 

@@ -1,7 +1,5 @@
-import {
-    parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
-    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
-} from './Utils';
+import { checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
+    parseInputFile, sanitizeUrls } from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
@@ -311,13 +309,18 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
 async function main() {
     await init(); // must be first
 
-    const outDirs: string | string[] = getOutputDirectoriesList(argv.outputDirectory as string);
-    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
+    let videoUrls: Array<string>;
+    let outDirs: Array<string> = [];
+
+    if (argv.videoUrls) {
+        videoUrls = sanitizeUrls(argv.videoUrls.map(item => item as string));
+        outDirs = new Array(videoUrls.length).fill(argv.outputDirectory);
+    }
+    else {
+        [videoUrls, outDirs] =  parseInputFile(argv.inputFile!, argv.outputDirectory);
+    }
+
     let session: Session;
-
-    checkOutDirsUrlsMismatch(outDirs, videoUrls);
-    makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
-
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
 
     downloadVideo(videoUrls, outDirs, session);
