@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } f
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';
 import { Session } from './Types';
 
+
 export class ApiClient {
     private static instance: ApiClient;
     private axiosInstance?: AxiosInstance;
@@ -26,7 +27,7 @@ export class ApiClient {
                     console.warn(`${err}. Retrying request...`);
 
                     return true;
-                }   
+                }
                 console.warn(`Got HTTP ${err?.response?.status}. Retrying request...`);
                 const condition = retryCodes.includes(err?.response?.status ?? 0);
 
@@ -74,7 +75,7 @@ export class ApiClient {
         method: AxiosRequestConfig['method'] = 'get',
         payload?: any,
         responseType: AxiosRequestConfig['responseType'] = 'json'): Promise<AxiosResponse | undefined> {
-            
+
         const headers: object = {
             'Authorization': 'Bearer ' + this.session?.AccessToken
         };
@@ -87,5 +88,4 @@ export class ApiClient {
             responseType: responseType
         });
     }
-
 }

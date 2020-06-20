@@ -5,10 +5,10 @@ import colors from 'colors';
 import fs from 'fs';
 
 
-export function sanitizeUrls(urls: string[]): string[] {
+export function sanitizeUrls(urls: Array<string>): Array<string> {
+
     const URLregex = new RegExp(/(https:\/\/.*\/video\/\w{8}-(?:\w{4}-){3}\w{12})/);
     const sanitized: Set<string> = new Set<string>();
-
 
     urls.forEach((url, index) =>{
         const match: RegExpExecArray | null = URLregex.exec(url);
@@ -30,7 +30,7 @@ export function sanitizeUrls(urls: string[]): string[] {
 }
 
 
-export function parseInputFile(inputFile: string, defaultOutDir: string): [string[], string[]] {
+export function parseInputFile(inputFile: string, defaultOutDir: string): Array<Array<string>> {
 
     // rawContent is a list of each line of the file that has content
     const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
@@ -105,8 +105,8 @@ export function checkRequirements() {
 }
 
 
-export function ffmpegTimemarkToChunk(timemark: string) {
-    const timeVals: string[] = timemark.split(':');
+export function ffmpegTimemarkToChunk(timemark: string): number {
+    const timeVals: Array<string> = timemark.split(':');
     const hrs = parseInt(timeVals[0]);
     const mins = parseInt(timeVals[1]);
     const secs = parseInt(timeVals[2]);

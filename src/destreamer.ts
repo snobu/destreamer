@@ -57,8 +57,8 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         ]
     });
     const page = (await browser.pages())[0];
-    console.log('Navigating to login page...');
 
+    console.log('Navigating to login page...');
     await page.goto(url, { waitUntil: 'load' });
 
     try {
@@ -84,7 +84,6 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
     let session = null;
     let tries: number = 1;
-
     while (!session) {
         try {
             let sessionInfo: any;
@@ -119,7 +118,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 
-function extractVideoGuid(videoUrls: string[]): string[] {
+function extractVideoGuid(videoUrls: Array<string>): Array<string> {
     const videoGuids: Array<string> = [];
     let guid: string | undefined = '';
 
@@ -142,11 +141,11 @@ function extractVideoGuid(videoUrls: string[]): string[] {
 }
 
 
-async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
+async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<string>, session: Session) {
+
     const videoGuids = extractVideoGuid(videoUrls);
 
     console.log('Fetching videos info...');
-
     const videos: Array<Video> = createUniquePath (
         await getVideoInfo(videoGuids, session, argv.closedCaptions),
         outputDirectories, argv.format, argv.skip
@@ -302,5 +301,6 @@ async function main() {
 
     downloadVideo(videoUrls, outDirs, session);
 }
+
 
 main();

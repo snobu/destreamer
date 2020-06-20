@@ -4,6 +4,7 @@ export type Session = {
     ApiGatewayVersion: string;
 }
 
+
 export type Video = {
     date: string;
     title: string;

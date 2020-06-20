@@ -7,22 +7,24 @@ import fs from 'fs';
 // TODO: ?add inline parsing test
 // TODO: add refreshSession test
 
-let browser: any;
-let page: any;
 
 describe('Puppeteer', () => {
     it('should grab GitHub page title', async () => {
-        browser = await puppeteer.launch({
+        const browser = await puppeteer.launch({
             headless: true,
             args: ['--disable-dev-shm-usage', '--fast-start', '--no-sandbox']
         });
-        page = await browser.newPage();
+
+        const page = await browser.newPage();
         await page.goto('https://github.com/', { waitUntil: 'load' });
+
         let pageTitle = await page.title();
         assert.equal(true, pageTitle.includes('GitHub'));
+
         await browser.close();
-    }).timeout(25000); // yeah, this may take a while...
+    }).timeout(30000); // yeah, this may take a while...
 });
+
 
 describe('Destreamer', () => {
     describe('Parsing', () => {

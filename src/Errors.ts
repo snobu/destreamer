@@ -2,6 +2,7 @@ interface IError {
     [key: number]: string
 }
 
+
 export const enum ERROR_CODE {
     NO_ERROR,
     UNHANDLED_ERROR,
@@ -16,6 +17,7 @@ export const enum ERROR_CODE {
     UNK_FFMPEG_ERROR,
     NO_SESSION_INFO
 }
+
 
 // TODO: create better errors descriptions
 export const Error: IError = {

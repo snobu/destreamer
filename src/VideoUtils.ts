@@ -26,7 +26,7 @@ function durationToTotalChunks(duration: string) {
     return (hrs * 60) + mins + (secs / 60);
 }
 
-export async function getVideoInfo(videoGuids: string[], session: Session, subtitles?: boolean): Promise<Video[]> {
+export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
     let metadata: Video[] = [];
     let title: string;
     let date: string;
@@ -85,7 +85,7 @@ export async function getVideoInfo(videoGuids: string[], session: Session, subti
 }
 
 
-export function createUniquePath(videos: Video[], outDirs: string[], format: string, skip?: boolean): Video[] {
+export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, format: string, skip?: boolean): Array<Video> {
 
     videos.forEach((video, index) => {
         let title = `${video.title} - ${video.date}`;

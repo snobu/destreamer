@@ -6,7 +6,6 @@ import yargs from 'yargs';
 import fs from 'fs';
 
 
-
 export const argv = yargs.options({
     username: {
         alias: 'u',
