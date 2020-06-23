@@ -44,6 +44,7 @@
     "sanitize-filename": "^1.6.3",
     "terminal-image": "^1.0.1",
     "typescript": "^3.8.3",
+    "winston": "^3.3.2",
     "yargs": "^15.0.3"
   }
 }
