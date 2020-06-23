@@ -14,7 +14,9 @@ export function sanitizeUrls(urls: Array<string>): Array<string> {
         const match: RegExpExecArray | null = URLregex.exec(url);
 
         if (!match) {
-            console.warn(`Invalid URL at line ${index + 1}, skipping..`);
+            if (!(url === '' || url.startsWith(' '))) {
+                console.warn(`Invalid URL at line ${index + 1}, skipping..`);
+            }
         }
         else {
             // we add the first (and only) match from the regex
@@ -34,7 +36,7 @@ export function parseInputFile(inputFile: string, defaultOutDir: string): Array<
 
     // rawContent is a list of each line of the file that has content
     const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
-        .split(/\r?\n/).filter(item => item !== '');
+        .split(/\r?\n/); // .filter(item => item !== '');
 
     console.info('\nParsing and sanitizing URLs...\n');
     const urlList: Array<string> = sanitizeUrls(rawContent);
@@ -42,9 +44,15 @@ export function parseInputFile(inputFile: string, defaultOutDir: string): Array<
 
     console.info('\nParsing and creating directories...\n');
     let outList: Array<string> = [];
+    let i: number = 0;
 
-    for (let i = 0, j = 0; i < urlList.length; i++, j++) {
-        let outDir: string = parseOption('-dir', rawContent[j + 1]);
+    for (const url of urlList) {
+        // this will let us sync urlList with rawContent
+        while (!rawContent[i].includes(url)) {
+            i++;
+        }
+
+        let outDir: string = parseOption('-dir', rawContent[i + 1]);
 
         if (outDir) {
             // check if the directory in the file is ok
@@ -55,7 +63,6 @@ export function parseInputFile(inputFile: string, defaultOutDir: string): Array<
             else {
                 outList.push(defaultOutDir);
             }
-            j++;
         }
         else {
             outList.push(defaultOutDir);
