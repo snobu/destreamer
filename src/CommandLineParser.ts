@@ -1,6 +1,7 @@
 import { CLI_ERROR, ERROR_CODE } from './Errors';
 import { checkOutDir } from './Utils';
 
+import colors from 'colors';
 import readlineSync from 'readline-sync';
 import yargs from 'yargs';
 import fs from 'fs';
@@ -106,7 +107,7 @@ export const argv = yargs.options({
         return true;
     }
     else {
-        throw new Error(CLI_ERROR.INVALID_OUTDIR.red);
+        throw new Error(makeFatalError(CLI_ERROR.INVALID_OUTDIR));
     }
 })
 .argv;
@@ -115,7 +116,7 @@ export const argv = yargs.options({
 function noArguments(): boolean {
     // if only 2 args no other args (0: node path, 1: js script path)
     if (process.argv.length === 2) {
-        throw new Error(CLI_ERROR.MISSING_INPUT_ARG.red);
+        throw new Error(makeFatalError(CLI_ERROR.MISSING_INPUT_ARG));
     }
 
     return true;
@@ -126,24 +127,29 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
     inputFile: string | undefined): boolean {
     // check if both inputs are declared
     if ((videoUrls !== undefined) && (inputFile !== undefined)) {
-        throw new Error(CLI_ERROR.INPUT_ARG_CONFLICT.red);
+        throw new Error(makeFatalError(CLI_ERROR.INPUT_ARG_CONFLICT));
     }
     // check if no input is declared or if they are declared but empty
     else if (!(videoUrls || inputFile) || (videoUrls?.length === 0) || (inputFile?.length === 0)) {
-        throw new Error(CLI_ERROR.MISSING_INPUT_ARG.red);
+        throw new Error(makeFatalError(CLI_ERROR.MISSING_INPUT_ARG));
     }
     else if (inputFile) {
         // check if inputFile doesn't end in '.txt'
         if (inputFile.substring(inputFile.length - 4) !== '.txt') {
-            throw new Error(CLI_ERROR.INPUTFILE_WRONG_EXTENSION.red);
+            throw new Error(makeFatalError(CLI_ERROR.INPUTFILE_WRONG_EXTENSION));
         }
         // check if the inputFile exists
         else if (!fs.existsSync(inputFile)) {
-            throw new Error(CLI_ERROR.INPUTFILE_DOESNT_EXISTS.red);
+            throw new Error(makeFatalError(CLI_ERROR.INPUTFILE_DOESNT_EXISTS));
         }
     }
 
     return true;
+}
+
+
+function makeFatalError(message: string): string {
+    return colors.red('\n[FATAL ERROR] ') + message;
 }
 
 

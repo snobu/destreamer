@@ -1,10 +1,12 @@
-import * as fs from 'fs';
 import { Session } from './Types';
-import { bgGreen, bgYellow, green } from 'colors';
-import jwtDecode from 'jwt-decode';
-import puppeteer from 'puppeteer';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { ERROR_CODE } from './Errors';
+import { logger } from './Logger';
+
+import jwtDecode from 'jwt-decode';
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+
 
 export class TokenCache {
     private tokenCacheFile: string = '.token_cache';
@@ -12,7 +14,7 @@ export class TokenCache {
     public Read(): Session | null {
         let json = null;
         if (!fs.existsSync(this.tokenCacheFile)) {
-            console.warn(bgYellow.black(`${this.tokenCacheFile} not found.\n`));
+            logger.warn(`${this.tokenCacheFile} not found. \n`);
 
             return null;
         }
@@ -27,11 +29,11 @@ export class TokenCache {
 
         if (this.checkValid(session)) {
             // TODO: reimplement timeleft without another decode of the jwt
-            console.info(bgGreen.black('\nAccess token still good!')); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
+            logger.info('Access token still good! \n'.green); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
 
             return session;
         }
-        console.warn(bgYellow.black('\nAccess token has expired.'));
+        logger.warn('Access token has expired! \n');
 
         return null;
     }
@@ -40,9 +42,9 @@ export class TokenCache {
         let s = JSON.stringify(session, null, 4);
         fs.writeFile('.token_cache', s, (err: any) => {
             if (err) {
-                return console.error(err);
+                return logger.error(err);
             }
-            console.info(green('Fresh access token dropped into .token_cache'));
+            logger.info('Fresh access token dropped into .token_cachen \n'.green);
         });
     }
 

@@ -1,6 +1,6 @@
-import { Error, ERROR_CODE } from './Errors';
+import { errors, ERROR_CODE } from './Errors';
+import { logger } from './Logger';
 
-import colors from 'colors';
 
 /**
  * This file contains global destreamer process events
@@ -16,13 +16,18 @@ export function setProcessEvents() {
             return;
         }
 
-        const msg = code in Error ? `\n\n${Error[code]} \n` : `\n\nUnknown error: exit code ${code} \n`;
+        const msg = (code in errors) ? `${errors[code]} \n` : `Unknown error: exit code ${code} \n`;
 
-        console.error(colors.bgRed(msg));
+        logger.error({ message: msg, fatal: true });
     });
 
     process.on('unhandledRejection', (reason) => {
-        console.error(colors.red(reason as string));
+        if (reason instanceof Error) {
+            logger.error({ message: (reason as Error) });
+            process.exit(ERROR_CODE.UNHANDLED_ERROR);
+        }
+
+        logger.error({ message: (reason as string) });
         process.exit(ERROR_CODE.UNHANDLED_ERROR);
     });
 }

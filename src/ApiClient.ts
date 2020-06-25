@@ -1,6 +1,8 @@
+import { Session } from './Types';
+import { logger } from './Logger';
+
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';
-import { Session } from './Types';
 
 
 export class ApiClient {
@@ -15,6 +17,7 @@ export class ApiClient {
             timeout: 7000,
             headers: { 'User-Agent': 'destreamer/2.0 (Hammer of Dawn)' }
         });
+
         axiosRetry(this.axiosInstance, {
             shouldResetTimeout: true,
             retries: 6,
@@ -24,14 +27,13 @@ export class ApiClient {
             retryCondition: (err: AxiosError) => {
                 const retryCodes = [429, 500, 502, 503];
                 if (isNetworkOrIdempotentRequestError(err)) {
-                    console.warn(`${err}. Retrying request...`);
+                    logger.error(`${err}. Retrying request...`);
 
                     return true;
                 }
-                console.warn(`Got HTTP ${err?.response?.status}. Retrying request...`);
-                const condition = retryCodes.includes(err?.response?.status ?? 0);
+                logger.warn(`Got HTTP code ${err?.response?.status ?? undefined}. Retrying request...`);
 
-                return condition;
+                return retryCodes.includes(err?.response?.status ?? 0);
             }
         });
     }

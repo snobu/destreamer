@@ -6,6 +6,7 @@ import path from 'path';
 import { parse } from 'iso8601-duration';
 import { askUserChoiche } from './CommandLineParser';
 import sanitize from 'sanitize-filename';
+import { logger } from './Logger';
 
 
 function publishedDateToString(date: string) {
@@ -59,7 +60,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
                 captionsUrl = undefined;
             }
             else if (captions?.data.value.length === 1) {
-                console.log(`\nFound subtitles for ${title}`.green);
+                logger.info(`Found subtitles for ${title}. \n`);
                 captionsUrl = captions?.data.value.pop().url;
             }
             else {

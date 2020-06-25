@@ -1,7 +1,7 @@
 import { ERROR_CODE } from './Errors';
+import { logger } from './Logger';
 
 import { execSync } from 'child_process';
-import colors from 'colors';
 import fs from 'fs';
 
 
@@ -15,7 +15,7 @@ export function sanitizeUrls(urls: Array<string>): Array<string> {
 
         if (!match) {
             if (!(url === '' || url.startsWith(' '))) {
-                console.warn(`Invalid URL at line ${index + 1}, skipping..`);
+                logger.warn(`Invalid URL at line ${index + 1}, skipping..`);
             }
         }
         else {
@@ -38,11 +38,11 @@ export function parseInputFile(inputFile: string, defaultOutDir: string): Array<
     const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
         .split(/\r?\n/); // .filter(item => item !== '');
 
-    console.info('\nParsing and sanitizing URLs...\n');
+    logger.info('\nParsing and sanitizing URLs...\n');
     const urlList: Array<string> = sanitizeUrls(rawContent);
         // .filter(item => !item.startsWith(' ')));
 
-    console.info('\nParsing and creating directories...\n');
+    logger.info('\nParsing and creating directories...\n');
     let outList: Array<string> = [];
     let i: number = 0;
 
@@ -86,10 +86,10 @@ export function checkOutDir(directory: string): boolean {
     if (!fs.existsSync(directory)) {
         try {
             fs.mkdirSync(directory);
-            console.log('Created directory: '.yellow + directory);
+            logger.info('Created directory: '.yellow + directory);
         }
         catch (e) {
-            console.log('Cannot create directory: '.red + directory +
+            logger.warn('Cannot create directory: '+ directory +
                 '\nFalling back to default directory..');
 
             return false;
@@ -103,8 +103,7 @@ export function checkOutDir(directory: string): boolean {
 export function checkRequirements() {
     try {
         const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];
-        console.info(colors.green(`Using ${ffmpegVer}\n`));
-
+        logger.info(`Using ${ffmpegVer}\n`);
     }
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
