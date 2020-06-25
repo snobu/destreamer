@@ -33,7 +33,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     let date: string;
     let totalChunks: number;
     let playbackUrl: string;
-    let posterImage: string;
+    let posterImageUrl: string;
     let captionsUrl: string | undefined;
 
     const apiClient = ApiClient.getInstance(session);
@@ -49,7 +49,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
                 return item['playbackUrl'];
             })[0];
 
-        posterImage = response?.data['posterImage']['medium']['url'];
+        posterImageUrl = response?.data['posterImage']['medium']['url'];
         date = publishedDateToString(response?.data['publishedDate']);
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
@@ -77,7 +77,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
             title: title,
             outPath: '',
             playbackUrl: playbackUrl,
-            posterImage: posterImage,
+            posterImageUrl: posterImageUrl,
             captionsUrl: captionsUrl
         });
     }

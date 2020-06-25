@@ -146,11 +146,10 @@ function extractVideoGuid(videoUrls: Array<string>): Array<string> {
 
 async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<string>, session: Session) {
 
-    const videoGuids = extractVideoGuid(videoUrls);
-
     logger.info('Fetching videos info... \n');
     const videos: Array<Video> = createUniquePath (
-        await getVideoInfo(videoGuids, session, argv.closedCaptions),
+        await getVideoInfo(
+            extractVideoGuid(videoUrls), session, argv.closedCaptions),
         outputDirectories, argv.format, argv.skip
         );
 
@@ -191,6 +190,12 @@ async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<
         });
 
         logger.info(`\nDownloading Video: ${video.title} \n`);
+        logger.verbose('Extra video info \n' +
+        '\t Video m3u8 playlist URL: '.cyan + video.playbackUrl + '\n' +
+        '\t Video tumbnail URL: '.cyan + video.posterImageUrl + '\n' +
+        '\t Video subtitle URL (may not exist): '.cyan + video.captionsUrl + '\n' +
+        '\t Video total chunks: '.cyan + video.totalChunks + '\n');
+
         logger.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
         if (!process.stdout.columns) {
             logger.warn(
@@ -204,7 +209,7 @@ async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<
         const headers = 'Authorization: Bearer ' + session.AccessToken;
 
         if (!argv.noExperiments) {
-            await drawThumbnail(video.posterImage, session);
+            await drawThumbnail(video.posterImageUrl, session);
         }
 
         const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
@@ -299,8 +304,15 @@ async function main() {
         [videoUrls, outDirs] =  parseInputFile(argv.inputFile!, argv.outputDirectory);
     }
 
+    logger.verbose('List of videos and corresponding output directory \n' +
+        videoUrls.map((url, i) => `\t${url} => ${outDirs[i]} \n`).join(''));
+
     let session: Session;
     session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
+
+    logger.verbose('Session and API info \n' +
+        '\t API Gateway URL: '.cyan + session.ApiGatewayUri + '\n' +
+        '\t API Gateway version: '.cyan + session.ApiGatewayVersion + '\n');
 
     downloadVideo(videoUrls, outDirs, session);
 }

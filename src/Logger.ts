@@ -19,16 +19,16 @@ export function customPrint (info: winston.Logform.TransformableInfo): string {
             return colors.red('\n\n[FATAL ERROR] ') + (info.stack ?? info.message);
         }
 
-        return colors.red('[ERROR] ') + (info.stack ?? info.message);
+        return colors.red('\n[ERROR] ') + (info.stack ?? info.message);
     }
     else if (info.level === 'warn') {
-        return colors.yellow('[WARNING] ') + info.message;
+        return colors.yellow('\n[WARNING] ') + info.message;
     }
     else if (info.level === 'info') {
         return info.message;
     }
     else if (info.level === 'verbose') {
-        return colors.cyan('[VERBOSE] ') + info.message;
+        return colors.cyan('\n[VERBOSE] ') + info.message;
     }
 
     return `${info.level}: ${info.message} - ${info.timestamp}`;

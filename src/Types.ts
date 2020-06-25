@@ -11,6 +11,6 @@ export type Video = {
     outPath: string;
     totalChunks: number;    // Abstraction of FFmpeg timemark
     playbackUrl: string;
-    posterImage: string;
+    posterImageUrl: string;
     captionsUrl?: string
 }
