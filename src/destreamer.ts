@@ -289,7 +289,7 @@ async function main() {
     logger.verbose('List of videos and corresponding output directory \n' +
         videoGUIDs.map((guid, i) => `\t${guid} => ${outDirs[i]} \n`).join(''));
 
-    process.exit();
+
     downloadVideo(videoGUIDs, outDirs, session);
 }
 
