@@ -4,7 +4,7 @@
     "type": "git",
     "url": "git://github.com/snobu/destreamer.git"
   },
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Save Microsoft Stream videos for offline enjoyment.",
   "main": "build/src/destreamer.js",
   "bin": "build/src/destreamer.js",
