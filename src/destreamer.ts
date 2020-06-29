@@ -1,6 +1,5 @@
 import { logger } from './Logger';
-import { checkRequirements, ffmpegTimemarkToChunk,
-    parseInputFile, sanitizeUrls } from './Utils';
+import { checkRequirements, ffmpegTimemarkToChunk, parseInputFile, parseCLIinput} from './Utils';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { setProcessEvents } from './Events';
 import { ERROR_CODE } from './Errors';
@@ -13,7 +12,6 @@ import { argv } from './CommandLineParser';
 import puppeteer from 'puppeteer';
 import isElevated from 'is-elevated';
 import fs from 'fs';
-import { URL } from 'url';
 import cliProgress from 'cli-progress';
 
 
@@ -121,35 +119,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 
-function extractVideoGuid(videoUrls: Array<string>): Array<string> {
-    const videoGuids: Array<string> = [];
-    let guid: string | undefined = '';
-
-    for (const url of videoUrls) {
-        try {
-            const urlObj = new URL(url);
-            guid = urlObj.pathname.split('/').pop();
-        }
-        catch (e) {
-            logger.error(`Unrecognized URL format in ${url}: ${e.message}`);
-            process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
-        }
-
-        if (guid) {
-            videoGuids.push(guid);
-        }
-    }
-
-    return videoGuids;
-}
-
-
-async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<string>, session: Session) {
+async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session) {
 
     logger.info('Fetching videos info... \n');
     const videos: Array<Video> = createUniquePath (
-        await getVideoInfo(
-            extractVideoGuid(videoUrls), session, argv.closedCaptions),
+        await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
         outputDirectories, argv.format, argv.skip
         );
 
@@ -176,7 +150,7 @@ async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<
 
         if (argv.keepLoginData) {
             logger.info('Trying to refresh token...');
-            session = await refreshSession(videoUrls[0]);
+            session = await refreshSession();
         }
 
         const pbar = new cliProgress.SingleBar({
@@ -293,28 +267,30 @@ async function downloadVideo(videoUrls: Array<string>, outputDirectories: Array<
 async function main() {
     await init(); // must be first
 
-    let videoUrls: Array<string>;
-    let outDirs: Array<string> = [];
-
-    if (argv.videoUrls) {
-        videoUrls = sanitizeUrls(argv.videoUrls.map(item => item as string));
-        outDirs = new Array(videoUrls.length).fill(argv.outputDirectory);
-    }
-    else {
-        [videoUrls, outDirs] =  parseInputFile(argv.inputFile!, argv.outputDirectory);
-    }
-
-    logger.verbose('List of videos and corresponding output directory \n' +
-        videoUrls.map((url, i) => `\t${url} => ${outDirs[i]} \n`).join(''));
-
     let session: Session;
-    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
+    session = tokenCache.Read() ?? await DoInteractiveLogin('https://web.microsoftstream.com/', argv.username);
 
     logger.verbose('Session and API info \n' +
         '\t API Gateway URL: '.cyan + session.ApiGatewayUri + '\n' +
         '\t API Gateway version: '.cyan + session.ApiGatewayVersion + '\n');
 
-    downloadVideo(videoUrls, outDirs, session);
+    let videoGUIDs: Array<string>;
+    let outDirs: Array<string>;
+
+    if (argv.videoUrls) {
+
+        [videoGUIDs, outDirs] =  await parseCLIinput(argv.videoUrls as Array<string>, argv.outputDirectory, session);
+    }
+    else {
+        [videoGUIDs, outDirs] =  await parseInputFile(argv.inputFile!, argv.outputDirectory, session);
+
+    }
+
+    logger.verbose('List of videos and corresponding output directory \n' +
+        videoGUIDs.map((guid, i) => `\t${guid} => ${outDirs[i]} \n`).join(''));
+
+    process.exit();
+    downloadVideo(videoGUIDs, outDirs, session);
 }
 
 
