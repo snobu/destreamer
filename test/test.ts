@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import assert from 'assert';
 import tmp from 'tmp';
 import fs from 'fs';
+import { Session } from './Types';
 
 
 describe('Puppeteer', () => {
@@ -24,7 +25,12 @@ describe('Puppeteer', () => {
 
 
 describe('Destreamer parsing', () => {
-    it('Input file to arrays of URLs and DIRs', () => {
+    it('Input file to arrays of URLs and DIRs', async () => {
+        const testSession: Session = {
+            AccessToken: '',
+            ApiGatewayUri: '',
+            ApiGatewayVersion: ''
+        };
         const testIn: Array<string> = [
             'https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx',
             'https://web.microsoftstream.com/video/xxxxxxxx-bbbb-xxxx-xxxx-xxxxxxxxxxxx?',
@@ -54,7 +60,7 @@ describe('Destreamer parsing', () => {
         ];
         const tmpFile = tmp.fileSync({ postfix: '.txt' });
         fs.writeFileSync(tmpFile.fd, testIn.join('\r\n'));
-        const [testUrlOut , testDirOut]: Array<Array<string>> = parseInputFile(tmpFile.name, 'videos');
+        const [testUrlOut , testDirOut]: Array<Array<string>> = await parseInputFile(tmpFile.name, 'videos', testSession);
         if (testUrlOut.length !== expectedUrlOut.length) {
             throw "Expected url list and test list don't have the same number of elements".red;
         }
