@@ -23,7 +23,7 @@ async function extractGUIDs(url: string, client: ApiClient): Promise<Array<strin
         const videoNumber = await client.callApi(`groups/${groupMatch[1]}`, 'get')
             .then(response => response?.data.metrics.videos);
 
-        return await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate desc`, 'get')
+        return await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
             .then(response => response?.data.value.map((item: any) => item.id) );
     }
 
