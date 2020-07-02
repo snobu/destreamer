@@ -6,8 +6,9 @@ export const logger = winston.createLogger({
     level: 'info',
     transports: [
         new winston.transports.Console({
-            format: winston.format.combine(winston.format.errors({ stack: true }), winston.format.timestamp({ format: 'DD-MM-YYYY hh:mm:ss' }),
-                // winston.format.simple()
+            format: winston.format.combine(
+                winston.format.errors({ stack: true }),
+                winston.format.timestamp({ format: 'DD-MM-YYYY hh:mm:ss' }),
                 winston.format.printf(item => customPrint(item)))
         })
     ]
@@ -20,10 +21,10 @@ function customPrint (info: winston.Logform.TransformableInfo): string {
             return colors.red('\n\n[FATAL ERROR] ') + (info.stack ?? info.message);
         }
 
-        return colors.red('\n[ERROR] ') + (info.stack ?? info.message);
+        return colors.red('\n[ERROR] ') + (info.stack ?? info.message) + '\n';
     }
     else if (info.level === 'warn') {
-        return colors.yellow('\n[WARNING] ') + info.message;
+        return colors.yellow('\n[WARNING] ') + info.message + '\n';
     }
     else if (info.level === 'info') {
         return info.message;

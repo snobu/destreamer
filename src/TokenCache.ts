@@ -29,7 +29,7 @@ export class TokenCache {
 
         if (this.checkValid(session)) {
             // TODO: re-implement timeleft without another decode of the jwt
-            logger.info('Access token still good! \n'.bgGreen); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
+            logger.info('\nAccess token still good! \n'.bgGreen); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
 
             return session;
         }
