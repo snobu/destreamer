@@ -170,7 +170,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         '\t Video subtitle URL (may not exist): '.cyan + video.captionsUrl + '\n' +
         '\t Video total chunks: '.cyan + video.totalChunks + '\n');
 
-        logger.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        logger.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n\n');
         if (!process.stdout.columns) {
             logger.warn(
                 'Unable to get number of columns from terminal.\n' +
