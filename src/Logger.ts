@@ -1,5 +1,6 @@
-import winston from 'winston';
 import colors from 'colors';
+import winston from 'winston';
+
 
 export const logger = winston.createLogger({
     level: 'info',
@@ -13,7 +14,7 @@ export const logger = winston.createLogger({
 });
 
 
-export function customPrint (info: winston.Logform.TransformableInfo): string {
+function customPrint (info: winston.Logform.TransformableInfo): string {
     if (info.level === 'error') {
         if (info.fatal) {
             return colors.red('\n\n[FATAL ERROR] ') + (info.stack ?? info.message);

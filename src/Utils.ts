@@ -1,11 +1,10 @@
+import { ApiClient } from './ApiClient';
 import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
 import { Session } from './Types';
-import { ApiClient } from './ApiClient';
 
 import { execSync } from 'child_process';
 import fs from 'fs';
-
 
 
 async function extractGUIDs(url: string, client: ApiClient): Promise<Array<string> | null> {
@@ -29,6 +28,7 @@ async function extractGUIDs(url: string, client: ApiClient): Promise<Array<strin
 
     return null;
 }
+
 
 /**
  * Parse the list of url given by the user via console input.
@@ -62,6 +62,7 @@ export async function parseCLIinput(urlList: Array<string>, defaultOutDir: strin
 
     return [guidList, outDirList];
 }
+
 
 /**
  * Parse the input text file.
@@ -140,6 +141,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
 }
 
 
+// This leaves us the option to add more options (badum tss) _Luca
 function parseOption(optionSyntax: string, item: string): string | null {
     const match = item.match(
         RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)

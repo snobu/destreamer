@@ -1,5 +1,5 @@
-import { Session } from './Types';
 import { logger } from './Logger';
+import { Session } from './Types';
 
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';

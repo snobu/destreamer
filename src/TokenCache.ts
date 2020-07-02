@@ -1,11 +1,11 @@
-import { Session } from './Types';
-import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
+import { Session } from './Types';
 
+import fs from 'fs';
 import jwtDecode from 'jwt-decode';
 import puppeteer from 'puppeteer';
-import fs from 'fs';
 
 
 export class TokenCache {
@@ -28,8 +28,8 @@ export class TokenCache {
         };
 
         if (this.checkValid(session)) {
-            // TODO: reimplement timeleft without another decode of the jwt
-            logger.info('Access token still good! \n'.green); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
+            // TODO: re-implement timeleft without another decode of the jwt
+            logger.info('Access token still good! \n'.bgGreen); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
 
             return session;
         }

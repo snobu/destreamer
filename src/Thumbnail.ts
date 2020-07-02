@@ -1,6 +1,6 @@
 import { ApiClient } from './ApiClient';
-import { Session } from './Types';
 import { logger } from './Logger';
+import { Session } from './Types';
 
 import terminalImage from 'terminal-image';
 

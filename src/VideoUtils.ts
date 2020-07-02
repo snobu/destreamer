@@ -1,12 +1,12 @@
-import { Video, Session } from './Types';
 import { ApiClient } from './ApiClient';
+import { askUserChoiche } from './CommandLineParser';
+import { logger } from './Logger';
+import { Video, Session } from './Types';
 
 import fs from 'fs';
-import path from 'path';
 import { parse } from 'iso8601-duration';
-import { askUserChoiche } from './CommandLineParser';
+import path from 'path';
 import sanitize from 'sanitize-filename';
-import { logger } from './Logger';
 
 
 function publishedDateToString(date: string) {
@@ -18,6 +18,7 @@ function publishedDateToString(date: string) {
     return publishedDate;
 }
 
+
 function durationToTotalChunks(duration: string) {
     const durationObj = parse(duration);
     const hrs = durationObj['hours'] ?? 0;
@@ -26,6 +27,7 @@ function durationToTotalChunks(duration: string) {
 
     return (hrs * 60) + mins + (secs / 60);
 }
+
 
 export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
     let metadata: Video[] = [];

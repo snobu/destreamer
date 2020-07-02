@@ -2,9 +2,9 @@ import { CLI_ERROR, ERROR_CODE } from './Errors';
 import { checkOutDir } from './Utils';
 
 import colors from 'colors';
+import fs from 'fs';
 import readlineSync from 'readline-sync';
 import yargs from 'yargs';
-import fs from 'fs';
 
 
 export const argv = yargs.options({
@@ -148,6 +148,7 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
 }
 
 
+// FIXME: I really don't like this..maybe don't use a const enum? _Luca
 function makeFatalError(message: string): string {
     return colors.red('\n[FATAL ERROR] ') + message;
 }

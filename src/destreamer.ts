@@ -1,18 +1,18 @@
-import { logger } from './Logger';
-import { checkRequirements, ffmpegTimemarkToChunk, parseInputFile, parseCLIinput} from './Utils';
-import { getPuppeteerChromiumPath } from './PuppeteerHelper';
-import { setProcessEvents } from './Events';
-import { ERROR_CODE } from './Errors';
-import { TokenCache, refreshSession } from './TokenCache';
-import { getVideoInfo, createUniquePath } from './VideoUtils';
-import { Video, Session } from './Types';
-import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
+import { ERROR_CODE } from './Errors';
+import { setProcessEvents } from './Events';
+import { logger } from './Logger';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
+import { drawThumbnail } from './Thumbnail';
+import { TokenCache, refreshSession } from './TokenCache';
+import { Video, Session } from './Types';
+import { checkRequirements, ffmpegTimemarkToChunk, parseInputFile, parseCLIinput} from './Utils';
+import { getVideoInfo, createUniquePath } from './VideoUtils';
 
-import puppeteer from 'puppeteer';
-import isElevated from 'is-elevated';
-import fs from 'fs';
 import cliProgress from 'cli-progress';
+import fs from 'fs';
+import isElevated from 'is-elevated';
+import puppeteer from 'puppeteer';
 
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
@@ -130,11 +130,11 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
     if (argv.simulate) {
         videos.forEach(video => {
             logger.info(
-                '\nTitle: '.green           + video.title +
-                '\nOutPath: '.green         + video.outPath +
-                '\nPublished Date: '.green  + video.date +
-                '\nPlayback URL: '.green    + video.playbackUrl +
-                ((video.captionsUrl) ? ('\nCC URL: '.green + video.captionsUrl) : '')
+                '\nTitle:          '.green + video.title +
+                '\nOutPath:        '.green + video.outPath +
+                '\nPublished Date: '.green + video.date +
+                '\nPlayback URL:   '.green + video.playbackUrl +
+                ((video.captionsUrl) ? ('\nCC URL:         '.green + video.captionsUrl) : '')
             );
         });
 
