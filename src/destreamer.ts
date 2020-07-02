@@ -286,8 +286,9 @@ async function main() {
 
     }
 
-    logger.verbose('List of videos and corresponding output directory \n' +
-        videoGUIDs.map((guid, i) => `\t${guid} => ${outDirs[i]} \n`).join(''));
+    logger.verbose('List of GUIDs and corresponding output directory \n' +
+        videoGUIDs.map((guid, i) =>
+            `\thttps://web.microsoftstream.com/video/${guid} => ${outDirs[i]} \n`).join(''));
 
 
     downloadVideo(videoGUIDs, outDirs, session);
