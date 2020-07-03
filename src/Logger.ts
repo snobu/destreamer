@@ -24,7 +24,7 @@ function customPrint (info: winston.Logform.TransformableInfo): string {
         return colors.red('\n[ERROR] ') + (info.stack ?? info.message) + '\n';
     }
     else if (info.level === 'warn') {
-        return colors.yellow('\n[WARNING] ') + info.message + '\n';
+        return colors.yellow('\n[WARNING] ') + info.message;
     }
     else if (info.level === 'info') {
         return info.message;

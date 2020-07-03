@@ -278,12 +278,12 @@ async function main() {
     let outDirs: Array<string>;
 
     if (argv.videoUrls) {
-
+        logger.info('Parsing video/group urls');
         [videoGUIDs, outDirs] =  await parseCLIinput(argv.videoUrls as Array<string>, argv.outputDirectory, session);
     }
     else {
+        logger.info('Parsing input file');
         [videoGUIDs, outDirs] =  await parseInputFile(argv.inputFile!, argv.outputDirectory, session);
-
     }
 
     logger.verbose('List of GUIDs and corresponding output directory \n' +
