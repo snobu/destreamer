@@ -1,28 +1,16 @@
-interface IError {
-    [key: number]: string
-}
-
-
 export const enum ERROR_CODE {
-    NO_ERROR,
     UNHANDLED_ERROR,
-    MISSING_FFMPEG,
     ELEVATED_SHELL,
     CANCELLED_USER_INPUT,
-    INVALID_OUTPUT_DIR,
-    INVALID_INPUT_URLS,
-    OUTDIRS_URLS_MISMATCH,
-    INVALID_VIDEO_ID,
-    INVALID_VIDEO_GUID,
+    MISSING_FFMPEG,
     UNK_FFMPEG_ERROR,
+    INVALID_VIDEO_GUID,
     NO_SESSION_INFO
 }
 
 
 // TODO: create better errors descriptions
-export const errors: IError = {
-    [ERROR_CODE.NO_ERROR]:              'Clean exit with code 0',
-
+export const errors: {[key: number]: string} = {
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
                                         'Timeout or fatal error, please check your downloads directory and try again',
 
@@ -31,19 +19,10 @@ export const errors: IError = {
 
     [ERROR_CODE.CANCELLED_USER_INPUT]:  'Input was cancelled by user',
 
-    [ERROR_CODE.INVALID_OUTPUT_DIR]:    'Unable to create output directory',
-
     [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing!\n' +
                                         'Destreamer requires a fairly recent release of FFmpeg to download videos',
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]:      'Unknown FFmpeg error',
-
-    [ERROR_CODE.INVALID_INPUT_URLS]:    'No valid URL from input',
-
-    [ERROR_CODE.OUTDIRS_URLS_MISMATCH]: 'Output directories and URLs mismatch!\n' +
-                                        'You must input the same number of URLs and output directories',
-
-    [ERROR_CODE.INVALID_VIDEO_ID]:      'Unable to get video ID from URL',
 
     [ERROR_CODE.INVALID_VIDEO_GUID]:    'Unable to get video GUID from URL',
 

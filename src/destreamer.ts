@@ -43,7 +43,7 @@ async function init() {
 
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
+    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
 
