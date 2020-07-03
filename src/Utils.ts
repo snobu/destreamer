@@ -155,7 +155,7 @@ export function checkOutDir(directory: string): boolean {
     if (!fs.existsSync(directory)) {
         try {
             fs.mkdirSync(directory);
-            logger.info('Created directory: '.yellow + directory);
+            logger.info('\nCreated directory: '.yellow + directory);
         }
         catch (e) {
             logger.warn('Cannot create directory: '+ directory +
