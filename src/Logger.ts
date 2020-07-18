@@ -8,8 +8,7 @@ export const logger = winston.createLogger({
         new winston.transports.Console({
             format: winston.format.combine(
                 winston.format.errors({ stack: true }),
-                winston.format.timestamp({ format: 'DD-MM-YYYY hh:mm:ss' }),
-                winston.format.printf(item => customPrint(item)))
+                winston.format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss' }))
         })
     ]
 });

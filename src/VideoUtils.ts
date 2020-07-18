@@ -15,7 +15,7 @@ function publishedDateToString(date: string) {
     const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
     const publishedDate = day + '-' + month + '-' + dateJs.getFullYear();
 
-    return publishedDate;
+    return `${dateJs.getFullYear()}-${month}-${day}`;
 }
 
 
