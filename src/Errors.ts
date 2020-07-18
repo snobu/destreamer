@@ -30,18 +30,18 @@ export const errors: {[key: number]: string} = {
 
 
 export const enum CLI_ERROR {
-    MISSING_INPUT_ARG           = 'You must specify a URLs source.\n' +
-                                'Valid options are -i for one or more URLs separated by space or -f for input file.',
+    MISSING_INPUT_ARG           = 'You must specify a URLs source. \n' +
+                                'Valid options are -i for one or more URLs separated by space or -f for input file. \n',
 
-    INPUT_ARG_CONFLICT          = 'Too many URLs sources specified!\n' +
-                                'Please specify a single source, either -i or -f',
+    INPUT_ARG_CONFLICT          = 'Too many URLs sources specified! \n' +
+                                'Please specify a single source, either -i or -f \n',
 
-    INPUTFILE_WRONG_EXTENSION   = 'The specified inputFile has the wrong extension\n' +
-                                'Please make sure to use path/to/filename.txt when useing the -f option',
+    INPUTFILE_WRONG_EXTENSION   = 'The specified inputFile has the wrong extension \n' +
+                                'Please make sure to use path/to/filename.txt when useing the -f option \n',
 
-    INPUTFILE_NOT_FOUND         = 'The specified inputFile does not exists\n'+
-                                'Please check the filename and the path you provided',
+    INPUTFILE_NOT_FOUND         = 'The specified inputFile does not exists \n'+
+                                'Please check the filename and the path you provided \n',
 
-    INVALID_OUTDIR              = 'Could not create the default/specified output directory\n' +
-                                'Please check directory and permissions and try again.'
+    INVALID_OUTDIR              = 'Could not create the default/specified output directory \n' +
+                                'Please check directory and permissions and try again. \n'
 }
