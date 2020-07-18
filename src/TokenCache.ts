@@ -53,8 +53,8 @@ export class TokenCache {
 }
 
 
-export async function refreshSession(): Promise<Session> {
-    const url = 'https://web.microsoftstream.com';
+export async function refreshSession(url: string): Promise<Session> {
+    const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
@@ -70,7 +70,7 @@ export async function refreshSession(): Promise<Session> {
     const page: puppeteer.Page = (await browser.pages())[0];
     await page.goto(url, { waitUntil: 'load' });
 
-    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(url), { timeout: 30000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 30000 });
 
     let session: Session | null = null;
     let tries = 1;
