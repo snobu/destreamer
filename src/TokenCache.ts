@@ -1,3 +1,4 @@
+import { chromeCacheFolder } from './destreamer';
 import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
@@ -73,7 +74,7 @@ export async function refreshSession() {
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,            // NEVER TRUE OR IT DOES NOT WORK
-        userDataDir: './chrome_data',
+        userDataDir: chromeCacheFolder,
         args: [
             '--disable-dev-shm-usage',
             '--fast-start',

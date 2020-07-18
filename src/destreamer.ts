@@ -50,7 +50,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
     const browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
-        userDataDir: (argv.keepLoginData) ? './chrome_data' : undefined,
+        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
         args: [
             '--disable-dev-shm-usage',
             '--fast-start',
@@ -148,7 +148,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
             continue;
         }
 
-        if (argv.keepLoginData) {
+        if (argv.keepLoginCookies) {
             logger.info('Trying to refresh token...');
             session = await refreshSession();
         }
