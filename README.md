@@ -8,7 +8,7 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 # Saves Microsoft Stream videos for offline enjoyment
 
-### v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
+### v2.1 Release, codename _Hammer of Dawn<sup>TM</sup>_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
@@ -16,19 +16,11 @@ This release would not have been possible without the code and time contributed 
 
 Another specialized implementation (for University of Pisa this time) is available at https://github.com/Guray00/destreamer-unipi.
 
-## Outstanding bugs
-
-- We couldn't yet find an elegant way to refresh the access token, so you'll need to perform an interactive logon every hour or so. We're still at the drawing board on this one.
-
 ## What's new
 
-- Major code refactoring
-- Dramatically improved error handling
-- We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
-- We removed the dependency on `youtube-dl`
-- Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
-- Fixed a major 2FA bug that would sometimes cause a timeout in our code
-- Fixed a wide variety of other bugs, maybe introduced a few new ones :)
+- Major code refactoring (all credits to @lukaarma)
+- Destreamer is now able to refresh the session's access token. Use this with `-k` (keep cookies) and tick "Remember Me" on login.
+- We added support for closed captions (see `--closedCaptions` below)
 
 ## Disclaimer
 
