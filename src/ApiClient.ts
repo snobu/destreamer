@@ -14,11 +14,13 @@ export class ApiClient {
         this.session = session;
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
-            timeout: 7000,
+            // timeout: 7000,
             headers: { 'User-Agent': 'destreamer/2.0 (Hammer of Dawn)' }
         });
 
         axiosRetry(this.axiosInstance, {
+            // The following option is not working.
+            // We should open an issue on the relative GitHub
             shouldResetTimeout: true,
             retries: 6,
             retryDelay: (retryCount) => {
