@@ -141,7 +141,7 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
         }
         // check if the inputFile exists
         else if (!fs.existsSync(inputFile)) {
-            throw new Error(makeFatalError(CLI_ERROR.INPUTFILE_DOESNT_EXISTS));
+            throw new Error(makeFatalError(CLI_ERROR.INPUTFILE_NOT_FOUND));
         }
     }
 

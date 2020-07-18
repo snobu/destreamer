@@ -9,7 +9,6 @@ export const enum ERROR_CODE {
 }
 
 
-// TODO: create better errors descriptions
 export const errors: {[key: number]: string} = {
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
                                         'Timeout or fatal error, please check your downloads directory and try again',
@@ -40,9 +39,9 @@ export const enum CLI_ERROR {
     INPUTFILE_WRONG_EXTENSION   = 'The specified inputFile has the wrong extension\n' +
                                 'Please make sure to use path/to/filename.txt when useing the -f option',
 
-    INPUTFILE_DOESNT_EXISTS     = 'The specified inputFile does not exists\n'+
+    INPUTFILE_NOT_FOUND         = 'The specified inputFile does not exists\n'+
                                 'Please check the filename and the path you provided',
 
     INVALID_OUTDIR              = 'Could not create the default/specified output directory\n' +
-                                'Pleace check th e directory and permissions and try again'
+                                'Please check directory and permissions and try again.'
 }
