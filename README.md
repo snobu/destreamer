@@ -71,17 +71,20 @@ $ ./destreamer.sh
 Options:
   --help                  Show help                                                                            [boolean]
   --version               Show version number                                                                  [boolean]
-  --username, -u          The username used to log into MS (enabling this will fill in the email field for you) [string]
+  --username, -u          The username used to log into Microsoft Stream (enabling this will fill in the email field for
+                          you)                                                                                  [string]
   --videoUrls, -i         List of video urls                                                                     [array]
-  --inputFile, -f         Path to txt file containing the urls (and optionals outDirs)                          [string]
+  --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
+                                                                                                                [string]
   --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
-  --keepLoginData, -k     Let chrome save cache data so that you can use the "remember me" option during login [boolean]
+  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
+                                                                                              [boolean] [default: false]
   --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
   --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
   --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
                                                                                               [boolean] [default: false]
   --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
-                          ask if only 1 aviable)                                              [boolean] [default: false]
+                          ask if only one aviable)                                            [boolean] [default: false]
   --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
   --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
                                                                                               [string] [default: "copy"]
@@ -130,15 +133,15 @@ $ ./destreamer.sh -f list.txt
 ```
 ### Input file
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
-Additionally, you can be specify the '-dir' option after each line of URIs, deastreamer will download there the video (it will fall back to the default folder specified with -o if it can't be created).
+Additionally you can have destreamer download each video in the input list to a separate directory.
 These optional lines must start with white space(s).
 
 Usage -
 ```
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
- -dir='path/to/folder'
+ -dir=videos/lessons/week1
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
-        -dir = "/absolute/path/to/folder/"
+        -dir=videos/lessons/week2"
 ```
 
 

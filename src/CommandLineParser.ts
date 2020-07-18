@@ -11,7 +11,7 @@ export const argv = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
-        describe: 'The username used to log into MS (enabling this will fill in the email field for you)',
+        describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you)',
         demandOption: false
     },
     videoUrls: {
@@ -22,7 +22,7 @@ export const argv = yargs.options({
     },
     inputFile: {
         alias: 'f',
-        describe: 'Path to txt file containing the urls (and optionals outDirs)',
+        describe: 'Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.',
         type: 'string',
         demandOption: false
     },
@@ -33,10 +33,11 @@ export const argv = yargs.options({
         default: 'videos',
         demandOption: false
     },
-    keepLoginData: {
+    keepLoginCookies: {
         alias: 'k',
-        describe: 'Let chrome save cache data so that you can use the "remember me" option during login',
+        describe: 'Let Chromium cache identity provider cookies so you can use "Remember me" during login',
         type: 'boolean',
+        default: false,
         demandOption: false
     },
     noExperiments: {
@@ -62,7 +63,7 @@ export const argv = yargs.options({
     },
     closedCaptions: {
         alias: 'cc',
-        describe: 'Check if closed captions are aviable and let the user choose which one to download (will not ask if only 1 aviable)',
+        describe: 'Check if closed captions are aviable and let the user choose which one to download (will not ask if only one aviable)',
         type: 'boolean',
         default: false,
         demandOption: false
