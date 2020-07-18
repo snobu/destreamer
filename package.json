@@ -4,7 +4,7 @@
     "type": "git",
     "url": "git://github.com/snobu/destreamer.git"
   },
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Save Microsoft Stream videos for offline enjoyment.",
   "main": "build/src/destreamer.js",
   "bin": "build/src/destreamer.js",
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/mocha": "^7.0.2",
     "@types/puppeteer": "^1.20.4",
+    "@types/readline-sync": "^1.4.3",
     "@types/tmp": "^0.1.0",
     "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
@@ -39,9 +40,11 @@
     "iso8601-duration": "^1.2.0",
     "jwt-decode": "^2.2.0",
     "puppeteer": "2.1.1",
+    "readline-sync": "^1.4.10",
     "sanitize-filename": "^1.6.3",
     "terminal-image": "^1.0.1",
     "typescript": "^3.8.3",
+    "winston": "^3.3.2",
     "yargs": "^15.0.3"
   }
 }

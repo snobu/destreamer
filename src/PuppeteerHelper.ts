@@ -1,18 +1,20 @@
 import path from 'path';
 import puppeteer from 'puppeteer';
 
+
 // Thanks pkg-puppeteer [ cleaned up version :) ]
-export function getPuppeteerChromiumPath() {
-    const isPkg = __filename.includes('snapshot');
-    const macOS_Linux_rex = /^.*?\/node_modules\/puppeteer\/\.local-chromium/;
-    const win32_rex = /^.*?\\node_modules\\puppeteer\\\.local-chromium/;
-    const replaceRegex = process.platform === 'win32' ? win32_rex : macOS_Linux_rex;
+export function getPuppeteerChromiumPath(): string {
+    const isPkg: boolean = __filename.includes('snapshot');
+
+    const replaceRegex: RegExp = (process.platform === 'win32') ?
+        new RegExp(/^.*?\\node_modules\\puppeteer\\\.local-chromium/) :
+        new RegExp(/^.*?\/node_modules\/puppeteer\/\.local-chromium/);
 
     if (!isPkg) {
         return puppeteer.executablePath();
     }
 
-    const browserPath = puppeteer.executablePath()
+    const browserPath: string = puppeteer.executablePath()
         .replace(replaceRegex, path.join(path.dirname(process.execPath), 'chromium'));
 
     return browserPath;

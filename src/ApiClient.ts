@@ -1,6 +1,9 @@
+import { logger } from './Logger';
+import { Session } from './Types';
+
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';
-import { Session } from './Types';
+
 
 export class ApiClient {
     private static instance: ApiClient;
@@ -11,26 +14,30 @@ export class ApiClient {
         this.session = session;
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
-            timeout: 7000,
+            // timeout: 7000,
             headers: { 'User-Agent': 'destreamer/2.0 (Hammer of Dawn)' }
         });
+
         axiosRetry(this.axiosInstance, {
+            // The following option is not working.
+            // We should open an issue on the relative GitHub
             shouldResetTimeout: true,
             retries: 6,
-            retryDelay: (retryCount) => {
+            retryDelay: (retryCount: number) => {
                 return retryCount * 2000;
             },
             retryCondition: (err: AxiosError) => {
-                const retryCodes = [429, 500, 502, 503];
+                const retryCodes: Array<number> = [429, 500, 502, 503];
                 if (isNetworkOrIdempotentRequestError(err)) {
-                    console.warn(`${err}. Retrying request...`);
+                    logger.warn(`${err}. Retrying request...`);
 
                     return true;
-                }   
-                console.warn(`Got HTTP ${err?.response?.status}. Retrying request...`);
-                const condition = retryCodes.includes(err?.response?.status ?? 0);
+                }
+                logger.warn(`Got HTTP code ${err?.response?.status ?? undefined}. Retrying request...`);
 
-                return condition;
+                const shouldRetry: boolean = retryCodes.includes(err?.response?.status ?? 0);
+
+                return shouldRetry;
             }
         });
     }
@@ -52,7 +59,7 @@ export class ApiClient {
         method: AxiosRequestConfig['method'] = 'get',
         payload?: any): Promise<AxiosResponse | undefined> {
 
-        const delimiter = path.split('?').length === 1 ? '?' : '&';
+        const delimiter: '?' | '&' = path.split('?').length === 1 ? '?' : '&';
 
         const headers: object = {
             'Authorization': 'Bearer ' + this.session?.AccessToken
@@ -74,7 +81,7 @@ export class ApiClient {
         method: AxiosRequestConfig['method'] = 'get',
         payload?: any,
         responseType: AxiosRequestConfig['responseType'] = 'json'): Promise<AxiosResponse | undefined> {
-            
+
         const headers: object = {
             'Authorization': 'Bearer ' + this.session?.AccessToken
         };
@@ -87,5 +94,4 @@ export class ApiClient {
             responseType: responseType
         });
     }
-
 }

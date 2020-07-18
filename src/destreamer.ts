@@ -1,30 +1,31 @@
-import {
-    sleep, parseVideoUrls, checkRequirements, makeUniqueTitle, ffmpegTimemarkToChunk,
-    makeOutputDirectories, getOutputDirectoriesList, checkOutDirsUrlsMismatch
-} from './Utils';
-import { getPuppeteerChromiumPath } from './PuppeteerHelper';
-import { setProcessEvents } from './Events';
-import { ERROR_CODE } from './Errors';
-import { TokenCache } from './TokenCache';
-import { getVideoMetadata } from './Metadata';
-import { Metadata, Session } from './Types';
-import { drawThumbnail } from './Thumbnail';
 import { argv } from './CommandLineParser';
+import { ERROR_CODE } from './Errors';
+import { setProcessEvents } from './Events';
+import { logger } from './Logger';
+import { getPuppeteerChromiumPath } from './PuppeteerHelper';
+import { drawThumbnail } from './Thumbnail';
+import { TokenCache, refreshSession } from './TokenCache';
+import { Video, Session } from './Types';
+import { checkRequirements, ffmpegTimemarkToChunk, parseInputFile, parseCLIinput} from './Utils';
+import { getVideoInfo, createUniquePath } from './VideoUtils';
 
-import puppeteer from 'puppeteer';
-import isElevated from 'is-elevated';
-import colors from 'colors';
-import path from 'path';
-import fs from 'fs';
-import { URL } from 'url';
-import sanitize from 'sanitize-filename';
 import cliProgress from 'cli-progress';
+import fs from 'fs';
+import isElevated from 'is-elevated';
+import puppeteer from 'puppeteer';
+
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
-const tokenCache = new TokenCache();
+const tokenCache: TokenCache = new TokenCache();
+export const chromeCacheFolder = '.chrome_data';
 
-async function init() {
+
+async function init(): Promise<void> {
     setProcessEvents(); // must be first!
+
+    if (argv.verbose) {
+        logger.level = 'verbose';
+    }
 
     if (await isElevated()) {
         process.exit(ERROR_CODE.ELEVATED_SHELL);
@@ -33,53 +34,58 @@ async function init() {
     checkRequirements();
 
     if (argv.username) {
-        console.info('Username: %s', argv.username);
+        logger.info(`Username: ${argv.username}`);
     }
 
     if (argv.simulate) {
-        console.info(colors.yellow('Simulate mode, there will be no video download.\n'));
-    }
-
-    if (argv.verbose) {
-        console.info('Video URLs:');
-        console.info(argv.videoUrls);
+        logger.warn('Simulate mode, there will be no video downloaded. \n');
     }
 }
 
-async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_ID);
 
-    console.log('Launching headless Chrome to perform the OpenID Connect dance...');
-    const browser = await puppeteer.launch({
+async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
+    const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
+
+    logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
+
+    const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
+        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
         args: [
             '--disable-dev-shm-usage',
             '--fast-start',
             '--no-sandbox'
         ]
     });
-    const page = (await browser.pages())[0];
-    console.log('Navigating to login page...');
+    const page: puppeteer.Page = (await browser.pages())[0];
 
+    logger.info('Navigating to login page...');
     await page.goto(url, { waitUntil: 'load' });
 
-    if (username) {
-        await page.waitForSelector('input[type="email"]');
-        await page.keyboard.type(username);
-        await page.click('input[type="submit"]');
+    try {
+        if (username) {
+            await page.waitForSelector('input[type="email"]', {timeout: 3000});
+            await page.keyboard.type(username);
+            await page.click('input[type="submit"]');
+        }
+        else {
+            /* If a username was not provided we let the user take actions that
+            lead up to the video page. */
+        }
     }
-    else {
-        // If a username was not provided we let the user take actions that
-        // lead up to the video page.
+    catch (e) {
+        /* If there is no email input selector we aren't in the login module,
+        we are probably using the cache to aid the login.
+        It could finish the login on its own if the user said 'yes' when asked to
+        remember the credentials or it could still prompt the user for a password */
     }
 
-    await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
-    console.info('We are logged in.');
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 150000 });
+    logger.info('We are logged in.');
 
-    let session = null;
-    let tries: number = 1;
-
+    let session: Session | null = null;
+    let tries = 1;
     while (!session) {
         try {
             let sessionInfo: any;
@@ -100,85 +106,55 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
             session = null;
             tries++;
-            await sleep(3000);
+            await page.waitFor(3000);
         }
     }
 
     tokenCache.Write(session);
-    console.log('Wrote access token to token cache.');
-    console.log("At this point Chromium's job is done, shutting it down...\n");
+    logger.info('Wrote access token to token cache.');
+    logger.info("At this point Chromium's job is done, shutting it down...\n");
 
     await browser.close();
-    // --- Ignore all this for now ---
-    // --- hopefully we won't need it ----
-    // await sleep(1000);
-    // let banner = await page.evaluate(
-    //     () => {
-    //             let topbar = document.getElementsByTagName('body')[0];
-    //             topbar.innerHTML = 
-    //                 '<h1 style="color: red">DESTREAMER NEEDS THIS WINDOW ' +
-    //                 'TO DO SOME ACCESS TOKEN MAGIC. DO NOT CLOSE IT.</h1>';
-    //         });
-    // --------------------------------
 
     return session;
 }
 
-function extractVideoGuid(videoUrls: string[]): string[] {
-    const videoGuids: string[] = [];
-    let guid: string | undefined = '';
 
-    for (const url of videoUrls) {
-        try {
-            const urlObj = new URL(url);
-            guid = urlObj.pathname.split('/').pop();
-        }
-        catch (e) {
-            console.error(`Unrecognized URL format in ${url}: ${e.message}`);
-            process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
-        }
+async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session): Promise<void> {
 
-        if (guid) {
-            videoGuids.push(guid);
-        }
-    }
-
-    if (argv.verbose) {
-        console.info('Video GUIDs:');
-        console.info(videoGuids);
-    }
-
-    return videoGuids;
-}
-
-async function downloadVideo(videoUrls: string[], outputDirectories: string[], session: Session) {
-    const videoGuids = extractVideoGuid(videoUrls);
-
-    console.log('Fetching metadata...');
-
-    const metadata: Metadata[] = await getVideoMetadata(videoGuids, session);
+    logger.info('Fetching videos info... \n');
+    const videos: Array<Video> = createUniquePath (
+        await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
+        outputDirectories, argv.format, argv.skip
+        );
 
     if (argv.simulate) {
-        metadata.forEach(video => {
-            console.log(
-                colors.yellow('\n\nTitle: ') + colors.green(video.title) +
-                colors.yellow('\nPublished Date: ') + colors.green(video.date) +
-                colors.yellow('\nPlayback URL: ') + colors.green(video.playbackUrl)
+        videos.forEach((video: Video) => {
+            logger.info(
+                '\nTitle:          '.green + video.title +
+                '\nOutPath:        '.green + video.outPath +
+                '\nPublished Date: '.green + video.date +
+                '\nPlayback URL:   '.green + video.playbackUrl +
+                ((video.captionsUrl) ? ('\nCC URL:         '.green + video.captionsUrl) : '')
             );
         });
 
         return;
     }
 
-    if (argv.verbose) {
-        console.log(outputDirectories);
-    }
+    for (const video of videos) {
 
-    const outDirsIdxInc = outputDirectories.length > 1 ? 1:0;
+        if (argv.skip && fs.existsSync(video.outPath)) {
+            logger.info(`File already exists, skipping: ${video.outPath} \n`);
+            continue;
+        }
 
-    for (let i=0, j=0, l=metadata.length; i<l; ++i, j+=outDirsIdxInc) {
-        const video = metadata[i];
-        const pbar = new cliProgress.SingleBar({
+        if (argv.keepLoginCookies) {
+            logger.info('Trying to refresh token...');
+            session = await refreshSession();
+        }
+
+        const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
@@ -188,37 +164,40 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
             hideCursor: true,
         });
 
-        console.log(colors.yellow(`\nDownloading Video: ${video.title}\n`));
+        logger.info(`\nDownloading Video: ${video.title} \n`);
+        logger.verbose('Extra video info \n' +
+        '\t Video m3u8 playlist URL: '.cyan + video.playbackUrl + '\n' +
+        '\t Video tumbnail URL: '.cyan + video.posterImageUrl + '\n' +
+        '\t Video subtitle URL (may not exist): '.cyan + video.captionsUrl + '\n' +
+        '\t Video total chunks: '.cyan + video.totalChunks + '\n');
 
-        video.title = makeUniqueTitle(sanitize(video.title) + ' - ' + video.date, outputDirectories[j], argv.skip, argv.format);
-        
-        console.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...');
+        logger.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n\n');
         if (!process.stdout.columns) {
-            console.info(colors.red('Unable to get number of columns from terminal.\n' +
-            'This happens sometimes in Cygwin/MSYS.\n' +
-            'No progress bar can be rendered, however the download process should not be affected.\n\n' +
-            'Please use PowerShell or cmd.exe to run destreamer on Windows.'));
+            logger.warn(
+                'Unable to get number of columns from terminal.\n' +
+                'This happens sometimes in Cygwin/MSYS.\n' +
+                'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                'Please use PowerShell or cmd.exe to run destreamer on Windows.'
+            );
         }
 
-        const headers = 'Authorization: Bearer ' + session.AccessToken;
+        const headers: string = 'Authorization: Bearer ' + session.AccessToken;
 
-        // Very experimental inline thumbnail rendering
         if (!argv.noExperiments) {
-            await drawThumbnail(video.posterImage, session);
+            await drawThumbnail(video.posterImageUrl, session);
         }
 
-        const outputPath = outputDirectories[j] + path.sep + video.title + '.' + argv.format;
-        const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
+        const ffmpegInpt: any = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput = new FFmpegOutput(outputPath, new Map([
+        const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
             argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
             argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
             ['n', null]
         ]));
-        const ffmpegCmd = new FFmpegCommand();
+        const ffmpegCmd: any = new FFmpegCommand();
 
-        const cleanupFn = (): void => {
+        const cleanupFn: () => void = () => {
             pbar.stop();
 
            if (argv.noCleanup) {
@@ -226,10 +205,10 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
            }
 
             try {
-                fs.unlinkSync(outputPath);
+                fs.unlinkSync(video.outPath);
             }
             catch (e) {
-                // Future handling of an error maybe
+                // Future handling of an error (maybe)
             }
         };
 
@@ -240,9 +219,16 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // prepare ffmpeg command line
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
+        if (argv.closedCaptions && video.captionsUrl) {
+            const captionsInpt: any = new FFmpegInput(video.captionsUrl, new Map([
+                ['headers', headers]
+            ]));
 
-        ffmpegCmd.on('update', (data: any) => {
-            const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            ffmpegCmd.addInput(captionsInpt);
+        }
+
+        ffmpegCmd.on('update', async (data: any) => {
+            const currentChunks: number = ffmpegTimemarkToChunk(data.out_time);
 
             pbar.update(currentChunks, {
                 speed: data.bitrate
@@ -259,22 +245,15 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
         // let the magic begin...
         await new Promise((resolve: any) => {
             ffmpegCmd.on('error', (error: any) => {
-                if (argv.skip && error.message.includes('exists') && error.message.includes(outputPath)) {
-                    pbar.update(video.totalChunks); // set progress bar to 100%
-                    console.log(colors.yellow(`\nFile already exists, skipping: ${outputPath}`));
-                    resolve();
-                }
-                else {
-                    cleanupFn();
+                cleanupFn();
 
-                    console.log(`\nffmpeg returned an error: ${error.message}`);
-                    process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
-                }
+                logger.error(`FFmpeg returned an error: ${error.message}`);
+                process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
             });
 
             ffmpegCmd.on('success', () => {
                 pbar.update(video.totalChunks); // set progress bar to 100%
-                console.log(colors.green(`\nDownload finished: ${outputPath}`));
+                logger.info(`\nDownload finished: ${video.outPath} \n`);
                 resolve();
             });
 
@@ -285,19 +264,36 @@ async function downloadVideo(videoUrls: string[], outputDirectories: string[], s
     }
 }
 
-async function main() {
+
+async function main(): Promise<void> {
     await init(); // must be first
 
-    const outDirs: string[] = getOutputDirectoriesList(argv.outputDirectory as string);
-    const videoUrls: string[] = parseVideoUrls(argv.videoUrls);
     let session: Session;
+    session = tokenCache.Read() ?? await DoInteractiveLogin('https://web.microsoftstream.com/', argv.username);
 
-    checkOutDirsUrlsMismatch(outDirs, videoUrls);
-    makeOutputDirectories(outDirs); // create all dirs now to prevent ffmpeg panic
+    logger.verbose('Session and API info \n' +
+        '\t API Gateway URL: '.cyan + session.ApiGatewayUri + '\n' +
+        '\t API Gateway version: '.cyan + session.ApiGatewayVersion + '\n');
 
-    session = tokenCache.Read() ?? await DoInteractiveLogin(videoUrls[0], argv.username);
+    let videoGUIDs: Array<string>;
+    let outDirs: Array<string>;
 
-    downloadVideo(videoUrls, outDirs, session);
+    if (argv.videoUrls) {
+        logger.info('Parsing video/group urls');
+        [videoGUIDs, outDirs] =  await parseCLIinput(argv.videoUrls as Array<string>, argv.outputDirectory, session);
+    }
+    else {
+        logger.info('Parsing input file');
+        [videoGUIDs, outDirs] =  await parseInputFile(argv.inputFile!, argv.outputDirectory, session);
+    }
+
+    logger.verbose('List of GUIDs and corresponding output directory \n' +
+        videoGUIDs.map((guid: string, i: number) =>
+            `\thttps://web.microsoftstream.com/video/${guid} => ${outDirs[i]} \n`).join(''));
+
+
+    downloadVideo(videoGUIDs, outDirs, session);
 }
+
 
 main();

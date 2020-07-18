@@ -3,6 +3,8 @@
 *.log
 *.js
 *.zip
+
+.chrome_data
 node_modules
 videos
 release
