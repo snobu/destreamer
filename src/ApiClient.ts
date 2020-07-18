@@ -29,13 +29,15 @@ export class ApiClient {
             retryCondition: (err: AxiosError) => {
                 const retryCodes = [429, 500, 502, 503];
                 if (isNetworkOrIdempotentRequestError(err)) {
-                    logger.error(`${err}. Retrying request...`);
+                    logger.warn(`${err}. Retrying request...`);
 
                     return true;
                 }
                 logger.warn(`Got HTTP code ${err?.response?.status ?? undefined}. Retrying request...`);
 
-                return retryCodes.includes(err?.response?.status ?? 0);
+                const shouldRetry: boolean = retryCodes.includes(err?.response?.status ?? 0);
+
+                return shouldRetry;
             }
         });
     }
