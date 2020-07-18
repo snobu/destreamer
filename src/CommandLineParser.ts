@@ -155,8 +155,8 @@ function makeFatalError(message: string): string {
 }
 
 
-export function askUserChoiche(choiches: Array<string>): number {
-    let index = readlineSync.keyInSelect(choiches, 'Which resolution/format do you prefer?');
+export function promptUser(choices: Array<string>): number {
+    let index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
 
     if (index === -1) {
         process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
