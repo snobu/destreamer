@@ -7,7 +7,7 @@ import readlineSync from 'readline-sync';
 import yargs from 'yargs';
 
 
-export const argv = yargs.options({
+export const argv: any = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
@@ -102,8 +102,8 @@ export const argv = yargs.options({
 })
 .wrap(120)
 .check(() => noArguments())
-.check(argv => inputConflicts(argv.videoUrls, argv.inputFile))
-.check(argv => {
+.check((argv: any) => inputConflicts(argv.videoUrls, argv.inputFile))
+.check((argv: any) => {
     if (checkOutDir(argv.outputDirectory)) {
         return true;
     }

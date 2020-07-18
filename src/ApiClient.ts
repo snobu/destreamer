@@ -23,11 +23,11 @@ export class ApiClient {
             // We should open an issue on the relative GitHub
             shouldResetTimeout: true,
             retries: 6,
-            retryDelay: (retryCount) => {
+            retryDelay: (retryCount: number) => {
                 return retryCount * 2000;
             },
             retryCondition: (err: AxiosError) => {
-                const retryCodes = [429, 500, 502, 503];
+                const retryCodes: Array<number> = [429, 500, 502, 503];
                 if (isNetworkOrIdempotentRequestError(err)) {
                     logger.warn(`${err}. Retrying request...`);
 
@@ -59,7 +59,7 @@ export class ApiClient {
         method: AxiosRequestConfig['method'] = 'get',
         payload?: any): Promise<AxiosResponse | undefined> {
 
-        const delimiter = path.split('?').length === 1 ? '?' : '&';
+        const delimiter: '?' | '&' = path.split('?').length === 1 ? '?' : '&';
 
         const headers: object = {
             'Authorization': 'Bearer ' + this.session?.AccessToken

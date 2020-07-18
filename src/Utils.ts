@@ -3,27 +3,30 @@ import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
 import { Session } from './Types';
 
+import { AxiosResponse } from 'axios';
 import { execSync } from 'child_process';
 import fs from 'fs';
 
 
-async function extractGUIDs(url: string, client: ApiClient): Promise<Array<string> | null> {
+async function extractGuids(url: string, client: ApiClient): Promise<Array<string> | null> {
 
     const videoRegex = new RegExp(/https:\/\/.*\/video\/(\w{8}-(?:\w{4}-){3}\w{12})/);
     const groupRegex = new RegExp(/https:\/\/.*\/group\/(\w{8}-(?:\w{4}-){3}\w{12})/);
 
-    const videoMatch = videoRegex.exec(url);
-    const groupMatch = groupRegex.exec(url);
+    const videoMatch: RegExpExecArray | null = videoRegex.exec(url);
+    const groupMatch: RegExpExecArray | null = groupRegex.exec(url);
 
     if (videoMatch) {
         return [videoMatch[1]];
     }
     else if (groupMatch) {
-        const videoNumber = await client.callApi(`groups/${groupMatch[1]}`, 'get')
-            .then(response => response?.data.metrics.videos);
+        const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
+            .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
 
-        return await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
-            .then(response => response?.data.value.map((item: any) => item.id) );
+        let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
+            .then((response: AxiosResponse<any> | undefined) => response?.data.value.map((item: any) => item.id));
+
+        return result;
     }
 
     return null;
@@ -44,11 +47,11 @@ async function extractGUIDs(url: string, client: ApiClient): Promise<Array<strin
 export async function parseCLIinput(urlList: Array<string>, defaultOutDir: string,
     session: Session): Promise<Array<Array<string>>> {
 
-    const apiClient = ApiClient.getInstance(session);
+    const apiClient: ApiClient = ApiClient.getInstance(session);
     let guidList: Array<string> = [];
 
     for (const url of urlList) {
-        const guids: Array<string> | null = await extractGUIDs(url, apiClient);
+        const guids: Array<string> | null = await extractGuids(url, apiClient);
 
         if (guids) {
             guidList.push(...guids);
@@ -80,15 +83,15 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
     // rawContent is a list of each line of the file
     const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
         .split(/\r?\n/);
-    const apiClient = ApiClient.getInstance(session);
+    const apiClient: ApiClient = ApiClient.getInstance(session);
 
     let guidList: Array<string> = [];
     let outDirList: Array<string> = [];
     // if the last line was an url set this
-    let foundUrl: boolean = false;
+    let foundUrl = false;
 
     for (let i = 0; i < rawContent.length; i++) {
-        const line = rawContent[i];
+        const line: string = rawContent[i];
 
         // filter out lines with no content
         if (!line.match(/\S/)) {
@@ -126,7 +129,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
                 .fill(defaultOutDir));
         }
 
-        const guids: Array<string> | null = await extractGUIDs(line, apiClient);
+        const guids: Array<string> | null = await extractGuids(line, apiClient);
 
         if (guids) {
             guidList.push(...guids);
@@ -143,7 +146,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
 
 // This leaves us the option to add more options (badum tss) _Luca
 function parseOption(optionSyntax: string, item: string): string | null {
-    const match = item.match(
+    const match: RegExpMatchArray | null = item.match(
         RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)
         );
 
@@ -169,9 +172,9 @@ export function checkOutDir(directory: string): boolean {
 }
 
 
-export function checkRequirements() {
+export function checkRequirements(): void {
     try {
-        const ffmpegVer = execSync('ffmpeg -version').toString().split('\n')[0];
+        const ffmpegVer: string = execSync('ffmpeg -version').toString().split('\n')[0];
         logger.info(`Using ${ffmpegVer}\n`);
     }
     catch (e) {
@@ -182,9 +185,9 @@ export function checkRequirements() {
 
 export function ffmpegTimemarkToChunk(timemark: string): number {
     const timeVals: Array<string> = timemark.split(':');
-    const hrs = parseInt(timeVals[0]);
-    const mins = parseInt(timeVals[1]);
-    const secs = parseInt(timeVals[2]);
+    const hrs: number = parseInt(timeVals[0]);
+    const mins: number = parseInt(timeVals[1]);
+    const secs: number = parseInt(timeVals[2]);
 
     return (hrs * 60) + mins + (secs / 60);
 }

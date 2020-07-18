@@ -3,34 +3,34 @@ import { promptUser } from './CommandLineParser';
 import { logger } from './Logger';
 import { Video, Session } from './Types';
 
+import { AxiosResponse } from 'axios';
 import fs from 'fs';
 import { parse } from 'iso8601-duration';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 
 
-function publishedDateToString(date: string) {
-    const dateJs = new Date(date);
-    const day = dateJs.getDate().toString().padStart(2, '0');
-    const month = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
-    const publishedDate = day + '-' + month + '-' + dateJs.getFullYear();
+function publishedDateToString(date: string): string {
+    const dateJs: Date = new Date(date);
+    const day: string = dateJs.getDate().toString().padStart(2, '0');
+    const month: string = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
 
     return `${dateJs.getFullYear()}-${month}-${day}`;
 }
 
 
-function durationToTotalChunks(duration: string) {
-    const durationObj = parse(duration);
-    const hrs = durationObj['hours'] ?? 0;
-    const mins = durationObj['minutes'] ?? 0;
-    const secs = Math.ceil(durationObj['seconds'] ?? 0);
+function durationToTotalChunks(duration: string): number {
+    const durationObj: any = parse(duration);
+    const hrs: number = durationObj.hours ?? 0;
+    const mins: number = durationObj.minutes ?? 0;
+    const secs: number = Math.ceil(durationObj.seconds ?? 0);
 
     return (hrs * 60) + mins + (secs / 60);
 }
 
 
 export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
-    let metadata: Video[] = [];
+    let metadata: Array<Video> = [];
     let title: string;
     let date: string;
     let totalChunks: number;
@@ -38,10 +38,10 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     let posterImageUrl: string;
     let captionsUrl: string | undefined;
 
-    const apiClient = ApiClient.getInstance(session);
+    const apiClient: ApiClient = ApiClient.getInstance(session);
 
     for (const GUID of videoGuids) {
-        let response = await apiClient.callApi('videos/' + GUID, 'get');
+        let response: AxiosResponse<any> | undefined= await apiClient.callApi('videos/' + GUID, 'get');
 
         title = sanitize(response?.data['name']);
         playbackUrl = response?.data['playbackUrls']
@@ -56,7 +56,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
         if (subtitles) {
-            let captions = await apiClient.callApi(`videos/${GUID}/texttracks`, 'get');
+            let captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${GUID}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
@@ -90,9 +90,9 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
 export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, format: string, skip?: boolean): Array<Video> {
 
-    videos.forEach((video, index) => {
+    videos.forEach((video: Video, index: number) => {
         let title = `${video.title} - ${video.date}`;
-        let i: number = 0;
+        let i = 0;
 
         while (!skip && fs.existsSync(path.join(outDirs[index], title + '.' + format))) {
             title = `${video.title} - ${video.date}_${++i}`;

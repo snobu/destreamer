@@ -16,10 +16,11 @@ import puppeteer from 'puppeteer';
 
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
-const tokenCache = new TokenCache();
+const tokenCache: TokenCache = new TokenCache();
+export const chromeCacheFolder = '.chrome_data';
 
 
-async function init() {
+async function init(): Promise<void> {
     setProcessEvents(); // must be first!
 
     if (argv.verbose) {
@@ -43,11 +44,11 @@ async function init() {
 
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
+    const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
 
-    const browser = await puppeteer.launch({
+    const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
         userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
@@ -57,7 +58,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
             '--no-sandbox'
         ]
     });
-    const page = (await browser.pages())[0];
+    const page: puppeteer.Page = (await browser.pages())[0];
 
     logger.info('Navigating to login page...');
     await page.goto(url, { waitUntil: 'load' });
@@ -80,11 +81,11 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         remember the credentials or it could still prompt the user for a password */
     }
 
-    await browser.waitForTarget(target => target.url().includes(videoId), { timeout: 150000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 150000 });
     logger.info('We are logged in.');
 
-    let session = null;
-    let tries: number = 1;
+    let session: Session | null = null;
+    let tries = 1;
     while (!session) {
         try {
             let sessionInfo: any;
@@ -119,7 +120,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 
-async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session) {
+async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session): Promise<void> {
 
     logger.info('Fetching videos info... \n');
     const videos: Array<Video> = createUniquePath (
@@ -128,7 +129,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         );
 
     if (argv.simulate) {
-        videos.forEach(video => {
+        videos.forEach((video: Video) => {
             logger.info(
                 '\nTitle:          '.green + video.title +
                 '\nOutPath:        '.green + video.outPath +
@@ -153,7 +154,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
             session = await refreshSession();
         }
 
-        const pbar = new cliProgress.SingleBar({
+        const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
@@ -180,23 +181,23 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
             );
         }
 
-        const headers = 'Authorization: Bearer ' + session.AccessToken;
+        const headers: string = 'Authorization: Bearer ' + session.AccessToken;
 
         if (!argv.noExperiments) {
             await drawThumbnail(video.posterImageUrl, session);
         }
 
-        const ffmpegInpt = new FFmpegInput(video.playbackUrl, new Map([
+        const ffmpegInpt: any = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput = new FFmpegOutput(video.outPath, new Map([
+        const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
             argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
             argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
             ['n', null]
         ]));
-        const ffmpegCmd = new FFmpegCommand();
+        const ffmpegCmd: any = new FFmpegCommand();
 
-        const cleanupFn = (): void => {
+        const cleanupFn: () => void = () => {
             pbar.stop();
 
            if (argv.noCleanup) {
@@ -219,7 +220,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         ffmpegCmd.addInput(ffmpegInpt);
         ffmpegCmd.addOutput(ffmpegOutput);
         if (argv.closedCaptions && video.captionsUrl) {
-            const captionsInpt = new FFmpegInput(video.captionsUrl, new Map([
+            const captionsInpt: any = new FFmpegInput(video.captionsUrl, new Map([
                 ['headers', headers]
             ]));
 
@@ -227,7 +228,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         }
 
         ffmpegCmd.on('update', async (data: any) => {
-            const currentChunks = ffmpegTimemarkToChunk(data.out_time);
+            const currentChunks: number = ffmpegTimemarkToChunk(data.out_time);
 
             pbar.update(currentChunks, {
                 speed: data.bitrate
@@ -264,7 +265,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
 }
 
 
-async function main() {
+async function main(): Promise<void> {
     await init(); // must be first
 
     let session: Session;
@@ -287,7 +288,7 @@ async function main() {
     }
 
     logger.verbose('List of GUIDs and corresponding output directory \n' +
-        videoGUIDs.map((guid, i) =>
+        videoGUIDs.map((guid: string, i: number) =>
             `\thttps://web.microsoftstream.com/video/${guid} => ${outDirs[i]} \n`).join(''));
 
 

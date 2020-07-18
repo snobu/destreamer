@@ -2,13 +2,17 @@ import colors from 'colors';
 import winston from 'winston';
 
 
-export const logger = winston.createLogger({
+export const logger: winston.Logger = winston.createLogger({
     level: 'info',
     transports: [
         new winston.transports.Console({
             format: winston.format.combine(
                 winston.format.errors({ stack: true }),
-                winston.format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss' }))
+                winston.format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss' }),
+                winston.format.printf(
+                    (item: winston.Logform.TransformableInfo) => customPrint(item)
+                )
+            )
         })
     ]
 });

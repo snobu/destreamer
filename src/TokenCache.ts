@@ -42,7 +42,7 @@ export class TokenCache {
     }
 
     public Write(session: Session): void {
-        let s = JSON.stringify(session, null, 4);
+        let s: string = JSON.stringify(session, null, 4);
         fs.writeFile('.token_cache', s, (err: any) => {
             if (err) {
                 return logger.error(err);
@@ -53,10 +53,10 @@ export class TokenCache {
 }
 
 
-export async function refreshSession() {
+export async function refreshSession(): Promise<Session> {
     const url = 'https://web.microsoftstream.com';
 
-    const browser = await puppeteer.launch({
+    const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,            // NEVER TRUE OR IT DOES NOT WORK
         userDataDir: chromeCacheFolder,
@@ -67,13 +67,13 @@ export async function refreshSession() {
         ]
     });
 
-    const page = (await browser.pages())[0];
+    const page: puppeteer.Page = (await browser.pages())[0];
     await page.goto(url, { waitUntil: 'load' });
 
-    await browser.waitForTarget(target => target.url().includes(url), { timeout: 30000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(url), { timeout: 30000 });
 
-    let session = null;
-    let tries: number = 1;
+    let session: Session | null = null;
+    let tries = 1;
 
     while (!session) {
         try {
