@@ -10,33 +10,35 @@ import puppeteer from 'puppeteer';
 
 
 export class TokenCache {
-    private tokenCacheFile: string = '.token_cache';
+    private tokenCacheFile = '.token_cache';
 
     public Read(): Session | null {
-        let json = null;
         if (!fs.existsSync(this.tokenCacheFile)) {
             logger.warn(`${this.tokenCacheFile} not found. \n`);
 
             return null;
         }
-        let file = fs.readFileSync(this.tokenCacheFile, 'utf8');
-        json = JSON.parse(file);
 
-        let session: Session = {
-            AccessToken: json.AccessToken,
-            ApiGatewayUri: json.ApiGatewayUri,
-            ApiGatewayVersion: json.ApiGatewayVersion
-        };
+        let session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
 
-        if (this.checkValid(session)) {
-            // TODO: re-implement timeleft without another decode of the jwt
-            logger.info('Access token still good! \n'.green); //for ${Math.floor(timeLeft / 60)} minutes.\n`));
-
-            return session;
+        type Jwt = {
+            [key: string]: any
         }
-        logger.warn('Access token has expired! \n');
+        const decodedJwt: Jwt = jwtDecode(session.AccessToken);
 
-        return null;
+        let now: number = Math.floor(Date.now() / 1000);
+        let exp: number = decodedJwt['exp'];
+        let timeLeft: number = exp - now;
+
+        if (timeLeft < 120) {
+            logger.warn('Access token has expired! \n');
+
+            return null;
+        }
+
+        logger.info(`Access token still good for ${Math.floor(timeLeft / 60)} minutes.\n`.green);
+
+        return session;
     }
 
     public Write(session: Session): void {
@@ -47,23 +49,6 @@ export class TokenCache {
             }
             logger.info('Fresh access token dropped into .token_cachen \n'.green);
         });
-    }
-
-    public checkValid(session: Session): boolean {
-        interface Jwt {
-            [key: string]: any
-        }
-        const decodedJwt: Jwt = jwtDecode(session.AccessToken);
-
-        let now = Math.floor(Date.now() / 1000);
-        let exp = decodedJwt['exp'];
-        let timeLeft = exp - now;
-
-        if (timeLeft < 120) {
-            return false;
-        }
-
-        return true;
     }
 }
 
