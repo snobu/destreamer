@@ -44,7 +44,6 @@ async function init(): Promise<void> {
 
 
 async function DoInteractiveLogin(url: string, username?: string): Promise<Session> {
-    const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
 
@@ -81,7 +80,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         remember the credentials or it could still prompt the user for a password */
     }
 
-    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 150000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes('microsoftstream.com'), { timeout: 150000 });
     logger.info('We are logged in.');
 
     let session: Session | null = null;
@@ -142,16 +141,16 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         return;
     }
 
-    for (const video of videos) {
+    for (const [index, video] of videos.entries()) {
 
         if (argv.skip && fs.existsSync(video.outPath)) {
             logger.info(`File already exists, skipping: ${video.outPath} \n`);
             continue;
         }
 
-        if (argv.keepLoginCookies) {
+        if (argv.keepLoginCookies && index !== 0) {
             logger.info('Trying to refresh token...');
-            session = await refreshSession();
+            session = await refreshSession('https://web.microsoftstream.com/video/' + videoGUIDs[index]);
         }
 
         const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
