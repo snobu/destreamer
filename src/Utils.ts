@@ -127,6 +127,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         if (foundUrl) {
             outDirList.push(...Array(guidList.length - outDirList.length)
                 .fill(defaultOutDir));
+            foundUrl = false;
         }
 
         const guids: Array<string> | null = await extractGuids(line, apiClient);
@@ -138,6 +139,12 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         else {
             logger.warn(`Invalid url at line ${i + 1}, skipping..`);
         }
+    }
+
+    // if foundUrl is still true after the loop we have some url without an outDir
+    if (foundUrl) {
+        outDirList.push(...Array(guidList.length - outDirList.length)
+            .fill(defaultOutDir));
     }
 
     return [guidList, outDirList];
