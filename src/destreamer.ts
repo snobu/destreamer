@@ -80,7 +80,7 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
         remember the credentials or it could still prompt the user for a password */
     }
 
-    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes('microsoftstream.com'), { timeout: 150000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().endsWith('microsoftstream.com/'), { timeout: 150000 });
     logger.info('We are logged in.');
 
     let session: Session | null = null;
