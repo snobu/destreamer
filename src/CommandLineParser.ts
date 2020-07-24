@@ -1,9 +1,11 @@
 import { CLI_ERROR, ERROR_CODE } from './Errors';
 import { checkOutDir } from './Utils';
 import { logger } from './Logger';
+import { templateElements } from './Types';
 
 import fs from 'fs';
 import readlineSync from 'readline-sync';
+import sanitize from 'sanitize-filename';
 import yargs from 'yargs';
 
 
@@ -31,6 +33,13 @@ export const argv: any = yargs.options({
         describe: 'The directory where destreamer will save your downloads',
         type: 'string',
         default: 'videos',
+        demandOption: false
+    },
+    outputTemplate: {
+        alias: 't',
+        describe: 'The template for the title. See the README for more info.',
+        type: 'string',
+        default: '{title} - {date} {uniqueID}',
         demandOption: false
     },
     keepLoginCookies: {
@@ -113,6 +122,7 @@ export const argv: any = yargs.options({
         throw new Error(' ');
     }
 })
+.check((argv: any) => outputTemplateValid(argv))
 .argv;
 
 
@@ -157,6 +167,37 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
             throw new Error(' ');
         }
     }
+
+    return true;
+}
+
+
+function outputTemplateValid(argv: any): boolean {
+    let finalTemplate: string = argv.outputTemplate;
+    const elementRegEx = RegExp(/{(.*?)}/g);
+    let match = elementRegEx.exec(finalTemplate);
+
+    // if no template elements this fails
+    if (match) {
+        // keep iterating untill we find no more elements
+        while (match) {
+            if (!templateElements.includes(match[1])) {
+                logger.warn(`'${match[0]}' is not aviable as a template element`);
+                /* Remove bad element after warning so not to leave garbage
+                in the filenam if user ignores */
+                finalTemplate = finalTemplate.replace(match[0], '');
+            }
+            match = elementRegEx.exec(finalTemplate);
+        }
+    }
+    // bad template from user, switching to default
+    else {
+        logger.warn('Bad output template provided, using default one');
+        argv.outputTemplate = '{title} - {date} {uniqueID}';
+    }
+
+
+    argv.outputTemplate = sanitize(finalTemplate.trim());
 
     return true;
 }

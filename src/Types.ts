@@ -14,3 +14,12 @@ export type Video = {
     posterImageUrl: string;
     captionsUrl?: string
 }
+
+
+/* TODO: expand this template once we are all on board with a list
+see https://github.com/snobu/destreamer/issues/190 for list*/
+export const templateElements: Array<string> = [
+    'title' ,
+    'date' ,
+    'uniqueID'
+];
