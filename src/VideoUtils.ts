@@ -41,7 +41,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
     for (const GUID of videoGuids) {
-        let response: AxiosResponse<any> | undefined= await apiClient.callApi('videos/' + GUID, 'get');
+        let response: AxiosResponse<any> | undefined= await apiClient.callApi('videos/' + GUID + '?$expand=creator', 'get');
 
         title = sanitize(response?.data['name']);
         playbackUrl = response?.data['playbackUrls']
