@@ -81,7 +81,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
         authorEmail = response?.data['creator'].mail;
 
-        uniqueId = crypto.createHash('sha1').update(guid).digest('hex').substring(0, 8);
+        uniqueId = '#' + crypto.createHash('sha1').update(guid).digest('hex').substring(0, 8);
 
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
@@ -133,18 +133,30 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
 
 // FIXME: update to use title template
-export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, format: string, skip?: boolean): Array<Video> {
+export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, template: string, format: string, skip?: boolean): Array<Video> {
 
     videos.forEach((video: Video, index: number) => {
-        let title = `${video.title} - ${video.publishDate}`;
-        let i = 0;
+        let title: string = template;
+        let finalTitle: string;
+        const elementRegEx = RegExp(/{(.*?)}/g);
+        let match = elementRegEx.exec(template);
 
-        while (!skip && fs.existsSync(path.join(outDirs[index], title + '.' + format))) {
-            title = `${video.title} - ${video.publishDate}_${++i}`;
+        while (match) {
+            let value = video[match[1] as keyof Video] as string;
+            title = title.replace(match[0], value);
+            match = elementRegEx.exec(template);
+        }
+
+        let i = 0;
+        finalTitle = title;
+        logger.warn(fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format)));
+
+        while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
+            finalTitle = `${title}.${++i}`;
         }
 
 
-        video.outPath = path.join(outDirs[index], title + '.' + format);
+        video.outPath = path.join(outDirs[index], finalTitle + '.' + format);
     });
 
     return videos;

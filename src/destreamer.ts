@@ -124,7 +124,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
     logger.info('Fetching videos info... \n');
     const videos: Array<Video> = createUniquePath (
         await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
-        outputDirectories, argv.format, argv.skip
+        outputDirectories, argv.outputTemplate, argv.format, argv.skip
         );
 
     if (argv.simulate) {
