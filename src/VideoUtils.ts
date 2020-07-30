@@ -4,11 +4,11 @@ import { logger } from './Logger';
 import { Video, Session } from './Types';
 
 import { AxiosResponse } from 'axios';
+import crypto from 'crypto';
 import fs from 'fs';
-import { parse } from 'iso8601-duration';
+import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
-import sanitize from 'sanitize-filename';
-
+import sanitizeWindowsName from 'sanitize-filename';
 
 function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
@@ -19,8 +19,25 @@ function publishedDateToString(date: string): string {
 }
 
 
+function publishedTimeToString(date: string): string {
+    const dateJs: Date = new Date(date);
+    const hours: string = dateJs.getHours().toString();
+    const minutes: string = dateJs.getMinutes().toString();
+    const seconds: string = dateJs.getSeconds().toString();
+
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+
+function isoDurationToString(time: string): string {
+    const duration: Duration = parseDuration(time);
+
+    return `${duration.hours ?? '00'}:${duration.minutes ?? '00'}:${duration.seconds ?? '00'}`;
+}
+
+
 function durationToTotalChunks(duration: string): number {
-    const durationObj: any = parse(duration);
+    const durationObj: any = parseDuration(duration);
     const hrs: number = durationObj.hours ?? 0;
     const mins: number = durationObj.minutes ?? 0;
     const secs: number = Math.ceil(durationObj.seconds ?? 0);
@@ -32,7 +49,13 @@ function durationToTotalChunks(duration: string): number {
 export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
     let metadata: Array<Video> = [];
     let title: string;
-    let date: string;
+    let duration: string;
+    let publishDate: string;
+    let publishTime: string;
+    let author: string;
+    let authorEmail: string;
+    let uniqueId: string;
+    const outPath = '';
     let totalChunks: number;
     let playbackUrl: string;
     let posterImageUrl: string;
@@ -40,10 +63,28 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
-    for (const GUID of videoGuids) {
-        let response: AxiosResponse<any> | undefined= await apiClient.callApi('videos/' + GUID + '?$expand=creator', 'get');
+    /* TODO: change this to a single guid at a time to ease our footprint on the
+    MSS servers or we get throttled after 10 sequential reqs */
+    for (const guid of videoGuids) {
+        let response: AxiosResponse<any> | undefined =
+            await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
 
-        title = sanitize(response?.data['name']);
+        title = sanitizeWindowsName(response?.data['name']);
+
+        duration = isoDurationToString(response?.data.media['duration']);
+
+        publishDate = publishedDateToString(response?.data['publishedDate']);
+
+        publishTime = publishedTimeToString(response?.data['publishedDate']);
+
+        author = response?.data['creator'].name;
+
+        authorEmail = response?.data['creator'].mail;
+
+        uniqueId = crypto.createHash('sha1').update(guid).digest('hex').substring(0, 8);
+
+        totalChunks = durationToTotalChunks(response?.data.media['duration']);
+
         playbackUrl = response?.data['playbackUrls']
             .filter((item: { [x: string]: string; }) =>
                 item['mimeType'] == 'application/vnd.apple.mpegurl')
@@ -52,11 +93,9 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
             })[0];
 
         posterImageUrl = response?.data['posterImage']['medium']['url'];
-        date = publishedDateToString(response?.data['publishedDate']);
-        totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
         if (subtitles) {
-            let captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${GUID}/texttracks`, 'get');
+            let captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
@@ -74,10 +113,15 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         }
 
         metadata.push({
-            date: date,
-            totalChunks: totalChunks,
             title: title,
-            outPath: '',
+            duration: duration,
+            publishDate: publishDate,
+            publishTime: publishTime,
+            author: author,
+            authorEmail: authorEmail,
+            uniqueId: uniqueId,
+            outPath: outPath,
+            totalChunks: totalChunks,    // Abstraction of FFmpeg timemark
             playbackUrl: playbackUrl,
             posterImageUrl: posterImageUrl,
             captionsUrl: captionsUrl
@@ -88,14 +132,15 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 }
 
 
+// FIXME: update to use title template
 export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, format: string, skip?: boolean): Array<Video> {
 
     videos.forEach((video: Video, index: number) => {
-        let title = `${video.title} - ${video.date}`;
+        let title = `${video.title} - ${video.publishDate}`;
         let i = 0;
 
         while (!skip && fs.existsSync(path.join(outDirs[index], title + '.' + format))) {
-            title = `${video.title} - ${video.date}_${++i}`;
+            title = `${video.title} - ${video.publishDate}_${++i}`;
         }
 
 
