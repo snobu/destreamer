@@ -182,20 +182,22 @@ function isOutputTemplateValid(argv: any): boolean {
         // keep iterating untill we find no more elements
         while (match) {
             if (!templateElements.includes(match[1])) {
-                logger.warn(`'${match[0]}' is not aviable as a template element`);
-                /* Remove bad element after warning so not to leave garbage
-                in the filenam if user ignores */
-                finalTemplate = finalTemplate.replace(match[0], '');
+                logger.error(
+                    `'${match[0]}' is not aviable as a template element \n` +
+                    'Please check the template elements aviable in the README \n',
+                    { fatal: true }
+                );
+
+                process.exit(1);
             }
             match = elementRegEx.exec(finalTemplate);
         }
     }
     // bad template from user, switching to default
     else {
-        logger.warn('Bad output template provided, using default one');
+        logger.warn('Empty output template provided, using default one');
         argv.outputTemplate = '{title} - {date} {uniqueID}';
     }
-
 
     argv.outputTemplate = sanitize(finalTemplate.trim());
 
