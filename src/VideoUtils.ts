@@ -32,7 +32,7 @@ function publishedTimeToString(date: string): string {
 function isoDurationToString(time: string): string {
     const duration: Duration = parseDuration(time);
 
-    return `${duration.hours ?? '00'}:${duration.minutes ?? '00'}:${duration.seconds ?? '00'}`;
+    return `${duration.hours ?? '00'}:${duration.minutes ?? '00'}:${duration.seconds?.toFixed(0) ?? '00'}`;
 }
 
 
@@ -132,7 +132,6 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 }
 
 
-// FIXME: update to use title template
 export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, template: string, format: string, skip?: boolean): Array<Video> {
 
     videos.forEach((video: Video, index: number) => {
