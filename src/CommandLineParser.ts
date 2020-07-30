@@ -111,7 +111,7 @@ export const argv: any = yargs.options({
 })
 .wrap(120)
 .check(() => noArguments())
-.check((argv: any) => inputConflicts(argv.videoUrls, argv.inputFile))
+.check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
 .check((argv: any) => {
     if (checkOutDir(argv.outputDirectory)) {
         return true;
@@ -122,7 +122,7 @@ export const argv: any = yargs.options({
         throw new Error(' ');
     }
 })
-.check((argv: any) => outputTemplateValid(argv))
+.check((argv: any) => isOutputTemplateValid(argv))
 .argv;
 
 
@@ -139,7 +139,7 @@ function noArguments(): boolean {
 }
 
 
-function inputConflicts(videoUrls: Array<string | number> | undefined,
+function checkInputConflicts(videoUrls: Array<string | number> | undefined,
     inputFile: string | undefined): boolean {
     // check if both inputs are declared
     if ((videoUrls !== undefined) && (inputFile !== undefined)) {
@@ -172,7 +172,7 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
 }
 
 
-function outputTemplateValid(argv: any): boolean {
+function isOutputTemplateValid(argv: any): boolean {
     let finalTemplate: string = argv.outputTemplate;
     const elementRegEx = RegExp(/{(.*?)}/g);
     let match = elementRegEx.exec(finalTemplate);
