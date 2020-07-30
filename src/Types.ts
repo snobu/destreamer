@@ -26,9 +26,9 @@ see https://github.com/snobu/destreamer/issues/190#issuecomment-663718010 for li
 export const templateElements: Array<string> = [
     'title',
     'duration',
-    'publish_date',
-    'publish_time',
+    'publishDate',
+    'publishTime',
     'author',
-    'author_email',
-    'uniqueID'
+    'authorEmail',
+    'uniqueId'
 ];
