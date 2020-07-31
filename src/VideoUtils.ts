@@ -4,7 +4,6 @@ import { logger } from './Logger';
 import { Video, Session } from './Types';
 
 import { AxiosResponse } from 'axios';
-import crypto from 'crypto';
 import fs from 'fs';
 import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
@@ -81,7 +80,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
         authorEmail = response?.data['creator'].mail;
 
-        uniqueId = '#' + crypto.createHash('sha1').update(guid).digest('hex').substring(0, 8);
+        uniqueId = '#' + guid.split('-')[0];
 
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
@@ -148,7 +147,6 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
 
         let i = 0;
         finalTitle = title;
-        logger.warn(fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format)));
 
         while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
             finalTitle = `${title}.${++i}`;
