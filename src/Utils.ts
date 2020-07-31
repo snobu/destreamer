@@ -182,7 +182,7 @@ export function checkOutDir(directory: string): boolean {
 export function checkRequirements(): void {
     try {
         const ffmpegVer: string = execSync('ffmpeg -version').toString().split('\n')[0];
-        logger.info(`Using ${ffmpegVer}\n`);
+        logger.verbose(`Using ${ffmpegVer}\n`);
     }
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
