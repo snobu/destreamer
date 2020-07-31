@@ -39,7 +39,7 @@ export const argv: any = yargs.options({
         alias: 't',
         describe: 'The template for the title. See the README for more info.',
         type: 'string',
-        default: '{title} - {date} {uniqueID}',
+        default: '{title} - {publishDate} {uniqueId}',
         demandOption: false
     },
     keepLoginCookies: {
@@ -184,7 +184,7 @@ function isOutputTemplateValid(argv: any): boolean {
             if (!templateElements.includes(match[1])) {
                 logger.error(
                     `'${match[0]}' is not aviable as a template element \n` +
-                    'Please check the template elements aviable in the README \n',
+                    `Aviable templates elements: '${templateElements.join("', '")}' \n`,
                     { fatal: true }
                 );
 
@@ -195,8 +195,8 @@ function isOutputTemplateValid(argv: any): boolean {
     }
     // bad template from user, switching to default
     else {
-        logger.warn('Empty output template provided, using default one');
-        argv.outputTemplate = '{title} - {date} {uniqueID}';
+        logger.warn('Empty output template provided, using default one \n');
+        finalTemplate = '{title} - {publishDate} {uniqueId}';
     }
 
     argv.outputTemplate = sanitize(finalTemplate.trim());
