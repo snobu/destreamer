@@ -1,3 +1,48 @@
+
+# WAIT! Is an University of Parma Fork!
+I made this fork to allow people studying at the university of Parma to download files and permit students to enter their private university profile directly, without inserting their personal data every time. Unlike the main program, the access credentials to the unipr portal must be saved in the program root in a "credentials.txt" file following this format (1 string per line):
+```
+yourUserWithout@studenti.unipr.it
+yourMagicPassword
+```
+***You are storing plaintext-credentials, therefore pay attention!*** _(i will fix that later, i promise...!)_					 
+You can find the original work [here](https://github.com/snobu/destreamer), if you find any issue please submit to him.
+
+### Little trick 
+If you have to download lots of files, you can create a python script to keep working after crash without doing any action. Of course you have to manually stop it with ctrl+z, or it will run forever!
+
+```python
+#!/usr/bin/env python3
+
+import os
+import sys
+
+string = ""
+filename = os.path.basename(__file__)
+for arg in sys.argv:
+	if (arg != "python" and arg!="python3" and arg!= "./"+filename and arg!= filename):
+		string+= (arg+" ")
+
+print('''\n\nRunning forever-plugin for destreamer! 
+I will keep working after crash!
+You are running with this arguments: {}
+
+Remember to close with ctrl+z, or i will run forever!\n\n'''.format(string))
+
+while True:
+	os.system("./destreamer.sh "+string)
+```
+Create a file.py with the name you want (suggested forever.py....) and run the script with the desidered arguments like the main program.
+
+In addiction i raccomend to use: 
+```bash
+./destreamer.sh -f list.txt -O ./desidered/folder --format mp4 --skip
+```
+or
+```bash
+python3 ./forever.py -f list.txt -O ./desidered/folder --format mp4 --skip
+```
+
 <a href="https://github.com/snobu/destreamer/actions">
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
@@ -8,22 +53,25 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 # Saves Microsoft Stream videos for offline enjoyment
 
-### v2.1 Release, codename _Hammer of Dawn<sup>TM</sup>_
+### v2.0 Release, codename _Hammer of Dawn<sup>TM</sup>_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
-### Specialized vesions
+[Politecnico di Milano][polisite] students may want to use this fork over at https://github.com/SamanFekri/destreamer which is a specialized implementation of this project with automatic logon.
 
-- [Politecnico di Milano][polimi]: fork over at https://github.com/SamanFekri/destreamer
-- [Università di Pisa][unipi]: fork over at https://github.com/Guray00/destreamer-unipi
-- [Università della Calabria][unical]: fork over at https://github.com/peppelongo96/UnicalDown
-- [Università degli Studi di Parma][unipr]: fork over at https://github.com/vRuslan/destreamer-unipr
+## Outstanding bugs
+
+- We couldn't yet find an elegant way to refresh the access token, so you'll need to perform an interactive logon every hour or so. We're still at the drawing board on this one.
 
 ## What's new
 
-- Major code refactoring (all credits to @lukaarma)
-- Destreamer is now able to refresh the session's access token. Use this with `-k` (keep cookies) and tick "Remember Me" on login.
-- We added support for closed captions (see `--closedCaptions` below)
+- Major code refactoring
+- Dramatically improved error handling
+- We now have a token cache so we can reuse access tokens. This really means that within one hour you need to perform the interactive browser login only once.
+- We removed the dependency on `youtube-dl`
+- Getting to the HLS URL is dramatically more reliable as we dropped parsing the DOM for the video element in favor of calling the Microsoft Stream API
+- Fixed a major 2FA bug that would sometimes cause a timeout in our code
+- Fixed a wide variety of other bugs, maybe introduced a few new ones :)
 
 ## Disclaimer
 
@@ -52,11 +100,17 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 To build destreamer clone this repository, install dependencies and run the build script -
 
 ```sh
-$ git clone https://github.com/snobu/destreamer
-$ cd destreamer
+$ git clone https://github.com/vRuslan/destreamer-unipr
+$ cd ./destreamer-unipr
 $ npm install
 $ npm run build
 ```
+Then create in the program root folder the credentials.txt file with at the first line the username and in the second one the password.
+```
+yourUserWithout@studenti.unipr.it
+yourMagicPassword
+```
+***You are storing plaintext-credentials, therefore pay attention!***
 
 ## Usage
 
@@ -64,44 +118,44 @@ $ npm run build
 $ ./destreamer.sh
 
 Options:
-  --help                  Show help                                                                            [boolean]
-  --version               Show version number                                                                  [boolean]
-  --username, -u          The username used to log into Microsoft Stream (enabling this will fill in the email field for
-                          you)                                                                                  [string]
-  --videoUrls, -i         List of video urls                                                                     [array]
-  --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
-                                                                                                                [string]
-  --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
-  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
-                                                                                              [boolean] [default: false]
-  --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
-  --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
-  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
-                                                                                              [boolean] [default: false]
-  --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
-                          ask if only one aviable)                                            [boolean] [default: false]
-  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
-  --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
-                                                                                              [string] [default: "copy"]
-  --acodec                Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.
-                                                                                              [string] [default: "copy"]
-  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports)
-                                                                                               [string] [default: "mkv"]
-  --skip                  Skip download if file already exists                                [boolean] [default: false]
+  --help                   Show help                                   [boolean]
+  --version                Show version number                         [boolean]
+  --videoUrls, -i          List of video urls                            [array]
+  --videoUrlsFile, -f      Path to txt file containing the urls         [string]
+  --username, -u                                                        [string]
+  --outputDirectory, -o    The directory where destreamer will save your
+                           downloads [default: videos]                  [string]
+  --outputDirectories, -O  Path to a txt file containing one output directory
+                           per video                                    [string]
+  --noExperiments, -x      Do not attempt to render video thumbnails in the
+                           console                    [boolean] [default: false]
+  --simulate, -s           Disable video download and print metadata information
+                           to the console             [boolean] [default: false]
+  --verbose, -v            Print additional information to the console (use this
+                           before opening an issue on GitHub)
+                                                      [boolean] [default: false]
+  --noCleanup, --nc        Don't delete the downloaded video file when an FFmpeg
+                           error occurs               [boolean] [default: false]
+  --vcodec                 Re-encode video track. Specify FFmpeg codec (e.g.
+                           libx265) or set to "none" to disable video.
+                                                      [string] [default: "copy"]
+  --acodec                 Re-encode audio track. Specify FFmpeg codec (e.g.
+                           libopus) or set to "none" to disable audio.
+                                                      [string] [default: "copy"]
+  --format                 Output container format (mkv, mp4, mov, anything that
+                           FFmpeg supports)            [string] [default: "mkv"]
+  --skip                   Skip download if file already exists
+                                                      [boolean] [default: false]
 ```
 
-- Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
-
-- You can use an absolute path for `-o` (output directory), for example `/mnt/videos`.
-
-- We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
+We default to `.mkv` for the output container. If you prefer something else (like `mp4`), pass `--format mp4`.
 
 Download a video -
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1"
 ```
 
-Download a video and re-encode with HEVC (libx265) -
+Download a video and re-encode with HEVC (libx265):
 ```sh
 $ ./destreamer.sh -i "https://web.microsoftstream.com/video/VIDEO-1" --vcodec libx265
 ```
@@ -126,19 +180,12 @@ Download many videos but read URLs from a file -
 ```sh
 $ ./destreamer.sh -f list.txt
 ```
-### Input file
+
 You can create a `.txt` file containing your video URLs, one video per line. The text file can have any name, followed by the `.txt` extension.
-Additionally you can have destreamer download each video in the input list to a separate directory.
-These optional lines must start with white space(s).
 
-Usage -
-```
-https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
- -dir=videos/lessons/week1
-https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
-        -dir=videos/lessons/week2"
-```
+Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
+You can use an absolute path for `-o` (output directory), for example `/mnt/videos`.
 
 ## Expected output
 
@@ -166,7 +213,4 @@ Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll loo
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
 [wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
-[polimi]: https://www.polimi.it
-[unipi]: https://www.unipi.it/
-[unical]: https://www.unical.it/portale/
-[unipr]: https://www.unipr.it/
+[polisite]: https://www.polimi.it
