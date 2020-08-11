@@ -17,6 +17,7 @@ This release would not have been possible without the code and time contributed 
 - [Politecnico di Milano][polimi]: fork over at https://github.com/SamanFekri/destreamer
 - [Università di Pisa][unipi]: fork over at https://github.com/Guray00/destreamer-unipi
 - [Università della Calabria][unical]: fork over at https://github.com/peppelongo96/UnicalDown
+- [Università degli Studi di Parma][unipr]: fork over at https://github.com/peppelongo96/UnicalDown
 
 ## What's new
 
@@ -168,3 +169,4 @@ Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll loo
 [polimi]: https://www.polimi.it
 [unipi]: https://www.unipi.it/
 [unical]: https://www.unical.it/portale/
+[unipr]: https://www.unipr.it/
