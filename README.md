@@ -147,23 +147,24 @@ https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
 
 ### Title template
 The `-t` option allows users to input a template string for the output file names.
-In the template you have to use 1 or more of the following special sequence that will be substituted at runtime.
-The special sequences must be surrounded by curly brackets like this '{title} {publishDate}'
 
-- `title`: the video title
-- `duration`: the video duration in HH:MM:SS format
-- `publishDate`: the date when the video was first published in YYYY-MM-DD format
-- `publishTime`: the time when the video was first published in HH:MM:SS format
-- `author`: the video publisher's name
-- `authorEmail`: the video publisher's email
-- `uniqueId`: a (almost) unique ID generated from the video informations
+You can use one or more of the following magic sequence which will get substituted at runtime. The magic sequence must be surrounded by curly brackets like this: `{title} {publishDate}`
+
+- `title`: Video title
+- `duration`: Video duration in HH:MM:SS format
+- `publishDate`: The date when the video was published in YYYY-MM-DD format
+- `publishTime`: The time the video was published in HH:MM:SS format
+- `author`: Name of video publisher
+- `authorEmail`: E-mail of video publisher
+- `uniqueId`: An _unique-enough_ ID generated from the video metadata
 
 Example -
 ```
 Input:
--t '{title} - {duration} - {publishDate} - {publishTime} - {author} - {authorEmail} - {uniqueId}'
+    -t '{title} - {duration} - {publishDate} - {publishTime} - {author} - {authorEmail} - {uniqueId}'
+
 Expected filename:
-This is an example - 0:16:18 - 2020-07-30 - 10:30:13 - lukaarma - example@domain.org - #3c6ca929.mkv
+    This is an example - 0:16:18 - 2020-07-30 - 10:30:13 - lukaarma - example@domain.org - #3c6ca929.mkv
 ```
 
 ## Expected output
