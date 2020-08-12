@@ -75,6 +75,8 @@ Options:
   --videoUrls, -i         List of video urls                                                                     [array]
   --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
                                                                                                                 [string]
+  --outputTemplate, -t    The template for the title. See the README for more info.
+                                                                [string] [default: "{title} - {publishDate} {uniqueId}"]
   --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
   --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
                                                                                               [boolean] [default: false]
