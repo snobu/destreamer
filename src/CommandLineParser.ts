@@ -1,9 +1,11 @@
 import { CLI_ERROR, ERROR_CODE } from './Errors';
 import { checkOutDir } from './Utils';
 import { logger } from './Logger';
+import { templateElements } from './Types';
 
 import fs from 'fs';
 import readlineSync from 'readline-sync';
+import sanitize from 'sanitize-filename';
 import yargs from 'yargs';
 
 
@@ -31,6 +33,13 @@ export const argv: any = yargs.options({
         describe: 'The directory where destreamer will save your downloads',
         type: 'string',
         default: 'videos',
+        demandOption: false
+    },
+    outputTemplate: {
+        alias: 't',
+        describe: 'The template for the title. See the README for more info.',
+        type: 'string',
+        default: '{title} - {publishDate} {uniqueId}',
         demandOption: false
     },
     keepLoginCookies: {
@@ -102,7 +111,7 @@ export const argv: any = yargs.options({
 })
 .wrap(120)
 .check(() => noArguments())
-.check((argv: any) => inputConflicts(argv.videoUrls, argv.inputFile))
+.check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
 .check((argv: any) => {
     if (checkOutDir(argv.outputDirectory)) {
         return true;
@@ -113,6 +122,7 @@ export const argv: any = yargs.options({
         throw new Error(' ');
     }
 })
+.check((argv: any) => isOutputTemplateValid(argv))
 .argv;
 
 
@@ -129,7 +139,7 @@ function noArguments(): boolean {
 }
 
 
-function inputConflicts(videoUrls: Array<string | number> | undefined,
+function checkInputConflicts(videoUrls: Array<string | number> | undefined,
     inputFile: string | undefined): boolean {
     // check if both inputs are declared
     if ((videoUrls !== undefined) && (inputFile !== undefined)) {
@@ -157,6 +167,39 @@ function inputConflicts(videoUrls: Array<string | number> | undefined,
             throw new Error(' ');
         }
     }
+
+    return true;
+}
+
+
+function isOutputTemplateValid(argv: any): boolean {
+    let finalTemplate: string = argv.outputTemplate;
+    const elementRegEx = RegExp(/{(.*?)}/g);
+    let match = elementRegEx.exec(finalTemplate);
+
+    // if no template elements this fails
+    if (match) {
+        // keep iterating untill we find no more elements
+        while (match) {
+            if (!templateElements.includes(match[1])) {
+                logger.error(
+                    `'${match[0]}' is not aviable as a template element \n` +
+                    `Aviable templates elements: '${templateElements.join("', '")}' \n`,
+                    { fatal: true }
+                );
+
+                process.exit(1);
+            }
+            match = elementRegEx.exec(finalTemplate);
+        }
+    }
+    // bad template from user, switching to default
+    else {
+        logger.warn('Empty output template provided, using default one \n');
+        finalTemplate = '{title} - {publishDate} {uniqueId}';
+    }
+
+    argv.outputTemplate = sanitize(finalTemplate.trim());
 
     return true;
 }

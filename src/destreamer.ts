@@ -124,7 +124,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
     logger.info('Fetching videos info... \n');
     const videos: Array<Video> = createUniquePath (
         await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
-        outputDirectories, argv.format, argv.skip
+        outputDirectories, argv.outputTemplate, argv.format, argv.skip
         );
 
     if (argv.simulate) {
@@ -132,7 +132,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
             logger.info(
                 '\nTitle:          '.green + video.title +
                 '\nOutPath:        '.green + video.outPath +
-                '\nPublished Date: '.green + video.date +
+                '\nPublished Date: '.green + video.publishDate +
                 '\nPlayback URL:   '.green + video.playbackUrl +
                 ((video.captionsUrl) ? ('\nCC URL:         '.green + video.captionsUrl) : '')
             );
