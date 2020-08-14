@@ -68,7 +68,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         let response: AxiosResponse<any> | undefined =
             await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
 
-        title = sanitizeWindowsName(response?.data['name']);
+        title = response?.data['name'];
 
         duration = isoDurationToString(response?.data.media['duration']);
 
