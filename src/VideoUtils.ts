@@ -153,7 +153,12 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         }
 
 
-        video.outPath = path.join(outDirs[index], finalTitle + '.' + format);
+        if ("win32" == (require('os').platform() || "win32")) { // 
+            video.outPath = path.join(outDirs[index], `${sanitizeWindowsName(finalTitle, { replacement: "_" })}.${format}`);
+        } else {
+            video.outPath = path.join(outDirs[index], finalTitle + '.' + format);
+        }
+
     });
 
     return videos;
