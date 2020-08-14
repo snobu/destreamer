@@ -24,14 +24,14 @@ function publishedTimeToString(date: string): string {
     const minutes: string = dateJs.getMinutes().toString();
     const seconds: string = dateJs.getSeconds().toString();
 
-    return `${hours}:${minutes}:${seconds}`;
+    return `${hours}.${minutes}.${seconds}`;
 }
 
 
 function isoDurationToString(time: string): string {
     const duration: Duration = parseDuration(time);
 
-    return `${duration.hours ?? '00'}:${duration.minutes ?? '00'}:${duration.seconds?.toFixed(0) ?? '00'}`;
+    return `${duration.hours ?? '00'}.${duration.minutes ?? '00'}.${duration.seconds?.toFixed(0) ?? '00'}`;
 }
 
 
@@ -151,14 +151,9 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
             finalTitle = `${title}.${++i}`;
         }
-
-
-        if ("win32" == (require('os').platform() || "win32")) { // 
-            video.outPath = path.join(outDirs[index], `${sanitizeWindowsName(finalTitle, { replacement: "_" })}.${format}`);
-        } else {
-            video.outPath = path.join(outDirs[index], finalTitle + '.' + format);
-        }
-
+       
+        video.outPath = path.join(outDirs[index], `${sanitizeWindowsName(finalTitle, { replacement: "_" })}.${format}`);
+        
     });
 
     return videos;
