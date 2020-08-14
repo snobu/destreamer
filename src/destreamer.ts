@@ -119,16 +119,17 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 }
 
 
-async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session): Promise<void> {
+async function downloadVideo(videoGuidArray: Array<string>, outputDirectoryArray: Array<string>, session: Session): Promise<void> {
 
-    logger.info('Fetching videos info... \n');
-    const videos: Array<Video> = createUniquePath (
-        await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
-        outputDirectories, argv.outputTemplate, argv.format, argv.skip
+    for (const [index, videoGuid] of videoGuidArray.entries()) {
+        logger.info(`Fetching video's #${index} info... \n`);
+
+        const video: Video = createUniquePath (
+            await getVideoInfo(videoGuid, session, argv.closedCaptions),
+            outputDirectoryArray[index], argv.outputTemplate, argv.format, argv.skip
         );
 
-    if (argv.simulate) {
-        videos.forEach((video: Video) => {
+        if (argv.simulate) {
             logger.info(
                 '\nTitle:          '.green + video.title +
                 '\nOutPath:        '.green + video.outPath +
@@ -136,21 +137,19 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
                 '\nPlayback URL:   '.green + video.playbackUrl +
                 ((video.captionsUrl) ? ('\nCC URL:         '.green + video.captionsUrl) : '')
             );
-        });
 
-        return;
-    }
-
-    for (const [index, video] of videos.entries()) {
+            continue;
+        }
 
         if (argv.skip && fs.existsSync(video.outPath)) {
             logger.info(`File already exists, skipping: ${video.outPath} \n`);
+
             continue;
         }
 
         if (argv.keepLoginCookies && index !== 0) {
             logger.info('Trying to refresh token...');
-            session = await refreshSession('https://web.microsoftstream.com/video/' + videoGUIDs[index]);
+            session = await refreshSession('https://web.microsoftstream.com/video/' + videoGuidArray[index]);
         }
 
         const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
