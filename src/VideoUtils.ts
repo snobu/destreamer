@@ -151,9 +151,13 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
             finalTitle = `${title}.${++i}`;
         }
-       
-        video.outPath = path.join(outDirs[index], `${sanitizeWindowsName(finalTitle, { replacement: "_" })}.${format}`);
-        
+
+        const finalFileName = `${finalTitle}.${format}`;
+        const cleanFileName = sanitizeWindowsName(finalFileName, { replacement: "_" });
+        if (finalFileName !== cleanFileName) logger.warn(`Not a valid Windows file name: "${finalFileName}".\nReplacing invalid characters with underscores to preserve cross-platform consistency.`);
+
+        video.outPath = path.join(outDirs[index], finalFileName);
+
     });
 
     return videos;
