@@ -24,14 +24,14 @@ function publishedTimeToString(date: string): string {
     const minutes: string = dateJs.getMinutes().toString();
     const seconds: string = dateJs.getSeconds().toString();
 
-    return `${hours}:${minutes}:${seconds}`;
+    return `${hours}.${minutes}.${seconds}`;
 }
 
 
 function isoDurationToString(time: string): string {
     const duration: Duration = parseDuration(time);
 
-    return `${duration.hours ?? '00'}:${duration.minutes ?? '00'}:${duration.seconds?.toFixed(0) ?? '00'}`;
+    return `${duration.hours ?? '00'}.${duration.minutes ?? '00'}.${duration.seconds?.toFixed(0) ?? '00'}`;
 }
 
 
@@ -152,8 +152,12 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
             finalTitle = `${title}.${++i}`;
         }
 
+        const finalFileName = `${finalTitle}.${format}`;
+        const cleanFileName = sanitizeWindowsName(finalFileName, { replacement: "_" });
+        if (finalFileName !== cleanFileName) logger.warn(`Not a valid Windows file name: "${finalFileName}".\nReplacing invalid characters with underscores to preserve cross-platform consistency.`);
 
-        video.outPath = path.join(outDirs[index], finalTitle + '.' + format);
+        video.outPath = path.join(outDirs[index], finalFileName);
+
     });
 
     return videos;

@@ -72,7 +72,7 @@ export const argv: any = yargs.options({
     },
     closedCaptions: {
         alias: 'cc',
-        describe: 'Check if closed captions are aviable and let the user choose which one to download (will not ask if only one aviable)',
+        describe: 'Check if closed captions are available and let the user choose which one to download (will not ask if only one available)',
         type: 'boolean',
         default: false,
         demandOption: false
@@ -183,8 +183,8 @@ function isOutputTemplateValid(argv: any): boolean {
         while (match) {
             if (!templateElements.includes(match[1])) {
                 logger.error(
-                    `'${match[0]}' is not aviable as a template element \n` +
-                    `Aviable templates elements: '${templateElements.join("', '")}' \n`,
+                    `'${match[0]}' is not available as a template element \n` +
+                    `Available templates elements: '${templateElements.join("', '")}' \n`,
                     { fatal: true }
                 );
 
