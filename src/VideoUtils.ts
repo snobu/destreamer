@@ -9,6 +9,7 @@ import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
 import sanitizeWindowsName from 'sanitize-filename';
 
+
 function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
     const day: string = dateJs.getDate().toString().padStart(2, '0');
