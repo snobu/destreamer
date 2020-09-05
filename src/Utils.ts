@@ -179,6 +179,13 @@ export function checkOutDir(directory: string): boolean {
 }
 
 
+export async function getUrlsFromPlaylist(playlistUrl: string, session: Session): Promise<Array<string>> {
+    return await ApiClient.getInstance(session).callUrl(playlistUrl, 'get', null, 'text')
+        .then(res => (res?.data as string).split(/\r?\n/)
+            .filter(line => !(line.startsWith('#') || line === '')));
+}
+
+
 export function checkRequirements(): void {
     try {
         const ffmpegVer: string = execSync('ffmpeg -version').toString().split('\n')[0];
