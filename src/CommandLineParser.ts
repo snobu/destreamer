@@ -70,6 +70,22 @@ export const argv: any = yargs.options({
         default: false,
         demandOption: false
     },
+    debug: {
+        alias: 'd',
+        describe: 'Set logging level to debug (only use this if you know what are doing)',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
+    // TODO: change this in askChoiche so that by default we download the best one
+    // and let the user decide if they want a particular quality with this flag
+    bestQuality: {
+        alias: 'b',
+        describe: 'Automaticly choose the best quality aviable for video and audio',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
     closedCaptions: {
         alias: 'cc',
         describe: 'Check if closed captions are available and let the user choose which one to download (will not ask if only one available)',
