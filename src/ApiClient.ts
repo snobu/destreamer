@@ -15,7 +15,7 @@ export class ApiClient {
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
             // timeout: 7000,
-            headers: { 'User-Agent': 'destreamer/2.0 (Hammer of Dawn)' }
+            headers: { 'User-Agent': 'destreamer/3.0 (beta)' }
         });
 
         axiosRetry(this.axiosInstance, {
@@ -85,6 +85,13 @@ export class ApiClient {
         const headers: object = {
             'Authorization': 'Bearer ' + this.session?.AccessToken
         };
+
+        logger.debug(
+            'url: ' + url + '\n' +
+            'method: ' + method + '\n' +
+            'payload: ' + payload + '\n' +
+            'responseType: ' + responseType + '\n'
+        );
 
         return this.axiosInstance?.request({
             method: method,
