@@ -35,6 +35,9 @@ function customPrint (info: winston.Logform.TransformableInfo): string {
     else if (info.level === 'verbose') {
         return colors.cyan('\n[VERBOSE] ') + info.message;
     }
+    else if (info.level === 'debug') {
+        return colors.magenta('\n[debug] ') + info.message;
+    }
 
     return `${info.level}: ${info.message} - ${info.timestamp}`;
 }
