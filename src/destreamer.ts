@@ -1,31 +1,37 @@
-import { argv } from './CommandLineParser';
+import { ApiClient } from './ApiClient';
+import { argv, promptUser } from './CommandLineParser';
+import { getDecrypter } from './Descrypter';
+import { DownloadManager } from './DownloadManager';
 import { ERROR_CODE } from './Errors';
 import { setProcessEvents } from './Events';
 import { logger } from './Logger';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
-import { drawThumbnail } from './Thumbnail';
-import { TokenCache, refreshSession } from './TokenCache';
+// import { drawThumbnail } from './Thumbnail';
+import { TokenCache/* , refreshSession  */} from './TokenCache';
 import { Video, Session } from './Types';
-import { checkRequirements, ffmpegTimemarkToChunk, parseInputFile, parseCLIinput} from './Utils';
+import { checkRequirements, /* ffmpegTimemarkToChunk,  */parseInputFile, parseCLIinput, getUrlsFromPlaylist} from './Utils';
 import { getVideoInfo, createUniquePath } from './VideoUtils';
 
-import cliProgress from 'cli-progress';
+import { exec, execSync } from 'child_process';
 import fs from 'fs';
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
+import path from 'path';
+import tmp from 'tmp';
 
 
-const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
+const m3u8Parser: any = require('m3u8-parser'); // TODO: can we create an export or something for this?
 const tokenCache: TokenCache = new TokenCache();
 export const chromeCacheFolder = '.chrome_data';
+tmp.setGracefulCleanup();
+
+// const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
 
 
 async function init(): Promise<void> {
     setProcessEvents(); // must be first!
 
-    if (argv.verbose) {
-        logger.level = 'verbose';
-    }
+    logger.level = argv.debug ? 'debug' : (argv.verbose ? 'verbose' : 'info');
 
     if (await isElevated()) {
         process.exit(ERROR_CODE.ELEVATED_SHELL);
@@ -111,14 +117,153 @@ async function DoInteractiveLogin(url: string, username?: string): Promise<Sessi
 
     tokenCache.Write(session);
     logger.info('Wrote access token to token cache.');
-    logger.info("At this point Chromium's job is done, shutting it down...\n");
+    logger.info("At this point Chromium's job is done, shutting it down... \n\n");
 
     await browser.close();
 
     return session;
 }
 
+async function downloadVideo(videoGUIDs: Array<string>,
+    outputDirectories: Array<string>, session: Session): Promise<void> {
 
+    const apiClient = ApiClient.getInstance(session);
+
+    logger.info('Downloading video info, this might take a while...');
+
+    const videos: Array<Video> = createUniquePath (
+        await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
+        outputDirectories, argv.format, argv.skip
+    );
+
+    if (argv.simulate) {
+        videos.forEach(video => {
+            logger.info(
+                '\nTitle:          '.green + video.title +
+                '\nOutPath:        '.green + video.outPath +
+                '\nPublished Date: '.green + video.publishDate + ' ' + video.publishTime +
+                '\nPlayback URL:   '.green + video.playbackUrl +
+                ((video.captionsUrl) ? ('\nCC URL:         '.green + video.captionsUrl) : '')
+            );
+        });
+
+        return;
+    }
+
+    // Launch aria2c
+    logger.info('Trying to launch and connect to aria2c...\n');
+    const aria2cExec = exec('aria2c --enable-rpc --pause=true --rpc-listen-port=6789', (err, stdout, stderr) => {
+        logger.error(err?.message ?? (stderr || stdout));
+        process.exit(ERROR_CODE.ARIA2C_CRASH);
+    });
+    // Try to connect to aria2c webSocket
+    const downloadManager = new DownloadManager(6789);
+    try {
+        await downloadManager.init();
+    }
+    catch (err) {
+        process.exit(ERROR_CODE.NO_CONNECT_ARIA2C);
+    }
+    // We are connected
+
+    for (const video of videos) {
+        const masterParser = new m3u8Parser.Parser();
+
+        console.info(`\nDownloading video no.${videos.indexOf(video) + 1} \n`);
+
+        // TODO: check issue
+        if (argv.skip && fs.existsSync(video.outPath)) {
+            logger.info(`File already exists, skipping: ${video.outPath} \n`);
+            continue;
+        }
+
+        masterParser.push(await apiClient.callUrl(video.playbackUrl).then(res => res?.data));
+        masterParser.end();
+
+        // video playlist url
+        let videoPlaylistUrl: string;
+        let videoPlaylists: Array<any> = (masterParser.manifest.playlists as Array<any>)
+            .filter(playlist =>
+                Object.prototype.hasOwnProperty.call(playlist.attributes, 'RESOLUTION'));
+
+        if (videoPlaylists.length === 1 || argv.bestQuality) {
+            videoPlaylistUrl = videoPlaylists.pop().uri;
+        }
+        else {
+            let resolutions = videoPlaylists.map(playlist =>
+                playlist.attributes.RESOLUTION.width + 'x' +
+                playlist.attributes.RESOLUTION.height);
+            videoPlaylistUrl = videoPlaylists[promptUser(resolutions)].uri;
+        }
+
+        // audio playlist url
+        // TODO: better audio playlists parsing..?
+        let audioPlaylistUrl: string;
+        let audioPlaylists: Array<string> = Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
+
+        if (audioPlaylists.length === 1 || argv.bestQuality){
+            audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
+                .audio[audioPlaylists[0]].uri;
+        }
+        else {
+            audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
+                .audio[audioPlaylists[promptUser(audioPlaylists)]].uri;
+        }
+
+        const videoUrls = await getUrlsFromPlaylist(videoPlaylistUrl, session);
+        const audioUrls = await getUrlsFromPlaylist(audioPlaylistUrl, session);
+        const decrypter = await getDecrypter(videoPlaylistUrl, session);
+
+        // video download
+        const videoSegmentsDir = tmp.dirSync({
+            prefix: 'video',
+            tmpdir: path.dirname(video.outPath),
+            unsafeCleanup: true
+        });
+
+        logger.info('\nDownloading and merging video segments \n');
+        await downloadManager.downloadUrls(videoUrls, videoSegmentsDir.name);
+        execSync('copy /b *.encr ..\\video.encr', {cwd: videoSegmentsDir.name});
+        videoSegmentsDir.removeCallback();
+
+
+        // audio download
+        const audioSegmentsDir = tmp.dirSync({
+            prefix: 'audio',
+            tmpdir: path.dirname(video.outPath),
+            unsafeCleanup: true
+        });
+
+        logger.info('\nDownloading and merging audio segments \n');
+        await downloadManager.downloadUrls(audioUrls, audioSegmentsDir.name);
+        execSync('copy /b *.encr ..\\audio.encr', {cwd: audioSegmentsDir.name});
+        audioSegmentsDir.removeCallback();
+
+        // subs download
+        if (argv.closedCaptions && video.captionsUrl) {
+            await apiClient.callUrl(video.captionsUrl, 'get', null, 'text')
+            .then(res => fs.writeFileSync('subs.vtt', res?.data));
+        }
+
+        logger.warn('START DECRYPT');
+
+        const input = fs.createReadStream( path.join(path.dirname(video.outPath), 'video.encr'));
+        const output = fs.createWriteStream(video.outPath);
+
+        input.pipe(decrypter).pipe(output);
+
+        logger.warn('DONE DECRYPT');
+
+    }
+
+    logger.debug('closing');
+    await downloadManager.close();
+    logger.debug('closed websocket');
+    aria2cExec.kill('SIGINT');
+    logger.debug('closed aria2c');
+}
+
+/*
 async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array<string>, session: Session): Promise<void> {
 
     logger.info('Fetching videos info... \n');
@@ -261,7 +406,8 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
 
         process.removeListener('SIGINT', cleanupFn);
     }
-}
+}*/
+
 
 
 async function main(): Promise<void> {
@@ -286,12 +432,18 @@ async function main(): Promise<void> {
         [videoGUIDs, outDirs] =  await parseInputFile(argv.inputFile!, argv.outputDirectory, session);
     }
 
-    logger.verbose('List of GUIDs and corresponding output directory \n' +
+    logger.verbose('List of videos and corresponding output directory \n' +
         videoGUIDs.map((guid: string, i: number) =>
             `\thttps://web.microsoftstream.com/video/${guid} => ${outDirs[i]} \n`).join(''));
 
 
-    downloadVideo(videoGUIDs, outDirs, session);
+    /* FIXME: [FATAL] we have 4 lingering socket connections and
+    I can't figure them out.
+    To see them use debug mode and after execution (I suggested using
+    --simulate) use 'process._getActiveHandles();' and
+    'process._getActiveRequests();' in the debug console to see lingering
+    Handles (where you can find the sockets) or Requests */
+    await downloadVideo(videoGUIDs, outDirs, session);
 }
 
 
