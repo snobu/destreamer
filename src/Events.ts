@@ -21,6 +21,11 @@ export function setProcessEvents(): void {
         logger.error({ message: msg, fatal: true });
     });
 
+    process.on('SIGINT', signal => {
+        logger.error(signal);
+        process.exit(777);
+    });
+
     process.on('unhandledRejection', (reason: {} | null | undefined) => {
         if (reason instanceof Error) {
             logger.error({ message: (reason as Error) });
