@@ -5,7 +5,10 @@ export const enum ERROR_CODE {
     MISSING_FFMPEG,
     UNK_FFMPEG_ERROR,
     INVALID_VIDEO_GUID,
-    NO_SESSION_INFO
+    NO_SESSION_INFO,
+    NO_ENCRYPTION,
+    ARIA2C_CRASH,
+    NO_CONNECT_ARIA2C
 }
 
 
@@ -25,7 +28,13 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.INVALID_VIDEO_GUID]:    'Unable to get video GUID from URL',
 
-    [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page'
+    [ERROR_CODE.NO_SESSION_INFO]:       'Could not evaluate sessionInfo on the page',
+
+    [ERROR_CODE.NO_ENCRYPTION]:         'Could not extract the encryption info from the playlist',
+
+    [ERROR_CODE.ARIA2C_CRASH]:          'The aria2c rpc server crashed with the previous message',
+
+    [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c json-rpc webSocket'
 };
 
 
