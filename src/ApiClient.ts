@@ -66,6 +66,13 @@ export class ApiClient {
             'Authorization': 'Bearer ' + this.session?.AccessToken
         };
 
+        logger.debug(
+            '[ApiClient.callApi]\n' +
+            'path: ' + path + '\n' +
+            'method: ' + method + '\n' +
+            'payload: ' + payload + '\n'
+        );
+
         return this.axiosInstance?.request({
             method: method,
             headers: headers,
@@ -88,6 +95,7 @@ export class ApiClient {
         };
 
         logger.debug(
+            '[ApiClient.callUrl]\n' +
             'url: ' + url + '\n' +
             'method: ' + method + '\n' +
             'payload: ' + payload + '\n' +
