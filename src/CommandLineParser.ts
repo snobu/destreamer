@@ -77,13 +77,11 @@ export const argv: any = yargs.options({
         default: false,
         demandOption: false
     },
-    // TODO: change this in askChoiche so that by default we download the best one
-    // and let the user decide if they want a particular quality with this flag
-    bestQuality: {
-        alias: 'b',
-        describe: 'Automaticly choose the best quality aviable for video and audio',
-        type: 'boolean',
-        default: false,
+    selectQuality: {
+        alias: 'q',
+        describe: 'Select the quality with a number 1 (worst) trough 10 (best), 0 prompt the user for each video',
+        default: 10,
+        type: 'number',
         demandOption: false
     },
     closedCaptions: {
@@ -128,17 +126,9 @@ export const argv: any = yargs.options({
 .wrap(120)
 .check(() => noArguments())
 .check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
-.check((argv: any) => {
-    if (checkOutDir(argv.outputDirectory)) {
-        return true;
-    }
-    else {
-        logger.error(CLI_ERROR.INVALID_OUTDIR);
-
-        throw new Error(' ');
-    }
-})
+.check((argv: any) => checkOutputDirectoryExistance(argv.outputDirectory))
 .check((argv: any) => isOutputTemplateValid(argv))
+.check((argv: any) => checkQualityValue(argv))
 .argv;
 
 
@@ -188,6 +178,18 @@ function checkInputConflicts(videoUrls: Array<string | number> | undefined,
 }
 
 
+function checkOutputDirectoryExistance(dir: string): boolean {
+    if (checkOutDir(dir)) {
+        return true;
+    }
+    else {
+        logger.error(CLI_ERROR.INVALID_OUTDIR, { fatal: true });
+
+        throw new Error(' ');
+    }
+}
+
+
 function isOutputTemplateValid(argv: any): boolean {
     let finalTemplate: string = argv.outputTemplate;
     const elementRegEx = RegExp(/{(.*?)}/g);
@@ -218,6 +220,25 @@ function isOutputTemplateValid(argv: any): boolean {
     argv.outputTemplate = sanitize(finalTemplate.trim());
 
     return true;
+}
+
+
+function checkQualityValue(argv: any): boolean {
+    if (isNaN(argv.selectQuality)) {
+        logger.error('The quality value provided was not a number, switching to default');
+        argv.selectQuality = 10;
+
+        return true;
+    }
+    else if (argv.selectQuality < 0 || argv.selectQuality > 10) {
+        logger.error('The quality value provided was outside the valid range, switching to default');
+        argv.selectQuality = 10;
+
+        return true;
+    }
+    else {
+        return true;
+    }
 }
 
 
