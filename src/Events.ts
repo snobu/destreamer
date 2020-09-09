@@ -5,8 +5,6 @@ import { logger } from './Logger';
 /**
  * This file contains global destreamer process events
  *
- * @note SIGINT event is overridden in downloadVideo function
- *
  * @note function is required for non-packaged destreamer, so we can't do better
  */
 export function setProcessEvents(): void {

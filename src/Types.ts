@@ -27,7 +27,7 @@ export type Video = {
 }
 
 
-/* TODO: expand this template once we are all on board with a list
+/* NOTE: expand this template once we are all on board with a list
 see https://github.com/snobu/destreamer/issues/190#issuecomment-663718010 for list*/
 export const templateElements: Array<string> = [
     'title',

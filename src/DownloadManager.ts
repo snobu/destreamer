@@ -3,13 +3,11 @@ import { logger } from './Logger';
 import cliProgress from 'cli-progress';
 import WebSocket from 'ws';
 
-// TODO: ADD ERROR HANDLING!!!
-// FIXME: progress bar does not update after the first time, it just fills up immediatly
 
 export class DownloadManager {
     private webSocket: WebSocket;
     // TODO: there's a "not a tty" mode for progresBar
-    // FIXME: is there a way to fix the ETA? Can't get size nor ETA from aria that I can see
+    // NOTE: is there a way to fix the ETA? Can't get size nor ETA from aria that I can see
     // we initialize this for each download
     private progresBar!: cliProgress.Bar;
     private completed: number;
@@ -37,7 +35,7 @@ export class DownloadManager {
             const parsed = JSON.parse(data.toString());
 
             // print only messaged not handled during download
-            // TODO: maybe we could remove this and re-add when the downloads are done
+            // NOTE: maybe we could remove this and re-add when the downloads are done
             if (parsed.method !== 'aria2.onDownloadComplete' &&
                 parsed.method !== 'aria2.onDownloadStart' &&
                 parsed.id !== 'getSpeed' &&
@@ -166,7 +164,7 @@ export class DownloadManager {
                     this.queue.delete(parsed.params.pop().gid.toString());
                     this.progresBar.update(++this.completed);
 
-                    /* TODO: probably we could use setIntervall because reling on
+                    /* NOTE: probably we could use setIntervall because reling on
                     a completed download is good in most cases (since the segments
                     are small and a lot, somany and frequent updates) BUT if the user
                     internet speed is really low the completed downalods come in
