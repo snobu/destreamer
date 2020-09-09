@@ -1,6 +1,6 @@
 import { ApiClient } from './ApiClient';
 import { argv, promptUser } from './CommandLineParser';
-import { getDecrypter } from './Descrypter';
+import { getDecrypter } from './Decrypter';
 import { DownloadManager } from './DownloadManager';
 import { ERROR_CODE } from './Errors';
 import { setProcessEvents } from './Events';
@@ -10,7 +10,7 @@ import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { TokenCache/* , refreshSession  */} from './TokenCache';
 import { Video, Session } from './Types';
 import { checkRequirements, /* ffmpegTimemarkToChunk,  */parseInputFile, parseCLIinput, getUrlsFromPlaylist} from './Utils';
-import { getVideoInfo, createUniquePath } from './VideoUtils';
+import { getVideosInfo, createUniquePaths } from './VideoUtils';
 
 import { exec, execSync } from 'child_process';
 import fs from 'fs';
@@ -131,9 +131,9 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
     logger.info('Downloading video info, this might take a while...');
 
-    const videos: Array<Video> = createUniquePath (
-        await getVideoInfo(videoGUIDs, session, argv.closedCaptions),
-        outputDirectories, argv.format, argv.skip
+    const videos: Array<Video> = createUniquePaths (
+        await getVideosInfo(videoGUIDs, session, argv.closedCaptions),
+        outputDirectories, argv.outputTemplate ,argv.format, argv.skip
     );
 
     if (argv.simulate) {
@@ -152,10 +152,14 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
     // Launch aria2c
     logger.info('Trying to launch and connect to aria2c...\n');
-    const aria2cExec = exec('aria2c --enable-rpc --pause=true --rpc-listen-port=6789', (err, stdout, stderr) => {
-        logger.error(err?.message ?? (stderr || stdout));
-        process.exit(ERROR_CODE.ARIA2C_CRASH);
-    });
+
+    const aria2cExec = exec(
+        'aria2c --enable-rpc --pause=true --rpc-listen-port=6789',(err, stdout, stderr) => {
+            logger.error(err?.message ?? (stderr || stdout));
+            process.exit(ERROR_CODE.ARIA2C_CRASH);
+        }
+    );
+
     // Try to connect to aria2c webSocket
     const downloadManager = new DownloadManager(6789);
     try {
@@ -171,7 +175,6 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         console.info(`\nDownloading video no.${videos.indexOf(video) + 1} \n`);
 
-        // TODO: check issue
         if (argv.skip && fs.existsSync(video.outPath)) {
             logger.info(`File already exists, skipping: ${video.outPath} \n`);
             continue;
@@ -186,33 +189,40 @@ async function downloadVideo(videoGUIDs: Array<string>,
             .filter(playlist =>
                 Object.prototype.hasOwnProperty.call(playlist.attributes, 'RESOLUTION'));
 
-        if (videoPlaylists.length === 1 || argv.bestQuality) {
+        if (videoPlaylists.length === 1 || argv.selectQuality === 5) {
             videoPlaylistUrl = videoPlaylists.pop().uri;
         }
-        else {
-            let resolutions = videoPlaylists.map(playlist =>
+        else if (argv.selectQuality === 0) {
+            const resolutions = videoPlaylists.map(playlist =>
                 playlist.attributes.RESOLUTION.width + 'x' +
-                playlist.attributes.RESOLUTION.height);
+                playlist.attributes.RESOLUTION.height
+            );
+
             videoPlaylistUrl = videoPlaylists[promptUser(resolutions)].uri;
+        }
+        else {
+            const choiche = Math.round((argv.selectQuality * videoPlaylists.length) / 10);
+            videoPlaylistUrl = videoPlaylists[choiche].uri;
         }
 
         // audio playlist url
-        // TODO: better audio playlists parsing..?
+        // TODO: better audio playlists parsing? With language maybe?
         let audioPlaylistUrl: string;
         let audioPlaylists: Array<string> = Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
-
-        if (audioPlaylists.length === 1 || argv.bestQuality){
-            audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
-                .audio[audioPlaylists[0]].uri;
-        }
-        else {
-            audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
-                .audio[audioPlaylists[promptUser(audioPlaylists)]].uri;
-        }
+        audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO.audio[audioPlaylists[0]].uri;
+        // if (audioPlaylists.length === 1){
+        //     audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
+        //         .audio[audioPlaylists[0]].uri;
+        // }
+        // else {
+        //     audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
+        //         .audio[audioPlaylists[promptUser(audioPlaylists)]].uri;
+        // }
 
         const videoUrls = await getUrlsFromPlaylist(videoPlaylistUrl, session);
         const audioUrls = await getUrlsFromPlaylist(audioPlaylistUrl, session);
-        const decrypter = await getDecrypter(videoPlaylistUrl, session);
+        const videoDecrypter = await getDecrypter(videoPlaylistUrl, session);
+        const audioDecrypter = await getDecrypter(videoPlaylistUrl, session);
 
         // video download
         const videoSegmentsDir = tmp.dirSync({
@@ -223,8 +233,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         logger.info('\nDownloading and merging video segments \n');
         await downloadManager.downloadUrls(videoUrls, videoSegmentsDir.name);
-        execSync('copy /b *.encr ..\\video.encr', {cwd: videoSegmentsDir.name});
-        videoSegmentsDir.removeCallback();
+        execSync(`copy /b *.encr "${video.filename}.video.encr"`, {cwd: videoSegmentsDir.name});
 
 
         // audio download
@@ -236,31 +245,71 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         logger.info('\nDownloading and merging audio segments \n');
         await downloadManager.downloadUrls(audioUrls, audioSegmentsDir.name);
-        execSync('copy /b *.encr ..\\audio.encr', {cwd: audioSegmentsDir.name});
-        audioSegmentsDir.removeCallback();
+        execSync(`copy /b *.encr "${video.filename}.audio.encr"`, {cwd: audioSegmentsDir.name});
+
 
         // subs download
         if (argv.closedCaptions && video.captionsUrl) {
             await apiClient.callUrl(video.captionsUrl, 'get', null, 'text')
-            .then(res => fs.writeFileSync('subs.vtt', res?.data));
+            .then(res => fs.writeFileSync(
+                path.join(videoSegmentsDir.name, 'CC.vtt'), res?.data));
         }
 
-        logger.warn('START DECRYPT');
 
-        const input = fs.createReadStream( path.join(path.dirname(video.outPath), 'video.encr'));
-        const output = fs.createWriteStream(video.outPath);
+        logger.verbose('starting decrypt');
 
-        input.pipe(decrypter).pipe(output);
+        const videoDecryptInput = fs.createReadStream(
+            path.join(videoSegmentsDir.name, video.filename + '.video.encr'));
+        const videoDecryptOutput = fs.createWriteStream(
+            path.join(videoSegmentsDir.name, video.filename + '.video'));
 
-        logger.warn('DONE DECRYPT');
+        const decryptVideoPromise = new Promise(resolve => {
+            videoDecryptOutput.on('finish', resolve);
+            videoDecryptInput.pipe(videoDecrypter).pipe(videoDecryptOutput);
+        });
 
+        const audioDecryptInput = fs.createReadStream(
+            path.join(audioSegmentsDir.name, video.filename + '.audio.encr'));
+        const audioDecryptOutput = fs.createWriteStream(
+            path.join(audioSegmentsDir.name, video.filename + '.audio'));
+
+        const decryptAudioPromise = new Promise(resolve => {
+            audioDecryptOutput.on('finish', resolve);
+            audioDecryptInput.pipe(audioDecrypter).pipe(audioDecryptOutput);
+        });
+
+        await Promise.all([decryptVideoPromise, decryptAudioPromise]);
+
+        logger.verbose('done decrypt');
+
+        logger.info('\nMerging vdeo and audio together');
+        const mergeCommand = (
+            // add video input
+            `ffmpeg -i "${path.join(videoSegmentsDir.name, video.filename + '.video')}" ` +
+            // add audio input
+            `-i "${path.join(audioSegmentsDir.name, video.filename + '.audio')}" ` +
+            // add subtitles input if present and wanted
+            ((argv.closedCaptions && video.captionsUrl) ?
+                `-i "${path.join(videoSegmentsDir.name, 'CC.vtt')}" ` : '') +
+            // copy codec and output path
+            `-c copy "${video.outPath}"`
+        );
+
+        logger.debug('[destreamer] ' + mergeCommand);
+
+        execSync(mergeCommand, { stdio: 'ignore' });
+
+        videoSegmentsDir.removeCallback();
+        audioSegmentsDir.removeCallback();
     }
 
-    logger.debug('closing');
+    logger.debug('[destreamer] closing downloader socket');
     await downloadManager.close();
-    logger.debug('closed websocket');
+    logger.debug('[destreamer] closed downloader. Stopping aria2c deamon');
     aria2cExec.kill('SIGINT');
-    logger.debug('closed aria2c');
+    logger.debug('[destreamer] stopped aria2c');
+
+    return;
 }
 
 /*
@@ -444,6 +493,10 @@ async function main(): Promise<void> {
     'process._getActiveRequests();' in the debug console to see lingering
     Handles (where you can find the sockets) or Requests */
     await downloadVideo(videoGUIDs, outDirs, session);
+
+    // workaround for issue above
+    process.exit(0);
+
 }
 
 
