@@ -6,6 +6,7 @@ export type Session = {
 
 
 export type Video = {
+    // the following properties are all for the title template
     title: string;
     duration: string;
     publishDate: string;
@@ -13,11 +14,16 @@ export type Video = {
     author: string;
     authorEmail: string;
     uniqueId: string;
-    outPath: string;
-    totalChunks: number;    // Abstraction of FFmpeg timemark
+
+    // the following properties are all the urls neede for the download
     playbackUrl: string;
     posterImageUrl: string;
     captionsUrl?: string
+
+    // final filename, already sanitized and unique
+    filename: string;
+    // complete path to save the video
+    outPath: string;
 }
 
 
