@@ -1,5 +1,7 @@
+/* let's start our error codes up high so we
+don't exit with the wrong message if other modules exit with some code */
 export const enum ERROR_CODE {
-    UNHANDLED_ERROR,
+    UNHANDLED_ERROR = 1000,
     ELEVATED_SHELL,
     CANCELLED_USER_INPUT,
     MISSING_FFMPEG,
@@ -14,7 +16,7 @@ export const enum ERROR_CODE {
 
 export const errors: {[key: number]: string} = {
     [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
-                                        'Timeout or fatal error, please check your downloads directory and try again',
+                                        'Timeout or fatal error, please check your download directory/directories and try again',
 
     [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
                                         'Please run in a regular, non-elevated window.',
