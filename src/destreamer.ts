@@ -189,7 +189,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             .filter(playlist =>
                 Object.prototype.hasOwnProperty.call(playlist.attributes, 'RESOLUTION'));
 
-        if (videoPlaylists.length === 1 || argv.selectQuality === 5) {
+        if (videoPlaylists.length === 1 || argv.selectQuality === 10) {
             videoPlaylistUrl = videoPlaylists.pop().uri;
         }
         else if (argv.selectQuality === 0) {
@@ -201,7 +201,8 @@ async function downloadVideo(videoGUIDs: Array<string>,
             videoPlaylistUrl = videoPlaylists[promptUser(resolutions)].uri;
         }
         else {
-            const choiche = Math.round((argv.selectQuality * videoPlaylists.length) / 10);
+            const choiche = Math.round((argv.selectQuality * videoPlaylists.length) / 10) - 1;
+            logger.debug(`Video quality choiche: ${choiche}`);
             videoPlaylistUrl = videoPlaylists[choiche].uri;
         }
 
