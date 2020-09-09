@@ -4,10 +4,14 @@ import cliProgress from 'cli-progress';
 import WebSocket from 'ws';
 
 // TODO: ADD ERROR HANDLING!!!
+// FIXME: progress bar does not update after the first time, it just fills up immediatly
 
 export class DownloadManager {
     private webSocket: WebSocket;
-    private progresBar: cliProgress.Bar;
+    // TODO: there's a "not a tty" mode for progresBar
+    // FIXME: is there a way to fix the ETA? Can't get size nor ETA from aria that I can see
+    // we initialize this for each download
+    private progresBar!: cliProgress.Bar;
     private completed: number;
     private queue: Set<string>;
     private index: number;
@@ -17,19 +21,6 @@ export class DownloadManager {
         this.completed = 0;
         this.queue = new Set<string>();
         this.index = 1;
-
-        // TODO: there's a not a tty mode for progresBar
-        // FIXME: is there a way to fix the ETA?
-        // Can't get not the size nor the ETA from aria2c that I can see
-        this.progresBar = new cliProgress.SingleBar({
-            barCompleteChar: '\u2588',
-            barIncompleteChar: '\u2591',
-            format: 'progress [{bar}] {percentage}%   {speed} MB/s   {eta_formatted}',
-            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
-            barsize: Math.floor((process.stdout.columns || 30) / 3),
-            stopOnComplete: true,
-            hideCursor: true,
-        });
 
         // Is this really needed having the 30 columns default if
         // process.stdout.columns undefined/0?
@@ -103,6 +94,18 @@ export class DownloadManager {
         }
     }
 
+    private initProgresBar(): void {
+        this.progresBar = new cliProgress.SingleBar({
+            barCompleteChar: '\u2588',
+            barIncompleteChar: '\u2591',
+            format: 'progress [{bar}] {percentage}%   {speed} MB/s   {eta_formatted}',
+            // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
+            barsize: Math.floor((process.stdout.columns || 30) / 3),
+            stopOnComplete: true,
+            hideCursor: true,
+        });
+    }
+
     private createMessage(method: 'aria2.addUri', params: [[string]] | [[string], object], id?: string): string;
     private createMessage(method: 'aria2.changeOption', params: [string, object], id?: string): string;
     private createMessage(method: 'aria2.changeGlobalOption', params: [{[option: string]: string}], id?: string): string;
@@ -146,6 +149,12 @@ export class DownloadManager {
     public downloadUrls(urls: Array<string>, directory: string): Promise<void> {
         return new Promise (resolve => {
 
+            this.index = 1;
+            this.completed = 0;
+            // initialize the bar as a new one
+            this.initProgresBar();
+            let barStarted = false;
+
             const handleResponse = (data: WebSocket.Data): void => {
                 const parsed = JSON.parse(data.toString());
 
@@ -165,7 +174,6 @@ export class DownloadManager {
                     this.webSocket.send(this.createMessage('aria2.getGlobalStat', null, 'getSpeed'));
 
                     if (this.queue.size === 0) {
-                        this.index = 1;
                         this.webSocket.removeListener('message', handleResponse);
                         resolve();
                     }
@@ -177,10 +185,9 @@ export class DownloadManager {
                         { speed: ((parsed.result.downloadSpeed as number) / 1000000).toFixed(2) });
                 }
 
-                
                 // handle download errors
                 else if (parsed.method === 'aria2.onDownloadError') {
-                    // TODO: test download error parsing
+                    // TODO: test download error parsing, not had a chance to yet
                     logger.error(JSON.stringify(parsed));
 
                     let errorGid: string = parsed.params.pop().gid.toString();
@@ -212,14 +219,18 @@ export class DownloadManager {
                             this.queue.add(gid.toString())
                         );
 
-                        this.progresBar.start(this.queue.size, 0, { speed: 0});
+                        if (!barStarted) {
+                            barStarted = true;
+                            logger.debug(`[DownloadMangaer] Starting queue size: ${this.queue.size}`);
+                            this.progresBar.start(this.queue.size, 0, { speed: 0});
+                        }
                     }
                 }
             };
 
             this.webSocket.on('message', data => handleResponse(data));
 
-            const params: Array<any> = urls.map(url => {
+            const paramsForDownload: Array<any> = urls.map(url => {
                 const title: string = (this.index++).toString().padStart(16, '0') + '.encr';
 
                 return this.createMulticallElement(
@@ -227,7 +238,7 @@ export class DownloadManager {
             });
 
             this.webSocket.send(
-                this.createMessage('system.multicall', [params], 'addUrl')
+                this.createMessage('system.multicall', [paramsForDownload], 'addUrl')
             );
         });
     }
