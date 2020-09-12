@@ -15,7 +15,7 @@ export class ApiClient {
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
             // timeout: 7000,
-            headers: { 'User-Agent': 'destreamer/3.0 (beta)' }
+            headers: { 'User-Agent': 'destreamer/3.0 (Preview)' }
         });
 
         axiosRetry(this.axiosInstance, {
