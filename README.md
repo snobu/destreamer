@@ -7,6 +7,10 @@
 **destreamer v3.0** is just around the corner. Download speed improvement is astonishing and we have a never before seen photo from the design sessions:<br><br>
 ![desilva](https://user-images.githubusercontent.com/6472374/93003437-54a7fd00-f547-11ea-8473-e4602993e69d.jpg)
 
+Help us pick a codename for the new release:<br><br>
+![codename](https://user-images.githubusercontent.com/6472374/93003896-20ced680-f54b-11ea-8be1-2c14e0bd3751.png)
+Comment in this thread: https://github.com/snobu/destreamer/issues/223
+
 ![destreamer](assets/logo.png)
 
 _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
