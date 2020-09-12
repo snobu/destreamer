@@ -8,7 +8,7 @@
 ![desilva](https://user-images.githubusercontent.com/6472374/93003437-54a7fd00-f547-11ea-8473-e4602993e69d.jpg)
 
 Help us pick a codename for the new release:<br><br>
-![codename](https://user-images.githubusercontent.com/6472374/93003896-20ced680-f54b-11ea-8be1-2c14e0bd3751.png)
+![codename](https://user-images.githubusercontent.com/6472374/93003896-20ced680-f54b-11ea-8be1-2c14e0bd3751.png)<br><br>
 Comment in this thread: https://github.com/snobu/destreamer/issues/223
 
 ![destreamer](assets/logo.png)
