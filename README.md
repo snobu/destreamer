@@ -2,6 +2,11 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
+# BREAKING
+
+**destreamer v3.0** is just around the corner. Download speed improvement is astonishing and we have a never before seen photo from the design sessions:<br><br>
+![desilva](https://user-images.githubusercontent.com/6472374/93003437-54a7fd00-f547-11ea-8473-e4602993e69d.jpg)
+
 ![destreamer](assets/logo.png)
 
 _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
