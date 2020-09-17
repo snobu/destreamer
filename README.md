@@ -61,6 +61,33 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 
 **WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an X Window server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. See [this issue for more on WSL v1 and v2][wsl].
 
+## Can i plug in my own browser?
+
+Yes, yes you can. This may be useful if your main browser has some authentication plugins that are required for you to logon to your Microsoft Stream tenant.
+To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts`:
+
+```
+const browser: puppeteer.Browser = await puppeteer.launch({
+        executablePath: getPuppeteerChromiumPath(),
+        headless: false,
+        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
+        args: [
+            '--disable-dev-shm-usage',
+            '--fast-start',
+            '--no-sandbox'
+        ]
+    });
+```
+
+Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
+```
+        executablePath: "'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' --profile-directory=Default",
+```
+
+Note that for Mac/Linux the path will look a little different but no other changes are necessary.
+
+You need to rebuild (`npm run build`) every time you change this configuration.
+
 ## How to build
 
 To build destreamer clone this repository, install dependencies and run the build script -
