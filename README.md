@@ -66,7 +66,7 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 Yes, yes you can. This may be useful if your main browser has some authentication plugins that are required for you to logon to your Microsoft Stream tenant.
 To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts`:
 
-```
+```typescript
 const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
@@ -80,7 +80,7 @@ const browser: puppeteer.Browser = await puppeteer.launch({
 ```
 
 Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
-```
+```typescript
         executablePath: "'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' --profile-directory=Default",
 ```
 
