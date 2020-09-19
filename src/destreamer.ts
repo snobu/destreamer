@@ -12,9 +12,10 @@ import { Video, Session } from './Types';
 import { checkRequirements, parseInputFile, parseCLIinput, getUrlsFromPlaylist} from './Utils';
 import { getVideosInfo, createUniquePaths } from './VideoUtils';
 
-import { exec, execSync } from 'child_process';
+import { exec, execSync, ChildProcess } from 'child_process';
 import fs from 'fs';
 import isElevated from 'is-elevated';
+import portfinder from 'portfinder';
 import puppeteer from 'puppeteer';
 import path from 'path';
 import tmp from 'tmp';
@@ -149,20 +150,36 @@ async function downloadVideo(videoGUIDs: Array<string>,
         return;
     }
 
-    // Launch aria2c
     logger.info('Trying to launch and connect to aria2c...\n');
 
-    const aria2cExec = exec(
-        'aria2c --enable-rpc --pause=true --rpc-listen-port=6789',(err, stdout, stderr) => {
-            logger.error(err?.message ?? (stderr || stdout));
-            process.exit(ERROR_CODE.ARIA2C_CRASH);
+    // FIXME: see issue with downloadManager below
+    let aria2cExec: ChildProcess | undefined;
+    let downloadManager: DownloadManager | undefined;
+    await portfinder.getPortPromise().then(
+        port => {
+            logger.debug(`[DESTREAMER] Trying to use port ${port}`);
+            // Launch aria2c
+            aria2cExec = exec(
+                `aria2c --enable-rpc --pause=true --rpc-listen-port=${port}`, (err, stdout, stderr) => {
+                    logger.error(err?.message ?? (stderr || stdout));
+                    process.exit(ERROR_CODE.ARIA2C_CRASH);
+                }
+            );
+            // bind webSocket
+            downloadManager = new DownloadManager(port);
+        },
+        error => {
+            logger.error(error);
+            process.exit(ERROR_CODE.NO_DEAMON_PORT);
         }
     );
 
     // Try to connect to aria2c webSocket
-    const downloadManager = new DownloadManager(6789);
+    /* FIXME: why does ts not recognize that if we reach here downloadManager is defined
+    and it forces me to define it as undefined (pun intended) and then check with Optional Chaining
+    Is there something that im missing? Probably since it's late but Ill leave it to you Adrian*/
     try {
-        await downloadManager.init();
+        await (downloadManager?.init() ?? process.exit(555));
     }
     catch (err) {
         process.exit(ERROR_CODE.NO_CONNECT_ARIA2C);
@@ -172,7 +189,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
     for (const video of videos) {
         const masterParser = new m3u8Parser.Parser();
 
-        console.info(`\nDownloading video no.${videos.indexOf(video) + 1} \n`);
+        logger.info(`\nDownloading video no.${videos.indexOf(video) + 1} \n`);
 
         if (argv.skip && fs.existsSync(video.outPath)) {
             logger.info(`File already exists, skipping: ${video.outPath} \n`);
@@ -200,7 +217,10 @@ async function downloadVideo(videoGUIDs: Array<string>,
             videoPlaylistUrl = videoPlaylists[promptUser(resolutions)].uri;
         }
         else {
-            const choiche = Math.round((argv.selectQuality * videoPlaylists.length) / 10) - 1;
+            let choiche = Math.round((argv.selectQuality * videoPlaylists.length) / 10);
+            if (choiche === videoPlaylists.length) {
+                choiche--;
+            }
             logger.debug(`Video quality choiche: ${choiche}`);
             videoPlaylistUrl = videoPlaylists[choiche].uri;
         }
@@ -235,10 +255,8 @@ async function downloadVideo(videoGUIDs: Array<string>,
             unsafeCleanup: true
         });
 
-        logger.info('\nDownloading and merging video segments \n');
-        await downloadManager.downloadUrls(videoUrls, videoSegmentsDir.name);
-        execSync(`copy /b *.encr "${video.filename}.video.encr"`, {cwd: videoSegmentsDir.name});
-
+        logger.info('\nDownloading video segments \n');
+        await downloadManager?.downloadUrls(videoUrls, videoSegmentsDir.name);
 
         // audio download
         const audioSegmentsDir = tmp.dirSync({
@@ -247,21 +265,20 @@ async function downloadVideo(videoGUIDs: Array<string>,
             unsafeCleanup: true
         });
 
-        logger.info('\nDownloading and merging audio segments \n');
-        await downloadManager.downloadUrls(audioUrls, audioSegmentsDir.name);
-        execSync(`copy /b *.encr "${video.filename}.audio.encr"`, {cwd: audioSegmentsDir.name});
-
+        logger.info('\nDownloading audio segments \n');
+        await downloadManager?.downloadUrls(audioUrls, audioSegmentsDir.name);
 
         // subs download
         if (argv.closedCaptions && video.captionsUrl) {
+            logger.info('\nDownloading subtitles \n');
             await apiClient.callUrl(video.captionsUrl, 'get', null, 'text')
             .then(res => fs.writeFileSync(
                 path.join(videoSegmentsDir.name, 'CC.vtt'), res?.data));
         }
 
+        logger.info('\n\nMerging and decrypting video and audio segments...\n');
 
-        logger.verbose('starting decrypt');
-
+        execSync(`copy /b *.encr "${video.filename}.video.encr"`, {cwd: videoSegmentsDir.name});
         const videoDecryptInput = fs.createReadStream(
             path.join(videoSegmentsDir.name, video.filename + '.video.encr'));
         const videoDecryptOutput = fs.createWriteStream(
@@ -272,6 +289,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             videoDecryptInput.pipe(videoDecrypter).pipe(videoDecryptOutput);
         });
 
+        execSync(`copy /b *.encr "${video.filename}.audio.encr"`, {cwd: audioSegmentsDir.name});
         const audioDecryptInput = fs.createReadStream(
             path.join(audioSegmentsDir.name, video.filename + '.audio.encr'));
         const audioDecryptOutput = fs.createWriteStream(
@@ -284,9 +302,13 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         await Promise.all([decryptVideoPromise, decryptAudioPromise]);
 
-        logger.verbose('done decrypt');
+        logger.info('Decrypted!\n');
 
-        logger.info('\nMerging vdeo and audio together');
+        let luca: [number] = [3];
+
+        console.log(luca);
+
+        logger.info('Merging vdeo and audio together...\n');
         const mergeCommand = (
             // add video input
             `ffmpeg -i "${path.join(videoSegmentsDir.name, video.filename + '.video')}" ` +
@@ -303,14 +325,18 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         execSync(mergeCommand, { stdio: 'ignore' });
 
+        logger.info('Done! Removing temp files...\n');
+
         videoSegmentsDir.removeCallback();
         audioSegmentsDir.removeCallback();
+
+        logger.info(`Video no.${videos.indexOf(video) + 1} downloaded!!\n\n`);
     }
 
     logger.debug('[destreamer] closing downloader socket');
-    await downloadManager.close();
+    await downloadManager?.close();
     logger.debug('[destreamer] closed downloader. Stopping aria2c deamon');
-    aria2cExec.kill('SIGINT');
+    aria2cExec?.kill('SIGINT');
     logger.debug('[destreamer] stopped aria2c');
 
     return;
