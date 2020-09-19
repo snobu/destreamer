@@ -304,10 +304,6 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         logger.info('Decrypted!\n');
 
-        let luca: [number] = [3];
-
-        console.log(luca);
-
         logger.info('Merging vdeo and audio together...\n');
         const mergeCommand = (
             // add video input
