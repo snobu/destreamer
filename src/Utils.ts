@@ -23,7 +23,7 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
             .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
 
-        let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
+        const result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
             .then((response: AxiosResponse<any> | undefined) => response?.data.value.map((item: any) => item.id));
 
         return result;
@@ -48,7 +48,7 @@ export async function parseCLIinput(urlList: Array<string>, defaultOutDir: strin
     session: Session): Promise<Array<Array<string>>> {
 
     const apiClient: ApiClient = ApiClient.getInstance(session);
-    let guidList: Array<string> = [];
+    const guidList: Array<string> = [];
 
     for (const url of urlList) {
         const guids: Array<string> | null = await extractGuids(url, apiClient);
@@ -85,8 +85,8 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         .split(/\r?\n/);
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
-    let guidList: Array<string> = [];
-    let outDirList: Array<string> = [];
+    const guidList: Array<string> = [];
+    const outDirList: Array<string> = [];
     // if the last line was an url set this
     let foundUrl = false;
 
@@ -101,7 +101,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         // parse if line is option
         else if (line.includes('-dir')) {
             if (foundUrl) {
-                let outDir: string | null = parseOption('-dir', line);
+                const outDir: string | null = parseOption('-dir', line);
 
                 if (outDir && checkOutDir(outDir)) {
                     outDirList.push(...Array(guidList.length - outDirList.length)

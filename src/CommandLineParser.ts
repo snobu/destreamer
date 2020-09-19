@@ -224,7 +224,7 @@ function checkQualityValue(argv: any): boolean {
 
 
 export function promptUser(choices: Array<string>): number {
-    let index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
+    const index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
 
     if (index === -1) {
         process.exit(ERROR_CODE.CANCELLED_USER_INPUT);

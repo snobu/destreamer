@@ -201,7 +201,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         // video playlist url
         let videoPlaylistUrl: string;
-        let videoPlaylists: Array<any> = (masterParser.manifest.playlists as Array<any>)
+        const videoPlaylists: Array<any> = (masterParser.manifest.playlists as Array<any>)
             .filter(playlist =>
                 Object.prototype.hasOwnProperty.call(playlist.attributes, 'RESOLUTION'));
 
@@ -227,9 +227,10 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         // audio playlist url
         // TODO: better audio playlists parsing? With language maybe?
-        let audioPlaylistUrl: string;
-        let audioPlaylists: Array<string> = Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
-        audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO.audio[audioPlaylists[0]].uri;
+        const audioPlaylists: Array<string> =
+            Object.keys(masterParser.manifest.mediaGroups.AUDIO.audio);
+        const audioPlaylistUrl: string =
+            masterParser.manifest.mediaGroups.AUDIO.audio[audioPlaylists[0]].uri;
         // if (audioPlaylists.length === 1){
         //     audioPlaylistUrl = masterParser.manifest.mediaGroups.AUDIO
         //         .audio[audioPlaylists[0]].uri;
@@ -342,8 +343,9 @@ async function downloadVideo(videoGUIDs: Array<string>,
 async function main(): Promise<void> {
     await init(); // must be first
 
-    let session: Session;
-    session = tokenCache.Read() ?? await DoInteractiveLogin('https://web.microsoftstream.com/', argv.username);
+
+    const session: Session = tokenCache.Read() ??
+        await DoInteractiveLogin('https://web.microsoftstream.com/', argv.username);
 
     logger.verbose('Session and API info \n' +
         '\t API Gateway URL: '.cyan + session.ApiGatewayUri + '\n' +

@@ -135,7 +135,7 @@ export class DownloadManager {
      * @param options object with key: value pairs
      */
     private setOptions(options: {[option: string]: string}, guid?: string): void {
-        let message: string = guid ?
+        const message: string = guid ?
             this.createMessage('aria2.changeOption', [guid, options]) :
             this.createMessage('aria2.changeGlobalOption', [options]);
 
@@ -186,7 +186,7 @@ export class DownloadManager {
                     // TODO: test download error parsing, not had a chance to yet
                     logger.error(JSON.stringify(parsed));
 
-                    let errorGid: string = parsed.params.pop().gid.toString();
+                    const errorGid: string = parsed.params.pop().gid.toString();
                     this.queue.delete(errorGid);
 
                     // TODO: add this to createMessage
