@@ -91,28 +91,6 @@ export const argv: any = yargs.options({
         default: false,
         demandOption: false
     },
-    // NOTE: useless
-    noCleanup: {
-        alias: 'nc',
-        describe: 'Do not delete the downloaded video file when an FFmpeg error occurs',
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    // NOTE: useless
-    vcodec: {
-        describe: 'Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.',
-        type: 'string',
-        default: 'copy',
-        demandOption: false
-    },
-    // NOTE: useless
-    acodec: {
-        describe: 'Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.',
-        type: 'string',
-        default: 'copy',
-        demandOption: false
-    },
     format: {
         describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports)',
         type: 'string',
