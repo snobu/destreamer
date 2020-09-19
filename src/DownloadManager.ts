@@ -54,10 +54,12 @@ export class DownloadManager {
      */
     public async init(options?: {[option: string]: string}): Promise<void> {
         let tries = 0;
+        const limit = 5;
 
         while (this.webSocket.readyState !== this.webSocket.OPEN) {
-            if (tries < 5) {
+            if (tries < limit) {
                 tries++;
+                logger.debug(`[DownloadMangaer] Trying to connect to aria deamon ${tries}/${limit}`);
                 await new Promise(r => setTimeout(r, 2000));
             }
             else {
@@ -72,11 +74,7 @@ export class DownloadManager {
         }
     }
 
-    /**
-     * Wait for an established connection between the webSocket
-     * and Aria2c with a 10s timeout.
-     * Then send aria2c the global config option specified.
-     */
+    // FIXME: implement this (https://aria2.github.io/manual/en/html/aria2c.html#aria2.shutdown)
     public async close(): Promise<void> {
         let tries = 0;
         this.webSocket.close();
