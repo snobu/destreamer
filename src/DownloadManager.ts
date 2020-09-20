@@ -20,8 +20,6 @@ export class DownloadManager {
         this.queue = new Set<string>();
         this.index = 1;
 
-        // Is this really needed having the 30 columns default if
-        // process.stdout.columns undefined/0?
         if (!process.stdout.columns) {
             logger.warn(
                 'Unable to get number of columns from terminal.\n' +
@@ -31,7 +29,7 @@ export class DownloadManager {
             );
         }
 
-        this.webSocket.on('message', data => {
+        this.webSocket.on('message', (data: WebSocket.Data) => {
             const parsed = JSON.parse(data.toString());
 
             // print only messaged not handled during download
@@ -39,7 +37,8 @@ export class DownloadManager {
             if (parsed.method !== 'aria2.onDownloadComplete' &&
                 parsed.method !== 'aria2.onDownloadStart' &&
                 parsed.id !== 'getSpeed' &&
-                parsed.id !== 'addUrl') {
+                parsed.id !== 'addUrl' &&
+                parsed.id !== 'shutdown') {
                 logger.info('[INCOMING] \n' + JSON.stringify(parsed, null, 4) + '\n\n');
             }
         });
@@ -54,13 +53,13 @@ export class DownloadManager {
      */
     public async init(options?: {[option: string]: string}): Promise<void> {
         let tries = 0;
-        const limit = 5;
+        const waitSec = 10;
 
         while (this.webSocket.readyState !== this.webSocket.OPEN) {
-            if (tries < limit) {
+            if (tries < waitSec) {
                 tries++;
-                logger.debug(`[DownloadMangaer] Trying to connect to aria deamon ${tries}/${limit}`);
-                await new Promise(r => setTimeout(r, 2000));
+                logger.debug(`[DownloadMangaer] Trying to connect to aria deamon ${tries}/${waitSec}`);
+                await new Promise(r => setTimeout(r, 1000));
             }
             else {
                 throw new Error();
@@ -74,13 +73,25 @@ export class DownloadManager {
         }
     }
 
-    // FIXME: implement this (https://aria2.github.io/manual/en/html/aria2c.html#aria2.shutdown)
     public async close(): Promise<void> {
+        let exited = false;
         let tries = 0;
+        const waitSec = 10;
+
+        this.webSocket.on('message', (data: WebSocket.Data) => {
+            const parsed = JSON.parse(data.toString());
+
+            if (parsed.result === 'OK') {
+                exited = true;
+                logger.verbose('Aria2c shutdown complete');
+            }
+        });
+
+        this.webSocket.send(this.createMessage('aria2.shutdown', null, 'shutdown'));
         this.webSocket.close();
 
-        while (this.webSocket.readyState !== this.webSocket.CLOSED) {
-            if (tries < 10) {
+        while ((this.webSocket.readyState !== this.webSocket.CLOSED) || !exited) {
+            if (tries < waitSec) {
                 tries++;
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -103,11 +114,13 @@ export class DownloadManager {
     }
 
     private createMessage(method: 'aria2.addUri', params: [[string]] | [[string], object], id?: string): string;
+    private createMessage(method: 'aria2.getUris', params: [string], id?: string): string;
     private createMessage(method: 'aria2.changeOption', params: [string, object], id?: string): string;
     private createMessage(method: 'aria2.changeGlobalOption', params: [{[option: string]: string}], id?: string): string;
     private createMessage(method: 'system.multicall', params: [Array<object>], id?: string): string;
     // FIXME: I don't know how to properly implement this one that doesn't require params..
-    private createMessage(method: 'aria2.getGlobalStat', params: null, id?: string): string;
+    private createMessage(method: 'aria2.getGlobalStat', params?: null, id?: string): string;
+    private createMessage(method: 'aria2.shutdown', params?: null, id?: string): string;
     private createMessage(method: string, params?: any, id?: string): string {
         return JSON.stringify({
             jsonrpc: '2.0',
@@ -189,18 +202,13 @@ export class DownloadManager {
                     const errorGid: string = parsed.params.pop().gid.toString();
                     this.queue.delete(errorGid);
 
-                    // TODO: add this to createMessage
-                    this.webSocket.send(JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 'getUrlForRetry',
-                        method: 'aria2.getUris',
-                        params: [errorGid]
-                    }));
+                    this.webSocket.send(this.createMessage('aria2.getUris', [errorGid], 'getUrlForRetry'));
                 }
 
                 // TODO: handle download retries
                 else if (parsed.id === 'getUrlForRetry') {
-                    console.warn(JSON.stringify(parsed));
+                    logger.error('RECIVED URL TO RETRY, NOT IMPLEMENTED YET');
+                    logger.error(JSON.stringify(parsed, null, 4));
                 }
 
                 // handle url added to download list in aria
