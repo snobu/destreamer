@@ -194,6 +194,14 @@ export function checkRequirements(): void {
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
     }
+
+    try {
+        const aria2Ver: string = execSync('aria2c --version').toString().split('\n')[0];
+        logger.verbose(`Using ${aria2Ver}\n`);
+    }
+    catch (e) {
+        process.exit(ERROR_CODE.MISSING_ARIA2);
+    }
 }
 
 

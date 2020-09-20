@@ -1,3 +1,5 @@
+import { error } from "winston";
+
 /* let's start our error codes up high so we
 don't exit with the wrong message if other modules exit with some code */
 export const enum ERROR_CODE {
@@ -11,7 +13,8 @@ export const enum ERROR_CODE {
     NO_ENCRYPTION,
     ARIA2C_CRASH,
     NO_CONNECT_ARIA2C,
-    NO_DEAMON_PORT
+    NO_DEAMON_PORT,
+    MISSING_ARIA2
 }
 
 
@@ -24,8 +27,9 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.CANCELLED_USER_INPUT]:  'Input was cancelled by user',
 
-    [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing!\n' +
-                                        'Destreamer requires a fairly recent release of FFmpeg to download videos',
+    [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing! Destreamer requires FFmpeg to merge videos',
+
+    [ERROR_CODE.MISSING_ARIA2]:         'FFmpeg is missing! Destreamer requires Aria2c to download videos',
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]:      'Unknown FFmpeg error',
 
