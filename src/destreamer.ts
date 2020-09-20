@@ -154,6 +154,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
     // FIXME: see issue with downloadManager below
     let aria2cExec: ChildProcess | undefined;
+    let arai2cExited = false;
     let downloadManager: DownloadManager | undefined;
     await portfinder.getPortPromise().then(
         port => {
@@ -161,8 +162,14 @@ async function downloadVideo(videoGUIDs: Array<string>,
             // Launch aria2c
             aria2cExec = exec(
                 `aria2c --enable-rpc --pause=true --rpc-listen-port=${port}`, (err, stdout, stderr) => {
-                    logger.error(err?.message ?? (stderr || stdout));
-                    process.exit(ERROR_CODE.ARIA2C_CRASH);
+                    if (err) {
+                        logger.error(err.message ? err.message : (stderr ? stderr : stdout));
+                        process.exit(ERROR_CODE.ARIA2C_CRASH);
+                    }
+                    else {
+                        logger.verbose('Aria2c proces exited');
+                        arai2cExited = true;
+                    }
                 }
             );
             // bind webSocket
@@ -330,10 +337,21 @@ async function downloadVideo(videoGUIDs: Array<string>,
         logger.info(`Video no.${videos.indexOf(video) + 1} downloaded!!\n\n`);
     }
 
+    logger.info('Exiting, this will take some seconds...');
+
     logger.debug('[destreamer] closing downloader socket');
     await downloadManager?.close();
-    logger.debug('[destreamer] closed downloader. Stopping aria2c deamon');
-    aria2cExec?.kill('SIGINT');
+    logger.debug('[destreamer] closed downloader. Waiting aria2c deamon exit');
+    let tries = 0;
+    while (!arai2cExited) {
+        if (tries < 10) {
+            tries++;
+            await new Promise(r => setTimeout(r, 1000));
+        }
+        else {
+            aria2cExec?.kill('SIGINT');
+        }
+    }
     logger.debug('[destreamer] stopped aria2c');
 
     return;
@@ -368,17 +386,8 @@ async function main(): Promise<void> {
             `\thttps://web.microsoftstream.com/video/${guid} => ${outDirs[i]} \n`).join(''));
 
 
-    /* FIXME: [FATAL] we have 4 lingering socket connections and
-    I can't figure them out.
-    To see them use debug mode and after execution (I suggested using
-    --simulate) use 'process._getActiveHandles();' and
-    'process._getActiveRequests();' in the debug console to see lingering
-    Handles (where you can find the sockets) or Requests */
+    // fuck you bug, I WON!!!
     await downloadVideo(videoGUIDs, outDirs, session);
-
-    // workaround for issue above
-    process.exit(0);
-
 }
 
 
