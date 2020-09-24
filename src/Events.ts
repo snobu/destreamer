@@ -24,6 +24,11 @@ export function setProcessEvents(): void {
         process.exit(777);
     });
 
+    process.on('uncaughtException', (err: Error) => {
+        logger.error(err);
+        process.exit(ERROR_CODE.UNHANDLED_ERROR);
+    });
+
     process.on('unhandledRejection', (reason: {} | null | undefined) => {
         if (reason instanceof Error) {
             logger.error({ message: (reason as Error) });
