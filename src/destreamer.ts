@@ -24,6 +24,7 @@ import tmp from 'tmp';
 // TODO: can we create an export or something for this?
 const m3u8Parser: any = require('m3u8-parser');
 const tokenCache: TokenCache = new TokenCache();
+const downloadManager = new DownloadManager();
 export const chromeCacheFolder = '.chrome_data';
 tmp.setGracefulCleanup();
 
@@ -152,12 +153,14 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
     logger.info('Trying to launch and connect to aria2c...\n');
 
-    // FIXME: see issue with downloadManager below
+
+    /* FIXME: aria2Exec must be defined here for the scope but if it's not aslo undefined it says
+    that later on is used without being initialized even if we exit if it's not initialized.
+    Is there something that im missing? Probably since it's late but Ill leave it to you Adrian*/
     let aria2cExec: ChildProcess | undefined;
     let arai2cExited = false;
-    let downloadManager: DownloadManager | undefined;
-    await portfinder.getPortPromise().then(
-        port => {
+    await portfinder.getPortPromise({ port: 6800 }).then(
+        async port => {
             logger.debug(`[DESTREAMER] Trying to use port ${port}`);
             // Launch aria2c
             aria2cExec = exec(
@@ -172,26 +175,15 @@ async function downloadVideo(videoGUIDs: Array<string>,
                     }
                 }
             );
-            // bind webSocket
-            downloadManager = new DownloadManager(port);
+            // init webSocket
+            await downloadManager.init(port);
+            // We are connected
         },
         error => {
             logger.error(error);
-            process.exit(ERROR_CODE.NO_DEAMON_PORT);
+            process.exit(ERROR_CODE.NO_DAEMON_PORT);
         }
     );
-
-    // Try to connect to aria2c webSocket
-    /* FIXME: why does ts not recognize that if we reach here downloadManager is defined
-    and it forces me to define it as undefined (pun intended) and then check with Optional Chaining
-    Is there something that im missing? Probably since it's late but Ill leave it to you Adrian*/
-    try {
-        await (downloadManager?.init() ?? process.exit(555));
-    }
-    catch (err) {
-        process.exit(ERROR_CODE.NO_CONNECT_ARIA2C);
-    }
-    // We are connected
 
     for (const video of videos) {
         const masterParser = new m3u8Parser.Parser();
@@ -264,7 +256,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
         });
 
         logger.info('\nDownloading video segments \n');
-        await downloadManager?.downloadUrls(videoUrls, videoSegmentsDir.name);
+        await downloadManager.downloadUrls(videoUrls, videoSegmentsDir.name);
 
         // audio download
         const audioSegmentsDir = tmp.dirSync({
@@ -274,7 +266,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
         });
 
         logger.info('\nDownloading audio segments \n');
-        await downloadManager?.downloadUrls(audioUrls, audioSegmentsDir.name);
+        await downloadManager.downloadUrls(audioUrls, audioSegmentsDir.name);
 
         // subs download
         if (argv.closedCaptions && video.captionsUrl) {
@@ -340,7 +332,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
     logger.info('Exiting, this will take some seconds...');
 
     logger.debug('[destreamer] closing downloader socket');
-    await downloadManager?.close();
+    await downloadManager.close();
     logger.debug('[destreamer] closed downloader. Waiting aria2c deamon exit');
     let tries = 0;
     while (!arai2cExited) {

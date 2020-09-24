@@ -1,3 +1,4 @@
+import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
 
 import cliProgress from 'cli-progress';
@@ -5,7 +6,8 @@ import WebSocket from 'ws';
 
 
 export class DownloadManager {
-    private webSocket: WebSocket;
+    private webSocket!: WebSocket;
+    private connected: boolean;
     // TODO: there's a "not a tty" mode for progresBar
     // NOTE: is there a way to fix the ETA? Can't get size nor ETA from aria that I can see
     // we initialize this for each download
@@ -14,8 +16,8 @@ export class DownloadManager {
     private queue: Set<string>;
     private index: number;
 
-    public constructor(port: number) {
-        this.webSocket = new WebSocket(`http://localhost:${port}/jsonrpc`);
+    public constructor() {
+        this.connected = false;
         this.completed = 0;
         this.queue = new Set<string>();
         this.index = 1;
@@ -28,7 +30,63 @@ export class DownloadManager {
                 'Please use PowerShell or cmd.exe to run destreamer on Windows.'
             );
         }
+    }
 
+    /**
+     * MUST BE CALLED BEFORE ANY OTHER OPERATION
+     *
+     * Wait for an established connection between the webSocket
+     * and Aria2c with a 10s timeout.
+     * Then send aria2c the global config option if specified.
+     */
+    public async init(port: number, options?: {[option: string]: string}): Promise<void> {
+        let socTries = 0;
+        const maxTries = 10;
+        let timer = 0;
+        const waitTime = 20;
+
+        const errorHanlder = async (err: WebSocket.ErrorEvent): Promise<void> => {
+            // we try for 10 sec to initialize a socket on the specified port
+            if (err.error.code === 'ECONNREFUSED' && socTries < maxTries) {
+                logger.debug(`[DownloadMangaer] trying webSocket init ${socTries}/${maxTries}`);
+                await new Promise(r => setTimeout(r, 1000));
+
+                this.webSocket = new WebSocket(`http://localhost:${port}/jsonrpc`);
+                this.webSocket.onerror = errorHanlder;
+                this.webSocket.onopen = openHandler;
+                socTries++;
+            }
+            else {
+                logger.error(err);
+                process.exit(ERROR_CODE.NO_CONNECT_ARIA2C);
+            }
+        };
+
+        const openHandler = (event: WebSocket.OpenEvent): void => {
+            this.connected = true;
+            logger.debug(`[DownloadMangaer] open event recived ${event}`);
+            logger.info('Connected to aria2 daemon!');
+        };
+
+        // create webSocket
+        // FIXME: implement 'onopen' event
+        this.webSocket = new WebSocket(`http://localhost:${port}/jsonrpc`);
+        this.webSocket.onerror = errorHanlder;
+        this.webSocket.onopen = openHandler;
+
+
+        // wait for socket connection
+        while (!this.connected) {
+            if (timer < waitTime) {
+                timer++;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            else {
+                process.exit(ERROR_CODE.NO_CONNECT_ARIA2C);
+            }
+        }
+
+        // setup messages handling
         this.webSocket.on('message', (data: WebSocket.Data) => {
             const parsed = JSON.parse(data.toString());
 
@@ -42,30 +100,6 @@ export class DownloadManager {
                 logger.info('[INCOMING] \n' + JSON.stringify(parsed, null, 4) + '\n\n');
             }
         });
-    }
-
-    /**
-     * MUST BE CALLED BEFORE ANY OTHER OPERATION
-     *
-     * Wait for an established connection between the webSocket
-     * and Aria2c with a 10s timeout.
-     * Then send aria2c the global config option if specified.
-     */
-    public async init(options?: {[option: string]: string}): Promise<void> {
-        let tries = 0;
-        const waitSec = 10;
-
-        while (this.webSocket.readyState !== this.webSocket.OPEN) {
-            if (tries < waitSec) {
-                tries++;
-                logger.debug(`[DownloadMangaer] Trying to connect to aria deamon ${tries}/${waitSec}`);
-                await new Promise(r => setTimeout(r, 1000));
-            }
-            else {
-                throw new Error();
-            }
-        }
-        logger.info('Connected! \n');
 
         if (options) {
             logger.info('Now trying to send configs...');

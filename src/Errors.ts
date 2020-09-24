@@ -1,5 +1,3 @@
-import { error } from "winston";
-
 /* let's start our error codes up high so we
 don't exit with the wrong message if other modules exit with some code */
 export const enum ERROR_CODE {
@@ -19,10 +17,11 @@ export const enum ERROR_CODE {
 
 
 export const errors: {[key: number]: string} = {
-    [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error!\n' +
-                                        'Timeout or fatal error, please check your download directory/directories and try again',
+    [ERROR_CODE.UNHANDLED_ERROR]:       'Unhandled error or uncaught exception! \n' +
+                                        'Please check your download directory/directories and try again. \n' +
+                                        'If this keep happening please report it on github "https://github.com/snobu/destreamer/issues"',
 
-    [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell.\n' +
+    [ERROR_CODE.ELEVATED_SHELL]:        'Destreamer cannot run in an elevated (Administrator/root) shell. \n' +
                                         'Please run in a regular, non-elevated window.',
 
     [ERROR_CODE.CANCELLED_USER_INPUT]:  'Input was cancelled by user',
@@ -41,7 +40,7 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.ARIA2C_CRASH]:          'The aria2c rpc server crashed with the previous message',
 
-    [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c json-rpc webSocket',
+    [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c json-rpc webSocket before timeout!',
 
     [ERROR_CODE.NO_DAEMON_PORT]:        'Could not get a free port to use'
 };
