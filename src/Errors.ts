@@ -13,7 +13,7 @@ export const enum ERROR_CODE {
     NO_ENCRYPTION,
     ARIA2C_CRASH,
     NO_CONNECT_ARIA2C,
-    NO_DEAMON_PORT,
+    NO_DAEMON_PORT,
     MISSING_ARIA2
 }
 
@@ -43,7 +43,7 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c json-rpc webSocket',
 
-    [ERROR_CODE.NO_DEAMON_PORT]:        'Could not get a free port to use'
+    [ERROR_CODE.NO_DAEMON_PORT]:        'Could not get a free port to use'
 };
 
 
