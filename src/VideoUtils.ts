@@ -56,8 +56,7 @@ export async function getVideosInfo(videoGuids: Array<string>,
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
 
-    /* TODO[MAYBE]: change this to a single guid at a time to ease our footprint on the
-    MSS servers or we get throttled after 10 sequential reqs */
+    /* See 'https://github.com/snobu/destreamer/pull/203' for API throttling mitigation */
     for (const guid of videoGuids) {
 
         const response: AxiosResponse<any> | undefined =

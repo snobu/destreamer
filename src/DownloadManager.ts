@@ -6,9 +6,9 @@ import WebSocket from 'ws';
 
 
 export class DownloadManager {
+    // it's initalized in this.init()
     private webSocket!: WebSocket;
     private connected: boolean;
-    // TODO: there's a "not a tty" mode for progresBar
     // NOTE: is there a way to fix the ETA? Can't get size nor ETA from aria that I can see
     // we initialize this for each download
     private progresBar!: cliProgress.Bar;
@@ -69,7 +69,6 @@ export class DownloadManager {
         };
 
         // create webSocket
-        // FIXME: implement 'onopen' event
         this.webSocket = new WebSocket(`http://localhost:${port}/jsonrpc`);
         this.webSocket.onerror = errorHanlder;
         this.webSocket.onopen = openHandler;
@@ -94,9 +93,11 @@ export class DownloadManager {
             // NOTE: maybe we could remove this and re-add when the downloads are done
             if (parsed.method !== 'aria2.onDownloadComplete' &&
                 parsed.method !== 'aria2.onDownloadStart' &&
+                parsed.method !== 'aria2.onDownloadError' &&
                 parsed.id !== 'getSpeed' &&
                 parsed.id !== 'addUrl' &&
-                parsed.id !== 'shutdown') {
+                parsed.id !== 'shutdown' &&
+                parsed.id !== 'getUrlForRetry') {
                 logger.info('[INCOMING] \n' + JSON.stringify(parsed, null, 4) + '\n\n');
             }
         });
@@ -109,8 +110,8 @@ export class DownloadManager {
 
     public async close(): Promise<void> {
         let exited = false;
-        let tries = 0;
-        const waitSec = 10;
+        let timer = 0;
+        const waitTime = 10;
 
         this.webSocket.on('message', (data: WebSocket.Data) => {
             const parsed = JSON.parse(data.toString());
@@ -125,8 +126,8 @@ export class DownloadManager {
         this.webSocket.close();
 
         while ((this.webSocket.readyState !== this.webSocket.CLOSED) || !exited) {
-            if (tries < waitSec) {
-                tries++;
+            if (timer < waitTime) {
+                timer++;
                 await new Promise(r => setTimeout(r, 1000));
             }
             else {
@@ -140,6 +141,8 @@ export class DownloadManager {
             barCompleteChar: '\u2588',
             barIncompleteChar: '\u2591',
             format: 'progress [{bar}] {percentage}%   {speed} MB/s   {eta_formatted}',
+            noTTYOutput: true,
+            notTTYSchedule: 3000,
             // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
             barsize: Math.floor((process.stdout.columns || 30) / 3),
             stopOnComplete: true,
@@ -148,7 +151,7 @@ export class DownloadManager {
     }
 
     private createMessage(method: 'aria2.addUri', params: [[string]] | [[string], object], id?: string): string;
-    private createMessage(method: 'aria2.getUris', params: [string], id?: string): string;
+    private createMessage(method: 'aria2.tellStatus', params: [[string]] | [[string], object], id?: string): string;
     private createMessage(method: 'aria2.changeOption', params: [string, object], id?: string): string;
     private createMessage(method: 'aria2.changeGlobalOption', params: [{[option: string]: string}], id?: string): string;
     private createMessage(method: 'system.multicall', params: [Array<object>], id?: string): string;
@@ -230,13 +233,15 @@ export class DownloadManager {
 
                 // handle download errors
                 else if (parsed.method === 'aria2.onDownloadError') {
-                    // TODO: test download error parsing, not had a chance to yet
+                    // NOTE: to test error just pull the cord mid dowload,
+                    // then reconnect, wait 30 sec and voilà
                     logger.error(JSON.stringify(parsed));
 
                     const errorGid: string = parsed.params.pop().gid.toString();
                     this.queue.delete(errorGid);
 
-                    this.webSocket.send(this.createMessage('aria2.getUris', [errorGid], 'getUrlForRetry'));
+                    // FIXME: this does not work
+                    this.webSocket.send(this.createMessage('aria2.tellStatus', [[errorGid], ['files']], 'getUrlForRetry'));
                 }
 
                 // TODO: handle download retries
