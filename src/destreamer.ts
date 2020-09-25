@@ -278,7 +278,9 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         logger.info('\n\nMerging and decrypting video and audio segments...\n');
 
-        execSync(`copy /b *.encr "${video.filename}.video.encr"`, {cwd: videoSegmentsDir.name});
+        const cmd = (process.platform == 'win32') ? 'copy /b *.encr ' : 'cat *.encr > ';
+
+        execSync(cmd + `"${video.filename}.video.encr"`, { cwd: videoSegmentsDir.name });
         const videoDecryptInput = fs.createReadStream(
             path.join(videoSegmentsDir.name, video.filename + '.video.encr'));
         const videoDecryptOutput = fs.createWriteStream(
@@ -289,7 +291,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             videoDecryptInput.pipe(videoDecrypter).pipe(videoDecryptOutput);
         });
 
-        execSync(`copy /b *.encr "${video.filename}.audio.encr"`, {cwd: audioSegmentsDir.name});
+        execSync(cmd + `"${video.filename}.audio.encr"`, {cwd: audioSegmentsDir.name});
         const audioDecryptInput = fs.createReadStream(
             path.join(audioSegmentsDir.name, video.filename + '.audio.encr'));
         const audioDecryptOutput = fs.createWriteStream(
