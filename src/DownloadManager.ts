@@ -106,6 +106,8 @@ export class DownloadManager {
             logger.info('Now trying to send configs...');
             this.setOptions(options);
         }
+
+        logger.debug('[DownloadMangaer] Setup listener count on "message": ' + this.webSocket.listenerCount('message'));
     }
 
     public async close(): Promise<void> {
@@ -220,7 +222,8 @@ export class DownloadManager {
                     this.webSocket.send(this.createMessage('aria2.getGlobalStat', null, 'getSpeed'));
 
                     if (this.queue.size === 0) {
-                        this.webSocket.removeListener('message', handleResponse);
+                        this.webSocket.off('message', handleResponse);
+                        logger.debug('[DownloadMangaer] End download listener count on "message": ' + this.webSocket.listenerCount('message'));
                         resolve();
                     }
                 }
@@ -264,13 +267,28 @@ export class DownloadManager {
 
                         if (!barStarted) {
                             barStarted = true;
-                            logger.debug(`[DownloadMangaer] Starting queue size: ${this.queue.size}`);
+                            logger.debug(`[DownloadMangaer] Starting download queue size: ${this.queue.size}`);
                             this.progresBar.start(this.queue.size, 0, { speed: 0});
                         }
                     }
                 }
             };
 
+            // FIXME: terrible workaround for 'https://github.com/snobu/destreamer/issues/232#issuecomment-699642770' :/
+            this.webSocket.removeAllListeners('message');
+            this.webSocket.on('message', (data: WebSocket.Data) => {
+                const parsed = JSON.parse(data.toString());
+                if (parsed.method !== 'aria2.onDownloadComplete' &&
+                    parsed.method !== 'aria2.onDownloadStart' &&
+                    parsed.method !== 'aria2.onDownloadError' &&
+                    parsed.id !== 'getSpeed' &&
+                    parsed.id !== 'addUrl' &&
+                    parsed.id !== 'shutdown' &&
+                    parsed.id !== 'getUrlForRetry') {
+                    logger.info('[INCOMING] \n' + JSON.stringify(parsed, null, 4) + '\n\n');
+                }
+            });
+            logger.debug('[DownloadMangaer] Start download listener count on "message": ' + this.webSocket.listenerCount('message'));
             this.webSocket.on('message', data => handleResponse(data));
 
             const paramsForDownload: Array<any> = urls.map(url => {

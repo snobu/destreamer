@@ -170,7 +170,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
                         process.exit(ERROR_CODE.ARIA2C_CRASH);
                     }
                     else {
-                        logger.verbose('Aria2c proces exited');
+                        logger.verbose('Aria2c process exited');
                         arai2cExited = true;
                     }
                 }
