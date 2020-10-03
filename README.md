@@ -214,7 +214,7 @@ iTerm2 on a Mac -
 
 ![screenshot](assets/screenshot-mac.png)
 
-By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
+By default, downloads are saved under `videos/` ( Not a system media Videos folder ), unless specified by `-o` (output directory).
 
 ## Contributing
 
