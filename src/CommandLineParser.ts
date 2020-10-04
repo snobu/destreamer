@@ -13,12 +13,12 @@ export const argv: any = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
-        describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you)',
+        describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you).',
         demandOption: false
     },
     videoUrls: {
         alias: 'i',
-        describe: 'List of video urls',
+        describe: 'List of urls to videos or Microsoft Stream groups.',
         type: 'array',
         demandOption: false
     },
@@ -30,7 +30,7 @@ export const argv: any = yargs.options({
     },
     outputDirectory: {
         alias: 'o',
-        describe: 'The directory where destreamer will save your downloads',
+        describe: 'The directory where destreamer will save your downloads.',
         type: 'string',
         default: 'videos',
         demandOption: false
@@ -44,42 +44,43 @@ export const argv: any = yargs.options({
     },
     keepLoginCookies: {
         alias: 'k',
-        describe: 'Let Chromium cache identity provider cookies so you can use "Remember me" during login',
+        describe: 'Let Chromium cache identity provider cookies so you can use "Remember me" during login.\n' +
+                  'Must be used every subsequent time you launch Destreamer if you want to log in automatically.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     noExperiments: {
         alias: 'x',
-        describe: 'Do not attempt to render video thumbnails in the console',
+        describe: 'Do not attempt to render video thumbnails in the console.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     simulate: {
         alias: 's',
-        describe: 'Disable video download and print metadata information to the console',
+        describe: 'Disable video download and print metadata information to the console.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
         alias: 'v',
-        describe: 'Print additional information to the console (use this before opening an issue on GitHub)',
+        describe: 'Print additional information to the console (use this before opening an issue on GitHub).',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     closedCaptions: {
         alias: 'cc',
-        describe: 'Check if closed captions are available and let the user choose which one to download (will not ask if only one available)',
+        describe: 'Check if closed captions are available and let the user choose which one to download (will not ask if only one available).',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     noCleanup: {
         alias: 'nc',
-        describe: 'Do not delete the downloaded video file when an FFmpeg error occurs',
+        describe: 'Do not delete the downloaded video file when an FFmpeg error occurs.',
         type: 'boolean',
         default: false,
         demandOption: false
@@ -97,13 +98,13 @@ export const argv: any = yargs.options({
         demandOption: false
     },
     format: {
-        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports)',
+        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports).',
         type: 'string',
         default: 'mkv',
         demandOption: false
     },
     skip: {
-        describe: 'Skip download if file already exists',
+        describe: 'Skip download if file already exists.',
         type: 'boolean',
         default: false,
         demandOption: false

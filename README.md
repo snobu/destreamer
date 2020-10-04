@@ -108,30 +108,34 @@ Options:
   --help                  Show help                                                                            [boolean]
   --version               Show version number                                                                  [boolean]
   --username, -u          The username used to log into Microsoft Stream (enabling this will fill in the email field for
-                          you)                                                                                  [string]
-  --videoUrls, -i         List of video urls                                                                     [array]
+                          you).                                                                                 [string]
+  --videoUrls, -i         List of urls to videos or Microsoft Stream groups.                                     [array]
   --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
                                                                                                                 [string]
+  --outputDirectory, -o   The directory where destreamer will save your downloads.          [string] [default: "videos"]
   --outputTemplate, -t    The template for the title. See the README for more info.
                                                                 [string] [default: "{title} - {publishDate} {uniqueId}"]
-  --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
-  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
+  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login.
+                          Must be used every subsequent time you launch Destreamer if you want to log in automatically.
                                                                                               [boolean] [default: false]
-  --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
-  --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
-  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
+  --noExperiments, -x     Do not attempt to render video thumbnails in the console.           [boolean] [default: false]
+  --simulate, -s          Disable video download and print metadata information to the console.
                                                                                               [boolean] [default: false]
-  --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
-                          ask if only one aviable)                                            [boolean] [default: false]
-  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
+  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub).
+                                                                                              [boolean] [default: false]
+  --closedCaptions, --cc  Check if closed captions are available and let the user choose which one to download (will not
+                          ask if only one available).                                         [boolean] [default: false]
+  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs.[boolean] [default: false]
   --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
                                                                                               [string] [default: "copy"]
   --acodec                Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.
                                                                                               [string] [default: "copy"]
-  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports)
+  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports).
                                                                                                [string] [default: "mkv"]
-  --skip                  Skip download if file already exists                                [boolean] [default: false]
+  --skip                  Skip download if file already exists.                               [boolean] [default: false]
 ```
+
+- both --videoUrls and --inputFile also accept Microsoft Teams Groups url so if your Organization placed the videos you are interested in a group you can copy the link and Destreamer will download all the videos it can inside it! A group url looks like this https://web.microsoftstream.com/group/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 - Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
