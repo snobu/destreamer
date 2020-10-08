@@ -13,6 +13,7 @@ import cliProgress from 'cli-progress';
 import fs from 'fs';
 import isElevated from 'is-elevated';
 import puppeteer from 'puppeteer';
+import { ApiClient } from './ApiClient';
 
 
 const { FFmpegCommand, FFmpegInput, FFmpegOutput } = require('@tedconf/fessonia')();
@@ -151,6 +152,7 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         if (argv.keepLoginCookies && index !== 0) {
             logger.info('Trying to refresh token...');
             session = await refreshSession('https://web.microsoftstream.com/video/' + videoGUIDs[index]);
+            ApiClient.getInstance().setSession(session);
         }
 
         const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
