@@ -160,7 +160,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
     let aria2cExec: ChildProcess | undefined;
     let arai2cExited = false;
     await portfinder.getPortPromise({ port: 6800 }).then(
-        async port => {
+        async (port: number) => {
             logger.debug(`[DESTREAMER] Trying to use port ${port}`);
             // Launch aria2c
             aria2cExec = exec(
