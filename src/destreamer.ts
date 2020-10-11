@@ -12,7 +12,7 @@ import { Video, Session } from './Types';
 import { checkRequirements, parseInputFile, parseCLIinput, getUrlsFromPlaylist} from './Utils';
 import { getVideosInfo, createUniquePaths } from './VideoUtils';
 
-import { exec, execSync, ChildProcess } from 'child_process';
+import { spawn, execSync, ChildProcess } from 'child_process';
 import fs from 'fs';
 import isElevated from 'is-elevated';
 import portfinder from 'portfinder';
@@ -157,24 +157,33 @@ async function downloadVideo(videoGUIDs: Array<string>,
     /* FIXME: aria2Exec must be defined here for the scope but if it's not aslo undefined it says
     that later on is used without being initialized even if we exit if it's not initialized.
     Is there something that im missing? Probably since it's late but Ill leave it to you Adrian*/
-    let aria2cExec: ChildProcess | undefined;
+    let aria2cExec: ChildProcess;
     let arai2cExited = false;
     await portfinder.getPortPromise({ port: 6800 }).then(
         async (port: number) => {
             logger.debug(`[DESTREAMER] Trying to use port ${port}`);
             // Launch aria2c
-            aria2cExec = exec(
-                `aria2c --enable-rpc --pause=true --rpc-listen-port=${port}`, (err, stdout, stderr) => {
-                    if (err) {
-                        logger.error(err.message ? err.message : (stderr ? stderr : stdout));
-                        process.exit(ERROR_CODE.ARIA2C_CRASH);
-                    }
-                    else {
-                        logger.verbose('Aria2c process exited');
-                        arai2cExited = true;
-                    }
-                }
+            aria2cExec = spawn(
+                'aria2c',
+                ['--enable-rpc', '--pause=true', `--rpc-listen-port=${port}`],
+                {stdio: 'ignore'}
             );
+
+            aria2cExec.on('exit', (code: number | null, signal: string) => {
+                if (code === 0) {
+                    logger.verbose('Aria2c process exited');
+                    arai2cExited = true;
+                }
+                else {
+                    logger.error(`aria2c exit code: ${code}` + '\n' + `aria2c exit signal: ${signal}`);
+                    process.exit(ERROR_CODE.ARIA2C_CRASH);
+                }
+            });
+
+            aria2cExec.on('error', (err) => {
+                logger.error(err as Error);
+            });
+
             // init webSocket
             await downloadManager.init(port);
             // We are connected
@@ -350,7 +359,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             await new Promise(r => setTimeout(r, 1000));
         }
         else {
-            aria2cExec?.kill('SIGINT');
+            aria2cExec!.kill('SIGINT');
         }
     }
     logger.debug('[destreamer] stopped aria2c');
