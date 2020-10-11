@@ -52,7 +52,7 @@ export class TokenCache {
     public isExpiring(session: Session): [boolean, number] {
         const decodedJwt: Jwt = jwtDecode(session.AccessToken);
 
-        const timeLeft: number = decodedJwt['exp']; - Math.floor(Date.now() / 1000);
+        const timeLeft: number = decodedJwt['exp'] - Math.floor(Date.now() / 1000);
 
         if (timeLeft < (5 * 60)) {
             return [true, 0];

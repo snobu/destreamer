@@ -195,7 +195,8 @@ async function downloadVideo(videoGUIDs: Array<string>,
             continue;
         }
 
-        if (argv.keepLoginCookies && tokenCache.isExpiring(session)) {
+        const [isSessionExpiring] = tokenCache.isExpiring(session);
+        if (argv.keepLoginCookies && isSessionExpiring) {
             logger.info('Trying to refresh access token...');
             session = await refreshSession('https://web.microsoftstream.com/');
             apiClient.setSession(session);
