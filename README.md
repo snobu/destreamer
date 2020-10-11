@@ -2,6 +2,15 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
+# BREAKING
+
+**destreamer v3.0** is just around the corner. Download speed improvement is astonishing and we have a never before seen photo from the design sessions:<br><br>
+![desilva](https://user-images.githubusercontent.com/6472374/93003437-54a7fd00-f547-11ea-8473-e4602993e69d.jpg)
+
+Help us pick a codename for the new release:<br><br>
+![codename](https://user-images.githubusercontent.com/6472374/93003896-20ced680-f54b-11ea-8be1-2c14e0bd3751.png)<br><br>
+Comment in this thread: https://github.com/snobu/destreamer/issues/223
+
 ![destreamer](assets/logo.png)
 
 _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
@@ -52,6 +61,33 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 
 **WSL** (Windows Subsystem for Linux) is not supported as it can't easily pop up a browser window. It *may* work by installing an X Window server (like [Xming][xming]) and exporting the default display to it (`export DISPLAY=:0`) before running destreamer. See [this issue for more on WSL v1 and v2][wsl].
 
+## Can i plug in my own browser?
+
+Yes, yes you can. This may be useful if your main browser has some authentication plugins that are required for you to logon to your Microsoft Stream tenant.
+To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts`:
+
+```typescript
+const browser: puppeteer.Browser = await puppeteer.launch({
+        executablePath: getPuppeteerChromiumPath(),
+        headless: false,
+        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
+        args: [
+            '--disable-dev-shm-usage',
+            '--fast-start',
+            '--no-sandbox'
+        ]
+    });
+```
+
+Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
+```typescript
+        executablePath: "'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' --profile-directory=Default",
+```
+
+Note that for Mac/Linux the path will look a little different but no other changes are necessary.
+
+You need to rebuild (`npm run build`) every time you change this configuration.
+
 ## How to build
 
 To build destreamer clone this repository, install dependencies and run the build script -
@@ -72,30 +108,34 @@ Options:
   --help                  Show help                                                                            [boolean]
   --version               Show version number                                                                  [boolean]
   --username, -u          The username used to log into Microsoft Stream (enabling this will fill in the email field for
-                          you)                                                                                  [string]
-  --videoUrls, -i         List of video urls                                                                     [array]
+                          you).                                                                                 [string]
+  --videoUrls, -i         List of urls to videos or Microsoft Stream groups.                                     [array]
   --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
                                                                                                                 [string]
+  --outputDirectory, -o   The directory where destreamer will save your downloads.          [string] [default: "videos"]
   --outputTemplate, -t    The template for the title. See the README for more info.
                                                                 [string] [default: "{title} - {publishDate} {uniqueId}"]
-  --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
-  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
+  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login.
+                          Must be used every subsequent time you launch Destreamer if you want to log in automatically.
                                                                                               [boolean] [default: false]
-  --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
-  --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
-  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
+  --noExperiments, -x     Do not attempt to render video thumbnails in the console.           [boolean] [default: false]
+  --simulate, -s          Disable video download and print metadata information to the console.
                                                                                               [boolean] [default: false]
-  --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
-                          ask if only one aviable)                                            [boolean] [default: false]
-  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
+  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub).
+                                                                                              [boolean] [default: false]
+  --closedCaptions, --cc  Check if closed captions are available and let the user choose which one to download (will not
+                          ask if only one available).                                         [boolean] [default: false]
+  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs.[boolean] [default: false]
   --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
                                                                                               [string] [default: "copy"]
   --acodec                Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.
                                                                                               [string] [default: "copy"]
-  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports)
+  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports).
                                                                                                [string] [default: "mkv"]
-  --skip                  Skip download if file already exists                                [boolean] [default: false]
+  --skip                  Skip download if file already exists.                               [boolean] [default: false]
 ```
+
+- both --videoUrls and --inputFile also accept Microsoft Teams Groups url so if your Organization placed the videos you are interested in a group you can copy the link and Destreamer will download all the videos it can inside it! A group url looks like this https://web.microsoftstream.com/group/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 - Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
@@ -178,7 +218,7 @@ iTerm2 on a Mac -
 
 ![screenshot](assets/screenshot-mac.png)
 
-By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
+By default, downloads are saved under project root `Destreamer/videos/` ( Not the system media Videos folder ), unless specified by `-o` (output directory).
 
 ## Contributing
 

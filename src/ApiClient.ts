@@ -43,12 +43,27 @@ export class ApiClient {
         });
     }
 
+    /**
+     * Used to initialize/retrive the active ApiClient
+     *
+     * @param session used if initializing
+     */
     public static getInstance(session?: Session): ApiClient {
         if (!ApiClient.instance) {
             ApiClient.instance = new ApiClient(session);
         }
 
         return ApiClient.instance;
+    }
+
+    public setSession(session: Session): void {
+        if (!ApiClient.instance) {
+            logger.warn("Trying to update ApiCient session when it's not initialized!");
+        }
+
+        this.session = session;
+
+        return;
     }
 
     /**
