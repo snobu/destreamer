@@ -7,7 +7,7 @@ import { setProcessEvents } from './Events';
 import { logger } from './Logger';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { drawThumbnail } from './Thumbnail';
-import { TokenCache} from './TokenCache';
+import { TokenCache, refreshSession} from './TokenCache';
 import { Video, Session } from './Types';
 import { checkRequirements, parseInputFile, parseCLIinput, getUrlsFromPlaylist} from './Utils';
 import { getVideosInfo, createUniquePaths } from './VideoUtils';
@@ -193,6 +193,12 @@ async function downloadVideo(videoGUIDs: Array<string>,
         if (argv.skip && fs.existsSync(video.outPath)) {
             logger.info(`File already exists, skipping: ${video.outPath} \n`);
             continue;
+        }
+
+        if (argv.keepLoginCookies && tokenCache.isExpiring(session)) {
+            logger.info('Trying to refresh access token...');
+            session = await refreshSession('https://web.microsoftstream.com/');
+            apiClient.setSession(session);
         }
 
         masterParser.push(await apiClient.callUrl(video.playbackUrl).then(res => res?.data));
