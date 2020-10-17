@@ -28,7 +28,7 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.MISSING_FFMPEG]:        'FFmpeg is missing! Destreamer requires FFmpeg to merge videos',
 
-    [ERROR_CODE.MISSING_ARIA2]:         'FFmpeg is missing! Destreamer requires Aria2c to download videos',
+    [ERROR_CODE.MISSING_ARIA2]:         'Aria2c is missing! Destreamer requires Aria2c to download videos',
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]:      'Unknown FFmpeg error',
 
@@ -38,9 +38,9 @@ export const errors: {[key: number]: string} = {
 
     [ERROR_CODE.NO_ENCRYPTION]:         'Could not extract the encryption info from the playlist',
 
-    [ERROR_CODE.ARIA2C_CRASH]:          'The aria2c rpc server crashed with the previous message',
+    [ERROR_CODE.ARIA2C_CRASH]:          'The Aria2c RPC server crashed with the previous message',
 
-    [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c json-rpc webSocket before timeout!',
+    [ERROR_CODE.NO_CONNECT_ARIA2C]:     'Could not connect to Aria2c JSON-RPC WebSocket before timeout!',
 
     [ERROR_CODE.NO_DAEMON_PORT]:        'Could not get a free port to use'
 };
