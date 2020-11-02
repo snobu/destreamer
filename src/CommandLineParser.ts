@@ -16,13 +16,6 @@ export const argv: any = yargs.options({
         describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you).',
         demandOption: false
     },
-    concat: { // FOR CONCATENATING VIDEOS
-        alias: 'c',
-        describe: 'If enabled concatenate videos in the order they are typed in the file',
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
     videoUrls: {
         alias: 'i',
         describe: 'List of urls to videos or Microsoft Stream groups.',
@@ -110,7 +103,14 @@ export const argv: any = yargs.options({
         type: 'boolean',
         default: false,
         demandOption: false
-    }
+    },
+    concat: {
+        alias: 'c',
+        describe: 'If enabled concatenate videos in the order they are typed in the file',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
 })
 .wrap(120)
 .check(() => noArguments())

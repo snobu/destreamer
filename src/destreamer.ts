@@ -350,6 +350,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
     // START CONCATENATE
     if(argv.concat){
         logger.info("Concatenating videos...");
+        
         let concatFiles = "";
         let concatName = `videos_concatenated ${videos.length}`;
         for(const video of videos){
@@ -358,7 +359,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
         }
 
         // Create a file containg all videos path
-        await fs.promises.writeFile('files.txt', concatFiles);
+        fs.writeFileSync('files.txt', concatFiles);
         
         const concatCommand = (
             // set video concat settings
@@ -366,9 +367,13 @@ async function downloadVideo(videoGUIDs: Array<string>,
             // add video list
             `-i files.txt ` +
             // copy codec and output path
-            `-c copy videos/${concatName}.mkv`
+            `-c copy 'videos/${concatName}'.mkv`
         );
-        execSync(concatCommand, {stdio: 'ignore'}); //TODO: remove video files after they have been concateated
+        try{
+            execSync(concatCommand, {stdio: 'ignore'});
+        }catch(err){
+            logger.error("There was an error during video merging");
+        }
     }
     // END CONCATENATE
 
