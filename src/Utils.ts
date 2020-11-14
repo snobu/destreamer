@@ -20,8 +20,8 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         return [videoMatch[1]];
     }
     else if (groupMatch) {
-        const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
-            .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
+        // const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
+        //     .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
 
         // Anything over $top=100 will return a 400 Bad Request
         let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=100&$orderby=publishedDate asc`, 'get')
