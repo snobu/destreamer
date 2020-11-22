@@ -181,9 +181,9 @@ These optional lines must start with white space(s).
 Usage -
 ```
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
- -dir=videos/lessons/week1
+ -dir="videos/lessons/week1"
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
-        -dir=videos/lessons/week2"
+ -dir="videos/lessons/week2"
 ```
 
 ### Title template
