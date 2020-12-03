@@ -164,7 +164,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             // Launch aria2c
             aria2cExec = spawn(
                 'aria2c',
-                ['--enable-rpc', '--pause=true', `--rpc-listen-port=${port}`],
+                ['--pause=true', '--enable-rpc', '--allow-overwrite=true', '--auto-file-renaming=false', `--rpc-listen-port=${port}`],
                 {stdio: 'ignore'}
             );
 
@@ -184,7 +184,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
             });
 
             // init webSocket
-            await downloadManager.init(port);
+            await downloadManager.init(port, );
             // We are connected
         },
         error => {

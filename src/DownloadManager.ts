@@ -39,7 +39,7 @@ export class DownloadManager {
      * and Aria2c with a 10s timeout.
      * Then send aria2c the global config option if specified.
      */
-    public async init(port: number, options?: {[option: string]: string}): Promise<void> {
+    public async init(port: number, options?: { [option: string]: string }): Promise<void> {
         let socTries = 0;
         const maxTries = 10;
         let timer = 0;
@@ -107,6 +107,12 @@ export class DownloadManager {
             this.setOptions(options);
         }
 
+        this.webSocket.send(JSON.stringify({
+            jsonrpc: '2.0',
+            id: 'Destreamer',
+            method: 'aria2.getGlobalOption'
+        }));
+
         logger.debug('[DownloadMangaer] Setup listener count on "message": ' + this.webSocket.listenerCount('message'));
     }
 
@@ -153,9 +159,9 @@ export class DownloadManager {
     }
 
     private createMessage(method: 'aria2.addUri', params: [[string]] | [[string], object], id?: string): string;
-    private createMessage(method: 'aria2.tellStatus', params: [[string]] | [[string], object], id?: string): string;
+    private createMessage(method: 'aria2.tellStatus', params: [[string]] | [string, object], id?: string): string;
     private createMessage(method: 'aria2.changeOption', params: [string, object], id?: string): string;
-    private createMessage(method: 'aria2.changeGlobalOption', params: [{[option: string]: string}], id?: string): string;
+    private createMessage(method: 'aria2.changeGlobalOption', params: [{ [option: string]: string }], id?: string): string;
     private createMessage(method: 'system.multicall', params: [Array<object>], id?: string): string;
     // FIXME: I don't know how to properly implement this one that doesn't require params..
     private createMessage(method: 'aria2.getGlobalStat', params?: null, id?: string): string;
@@ -166,7 +172,7 @@ export class DownloadManager {
             id: id ?? 'Destreamer',
             method: method,
             // This took 40 mins just because I didn't want to use an if...so smart -_-
-            ...(!!params && {params: params})
+            ...(!!params && { params: params })
         });
     }
 
@@ -174,7 +180,7 @@ export class DownloadManager {
         return {
             methodName: method,
             // This took 40 mins just because I didn't want to use an if...so smart -_-
-            ...(!!params && {params: params})
+            ...(!!params && { params: params })
         };
     }
 
@@ -186,7 +192,7 @@ export class DownloadManager {
      *
      * @param options object with key: value pairs
      */
-    private setOptions(options: {[option: string]: string}, guid?: string): void {
+    private setOptions(options: { [option: string]: string }, guid?: string): void {
         const message: string = guid ?
             this.createMessage('aria2.changeOption', [guid, options]) :
             this.createMessage('aria2.changeGlobalOption', [options]);
@@ -195,7 +201,7 @@ export class DownloadManager {
     }
 
     public downloadUrls(urls: Array<string>, directory: string): Promise<void> {
-        return new Promise (resolve => {
+        return new Promise(resolve => {
 
             this.index = 1;
             this.completed = 0;
@@ -236,21 +242,19 @@ export class DownloadManager {
 
                 // handle download errors
                 else if (parsed.method === 'aria2.onDownloadError') {
-                    // NOTE: to test error just pull the cord mid dowload,
-                    // then reconnect, wait 30 sec and voilà
-                    logger.error(JSON.stringify(parsed));
+                    logger.error('Error while downloading, retrying...');
 
                     const errorGid: string = parsed.params.pop().gid.toString();
                     this.queue.delete(errorGid);
 
-                    // FIXME: this does not work
-                    this.webSocket.send(this.createMessage('aria2.tellStatus', [[errorGid], ['files']], 'getUrlForRetry'));
+                    // FIXME: I don't know if it's fixed, I was not able to reproduce a fail reliably
+                    this.webSocket.send(this.createMessage('aria2.tellStatus', [errorGid, ['files']], 'getUrlForRetry'));
                 }
 
-                // TODO: handle download retries
                 else if (parsed.id === 'getUrlForRetry') {
-                    logger.error('RECIVED URL TO RETRY, NOT IMPLEMENTED YET');
-                    logger.error(JSON.stringify(parsed, null, 4));
+                    const retryUrl = parsed.result.files[0].uris[0].uri;
+                    const retryTitle = parsed.result.files[0].path;
+                    this.webSocket.send(this.createMessage('aria2.addUri', [[retryUrl], { out: retryTitle }], 'addUrl'));
                 }
 
                 // handle url added to download list in aria
@@ -268,7 +272,7 @@ export class DownloadManager {
                         if (!barStarted) {
                             barStarted = true;
                             logger.debug(`[DownloadMangaer] Starting download queue size: ${this.queue.size}`);
-                            this.progresBar.start(this.queue.size, 0, { speed: 0});
+                            this.progresBar.start(this.queue.size, 0, { speed: 0 });
                         }
                     }
                 }
@@ -295,7 +299,7 @@ export class DownloadManager {
                 const title: string = (this.index++).toString().padStart(16, '0') + '.encr';
 
                 return this.createMulticallElement(
-                    'aria2.addUri', [[url], {out: title, dir: directory}]);
+                    'aria2.addUri', [[url], { out: title, dir: directory }]);
             });
 
             this.webSocket.send(
