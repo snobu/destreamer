@@ -154,9 +154,8 @@ async function downloadVideo(videoGUIDs: Array<string>,
     logger.info('Trying to launch and connect to aria2c...\n');
 
 
-    /* FIXME: aria2Exec must be defined here for the scope but if it's not aslo undefined it says
-    that later on is used without being initialized even if we exit if it's not initialized.
-    Is there something that im missing? Probably since it's late but Ill leave it to you Adrian*/
+    /* FIXME: aria2Exec must be defined here for the scope but later on it's complaining that it's not
+    initialized even if we never reach line#361 if we fail the assignment here*/
     let aria2cExec: ChildProcess;
     let arai2cExited = false;
     await portfinder.getPortPromise({ port: 6800 }).then(
