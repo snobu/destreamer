@@ -20,23 +20,12 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         return [videoMatch[1]];
     }
     else if (groupMatch) {
-        const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
-            .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
-        const result: Array<string> = [];
+        // const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
+        //     .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
 
-        // Anything above $top=100 results in 400 Bad Request
-        // Use $skip to skip the first 100 and get another 100 and so on
-        for (let index = 0; index <= Math.floor(videoNumber / 100); index++) {
-            const partial: Array<string> = await client.callApi(
-                `groups/${groupMatch[1]}/videos?$skip=${100 * index}&` +
-                '$top=100&$orderby=publishedDate asc', 'get')
-                .then(
-                    (response: AxiosResponse<any> | undefined) =>
-                        response?.data.value.map((item: any) => item.id)
-                );
-
-            result.push(...partial);
-        }
+        // Anything over $top=100 will return a 400 Bad Request
+        let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=100&$orderby=publishedDate asc`, 'get')
+            .then((response: AxiosResponse<any> | undefined) => response?.data.value.map((item: any) => item.id));
 
         return result;
     }
@@ -60,7 +49,7 @@ export async function parseCLIinput(urlList: Array<string>, defaultOutDir: strin
     session: Session): Promise<Array<Array<string>>> {
 
     const apiClient: ApiClient = ApiClient.getInstance(session);
-    const guidList: Array<string> = [];
+    let guidList: Array<string> = [];
 
     for (const url of urlList) {
         const guids: Array<string> | null = await extractGuids(url, apiClient);
@@ -97,8 +86,8 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         .split(/\r?\n/);
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
-    const guidList: Array<string> = [];
-    const outDirList: Array<string> = [];
+    let guidList: Array<string> = [];
+    let outDirList: Array<string> = [];
     // if the last line was an url set this
     let foundUrl = false;
 
@@ -113,23 +102,23 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         // parse if line is option
         else if (line.includes('-dir')) {
             if (foundUrl) {
-                const outDir: string | null = parseOption('-dir', line);
+                let outDir: string | null = parseOption('-dir', line);
 
                 if (outDir && checkOutDir(outDir)) {
                     outDirList.push(...Array(guidList.length - outDirList.length)
-                        .fill(outDir));
+                    .fill(outDir));
                 }
                 else {
                     outDirList.push(...Array(guidList.length - outDirList.length)
-                        .fill(defaultOutDir));
+                    .fill(defaultOutDir));
                 }
 
                 foundUrl = false;
                 continue;
             }
             else {
-                logger.warn(`Found options without preceding url at line ${i + 1}, skipping..`);
-                continue;
+            logger.warn(`Found options without preceding url at line ${i + 1}, skipping..`);
+            continue;
             }
         }
 
@@ -167,7 +156,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
 function parseOption(optionSyntax: string, item: string): string | null {
     const match: RegExpMatchArray | null = item.match(
         RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)
-    );
+        );
 
     return match ? match[1] : null;
 }
@@ -180,7 +169,7 @@ export function checkOutDir(directory: string): boolean {
             logger.info('\nCreated directory: '.yellow + directory);
         }
         catch (e) {
-            logger.warn('Cannot create directory: ' + directory +
+            logger.warn('Cannot create directory: '+ directory +
                 '\nFalling back to default directory..');
 
             return false;
