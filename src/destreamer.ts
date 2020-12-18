@@ -270,6 +270,7 @@ async function main(): Promise<void> {
     await init(); // must be first
 
     let session: Session;
+    // eslint-disable-next-line prefer-const
     session = tokenCache.Read() ?? await DoInteractiveLogin('https://web.microsoftstream.com/', argv.username);
 
     logger.verbose('Session and API info \n' +

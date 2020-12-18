@@ -19,16 +19,16 @@ export class TokenCache {
             return null;
         }
 
-        let session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
+        const session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
 
         type Jwt = {
             [key: string]: any
         }
         const decodedJwt: Jwt = jwtDecode(session.AccessToken);
 
-        let now: number = Math.floor(Date.now() / 1000);
-        let exp: number = decodedJwt['exp'];
-        let timeLeft: number = exp - now;
+        const now: number = Math.floor(Date.now() / 1000);
+        const exp: number = decodedJwt['exp'];
+        const timeLeft: number = exp - now;
 
         if (timeLeft < 120) {
             logger.warn('Access token has expired! \n');
@@ -42,7 +42,7 @@ export class TokenCache {
     }
 
     public Write(session: Session): void {
-        let s: string = JSON.stringify(session, null, 4);
+        const s: string = JSON.stringify(session, null, 4);
         fs.writeFile('.token_cache', s, (err: any) => {
             if (err) {
                 return logger.error(err);

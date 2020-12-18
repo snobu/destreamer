@@ -46,7 +46,7 @@ function durationToTotalChunks(duration: string): number {
 
 
 export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
-    let metadata: Array<Video> = [];
+    const metadata: Array<Video> = [];
     let title: string;
     let duration: string;
     let publishDate: string;
@@ -65,7 +65,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     /* TODO: change this to a single guid at a time to ease our footprint on the
     MSS servers or we get throttled after 10 sequential reqs */
     for (const guid of videoGuids) {
-        let response: AxiosResponse<any> | undefined =
+        const response: AxiosResponse<any> | undefined =
             await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
 
         title = sanitizeWindowsName(response?.data['name']);
@@ -94,7 +94,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         posterImageUrl = response?.data['posterImage']['medium']['url'];
 
         if (subtitles) {
-            let captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
+            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
@@ -140,7 +140,7 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         let match = elementRegEx.exec(template);
 
         while (match) {
-            let value = video[match[1] as keyof Video] as string;
+            const value = video[match[1] as keyof Video] as string;
             title = title.replace(match[0], value);
             match = elementRegEx.exec(template);
         }

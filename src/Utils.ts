@@ -193,7 +193,13 @@ export function checkOutDir(directory: string): boolean {
 
 export function checkRequirements(): void {
     try {
+        const copyrightYearRe = new RegExp(/\d{4}-(\d{4})/);
         const ffmpegVer: string = execSync('ffmpeg -version').toString().split('\n')[0];
+
+        if (parseInt(copyrightYearRe.exec(ffmpegVer)?.[1] ?? '0') <= 2019) {
+            process.exit(ERROR_CODE.OUTDATED_FFMPEG);
+        }
+
         logger.verbose(`Using ${ffmpegVer}\n`);
     }
     catch (e) {
