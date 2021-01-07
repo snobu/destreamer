@@ -2,13 +2,7 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
-## From the destreamer team,
-![](https://cdn.dribbble.com/users/534714/screenshots/5747869/happy_holidays_anim_800x600_v02.gif)<br>
-(Graphics by https://dribbble.com/alejandrocreates)
-
-**destreamer v3.0** is just around the corner. Download speed improvement is astonishing and we have a never before seen photo from the design sessions:<br><br>
-
-You can try out a pre-release today by cloning [this branch](https://github.com/snobu/destreamer/tree/aria2c_forRealNow).
+**destreamer v3.0** is just around the corner. You can try out a pre-release today by cloning [this branch](https://github.com/snobu/destreamer/tree/aria2c_forRealNow).
 
 ![destreamer](assets/logo.png)
 
