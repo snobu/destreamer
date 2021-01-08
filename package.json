@@ -32,7 +32,7 @@
     "@tedconf/fessonia": "^2.1.0",
     "@types/cli-progress": "^3.4.2",
     "@types/jwt-decode": "^2.2.1",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "axios-retry": "^3.1.8",
     "cli-progress": "^3.7.0",
     "colors": "^1.4.0",
