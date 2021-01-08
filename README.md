@@ -44,6 +44,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 - [**git**][git]: one or more npm dependencies require git.
+- [**aria2**][aria2]: present in your `$PATH`, on Linux you can install via `sudo apt install aria2`.
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
