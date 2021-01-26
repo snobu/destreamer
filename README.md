@@ -81,6 +81,8 @@ Note that for Mac/Linux the path will look a little different but no other chang
 
 You need to rebuild (`npm run build`) every time you change this configuration.
 
+If you're trying to run this on a Raspberry Pi you should see [this issue](https://github.com/snobu/destreamer/issues/311).
+
 ## How to build
 
 To build destreamer clone this repository, install dependencies and run the build script -
