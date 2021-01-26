@@ -34,9 +34,9 @@ export class ApiClient {
                     return true;
                 }
                 logger.warn(`Got HTTP code ${err?.response?.status ?? undefined}. Retrying request...`);
-                logger.verbose('Here is the error message: ');
+                logger.warn('Here is the error message: ');
                 console.dir(err.response?.data);
-                logger.verbose('We called this URL: ' + err.response?.config.baseURL + err.response?.config.url);
+                logger.warn('We called this URL: ' + err.response?.config.baseURL + err.response?.config.url);
 
                 const shouldRetry: boolean = retryCodes.includes(err?.response?.status ?? 0);
 
