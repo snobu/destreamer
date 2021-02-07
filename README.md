@@ -76,12 +76,15 @@ Now, change `executablePath` to reflect the path to your browser and profile (i.
 ```typescript
         executablePath: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
 ```
+In Linux for Chromium,
+```typescript
+        executablePath: '/usr/bin/chromium-browser',
+```
+Depending on your distro, it may also be `/usr/bin/chromium`. You will have to change it appropriately for Google Chrome.
 
-Note that for Mac/Linux the path will look a little different but no other changes are necessary.
+Note that for Mac the path may look a little different but no other changes are necessary.
 
 You need to rebuild (`npm run build`) every time you change this configuration.
-
-If you're trying to run this on a Raspberry Pi you should see [this issue](https://github.com/snobu/destreamer/issues/311).
 
 ## How to build
 
