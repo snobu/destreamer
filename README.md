@@ -46,6 +46,7 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 - [**git**][git]: one or more npm dependencies require git.
 - [**aria2**][aria2]: present in your `$PATH`, on Linux you can install via `sudo apt install aria2`.
 
+
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
 ## Limits and limitations
@@ -177,9 +178,9 @@ These optional lines must start with white space(s).
 Usage -
 ```
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
- -dir=videos/lessons/week1
+ -dir="videos/lessons/week1"
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
-        -dir=videos/lessons/week2"
+ -dir="videos/lessons/week2"
 ```
 
 ### Title template
@@ -229,6 +230,7 @@ Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll loo
 [xming]: https://sourceforge.net/projects/xming/
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
+[aria2]: https://aria2.github.io
 [wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
 [polimi]: https://www.polimi.it
 [unipi]: https://www.unipi.it/
