@@ -1,4 +1,4 @@
-@ECHO OFF
+@echo off
 
 node.exe --version | findstr "v8."
 IF %ERRORLEVEL% EQU 0 GOTO Node8
