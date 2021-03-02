@@ -218,6 +218,14 @@ iTerm2 on a Mac -
 
 By default, downloads are saved under project root `Destreamer/videos/` ( Not the system media Videos folder ), unless specified by `-o` (output directory).
 
+## KNOWN BUGS
+
+If you get a
+```
+[FATAL ERROR] Unknown error: exit code 4
+````
+when running destreamer, then make sure you're running a recent (post year 2019), stable version of **ffmpeg**.
+
 ## Contributing
 
 Contributions are welcome. Open an issue first before sending in a pull request. All pull requests require at least one code review before they are merged to master.
