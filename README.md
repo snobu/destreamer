@@ -185,7 +185,7 @@ https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 ### Title template
-The `-t` option allows users to input a template string for the output file names.
+The `-t` option allows user to specify a custom filename for the videos.
 
 You can use one or more of the following magic sequence which will get substituted at runtime. The magic sequence must be surrounded by curly brackets like this: `{title} {publishDate}`
 
@@ -197,8 +197,20 @@ You can use one or more of the following magic sequence which will get substitut
 - `authorEmail`: E-mail of video publisher
 - `uniqueId`: An _unique-enough_ ID generated from the video metadata
 
-Example -
+Examples -
 ```
+Input:
+    -t 'This is an example'
+
+Expected filename:
+    This is an example.mkv
+
+Input:
+    -t 'This is an example by {author}'
+
+Expected filename:
+    This is an example by lukaarma.mkv
+
 Input:
     -t '{title} - {duration} - {publishDate} - {publishTime} - {author} - {authorEmail} - {uniqueId}'
 
