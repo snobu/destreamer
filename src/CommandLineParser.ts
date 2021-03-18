@@ -174,9 +174,8 @@ function checkInputConflicts(videoUrls: Array<string | number> | undefined,
 
 
 function isOutputTemplateValid(argv: any): boolean {
-    let finalTemplate: string = argv.outputTemplate;
     const elementRegEx = RegExp(/{(.*?)}/g);
-    let match = elementRegEx.exec(finalTemplate);
+    let match = elementRegEx.exec(argv.outputTemplate);
 
     // if no template elements this fails
     if (match) {
@@ -191,11 +190,11 @@ function isOutputTemplateValid(argv: any): boolean {
 
                 process.exit(1);
             }
-            match = elementRegEx.exec(finalTemplate);
+            match = elementRegEx.exec(argv.outputTemplate);
         }
     }
 
-    argv.outputTemplate = sanitize(finalTemplate.trim());
+    argv.outputTemplate = sanitize(argv.outputTemplate.trim());
 
     return true;
 }
