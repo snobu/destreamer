@@ -194,11 +194,6 @@ function isOutputTemplateValid(argv: any): boolean {
             match = elementRegEx.exec(finalTemplate);
         }
     }
-    // bad template from user, switching to default
-    else {
-        logger.warn('Empty output template provided, using default one \n');
-        finalTemplate = '{title} - {publishDate} {uniqueId}';
-    }
 
     argv.outputTemplate = sanitize(finalTemplate.trim());
 
