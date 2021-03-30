@@ -74,7 +74,7 @@ const browser: puppeteer.Browser = await puppeteer.launch({
 
 Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
 ```typescript
-        executablePath: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+        executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 ```
 In Linux for Chromium,
 ```typescript
