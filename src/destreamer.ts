@@ -321,7 +321,7 @@ async function downloadVideo(videoGUIDs: Array<string>,
 
         logger.info('Decrypted!\n');
 
-        logger.info('Merging vdeo and audio together...\n');
+        logger.info('Merging video and audio together...\n');
         const mergeCommand = (
             // add video input
             `ffmpeg -i "${path.join(videoSegmentsDir.name, video.filename + '.video')}" ` +
