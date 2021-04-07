@@ -2,14 +2,9 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
-# BREAKING
+# destreamer v3.0 (aria2c as download manager)
 
-**destreamer v3.0** is just around the corner. Download speed improvement is astonishing and we have a never before seen photo from the design sessions:<br><br>
-![desilva](https://user-images.githubusercontent.com/6472374/93003437-54a7fd00-f547-11ea-8473-e4602993e69d.jpg)
-
-Help us pick a codename for the new release:<br><br>
-![codename](https://user-images.githubusercontent.com/6472374/93003896-20ced680-f54b-11ea-8be1-2c14e0bd3751.png)<br><br>
-Comment in this thread: https://github.com/snobu/destreamer/issues/223
+## This is a pre-release branch so don't expect stability, do expect speed improvements. Tons of it.
 
 ![destreamer](assets/logo.png)
 
@@ -49,6 +44,8 @@ Hopefully this doesn't break the end user agreement for Microsoft Stream. Since 
 - **npm**: usually comes with Node.js, type `npm` in your terminal to check for its presence
 - [**ffmpeg**][ffmpeg]: a recent version (year 2019 or above), in `$PATH` or in the same directory as this README file (project root).
 - [**git**][git]: one or more npm dependencies require git.
+- [**aria2**][aria2]: present in your `$PATH`, on Linux you can install via `sudo apt install aria2`.
+
 
 Destreamer takes a [honeybadger](https://www.youtube.com/watch?v=4r7wHMg5Yjg) approach towards the OS it's running on. We've successfully tested it on Windows, macOS and Linux.
 
@@ -108,30 +105,34 @@ Options:
   --help                  Show help                                                                            [boolean]
   --version               Show version number                                                                  [boolean]
   --username, -u          The username used to log into Microsoft Stream (enabling this will fill in the email field for
-                          you)                                                                                  [string]
-  --videoUrls, -i         List of video urls                                                                     [array]
+                          you).                                                                                 [string]
+  --videoUrls, -i         List of urls to videos or Microsoft Stream groups.                                     [array]
   --inputFile, -f         Path to text file containing URLs and optionally outDirs. See the README for more on outDirs.
                                                                                                                 [string]
+  --outputDirectory, -o   The directory where destreamer will save your downloads.          [string] [default: "videos"]
   --outputTemplate, -t    The template for the title. See the README for more info.
                                                                 [string] [default: "{title} - {publishDate} {uniqueId}"]
-  --outputDirectory, -o   The directory where destreamer will save your downloads           [string] [default: "videos"]
-  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login
+  --keepLoginCookies, -k  Let Chromium cache identity provider cookies so you can use "Remember me" during login.
+                          Must be used every subsequent time you launch Destreamer if you want to log in automatically.
                                                                                               [boolean] [default: false]
-  --noExperiments, -x     Do not attempt to render video thumbnails in the console            [boolean] [default: false]
-  --simulate, -s          Disable video download and print metadata information to the console[boolean] [default: false]
-  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub)
+  --noExperiments, -x     Do not attempt to render video thumbnails in the console.           [boolean] [default: false]
+  --simulate, -s          Disable video download and print metadata information to the console.
                                                                                               [boolean] [default: false]
-  --closedCaptions, --cc  Check if closed captions are aviable and let the user choose which one to download (will not
-                          ask if only one aviable)                                            [boolean] [default: false]
-  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs [boolean] [default: false]
+  --verbose, -v           Print additional information to the console (use this before opening an issue on GitHub).
+                                                                                              [boolean] [default: false]
+  --closedCaptions, --cc  Check if closed captions are available and let the user choose which one to download (will not
+                          ask if only one available).                                         [boolean] [default: false]
+  --noCleanup, --nc       Do not delete the downloaded video file when an FFmpeg error occurs.[boolean] [default: false]
   --vcodec                Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.
                                                                                               [string] [default: "copy"]
   --acodec                Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.
                                                                                               [string] [default: "copy"]
-  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports)
+  --format                Output container format (mkv, mp4, mov, anything that FFmpeg supports).
                                                                                                [string] [default: "mkv"]
-  --skip                  Skip download if file already exists                                [boolean] [default: false]
+  --skip                  Skip download if file already exists.                               [boolean] [default: false]
 ```
+
+- both --videoUrls and --inputFile also accept Microsoft Teams Groups url so if your Organization placed the videos you are interested in a group you can copy the link and Destreamer will download all the videos it can inside it! A group url looks like this https://web.microsoftstream.com/group/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 - Passing `--username` is optional. It's there to make logging in faster (the username field will be populated automatically on the login form).
 
@@ -177,9 +178,9 @@ These optional lines must start with white space(s).
 Usage -
 ```
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
- -dir=videos/lessons/week1
+ -dir="videos/lessons/week1"
 https://web.microsoftstream.com/video/xxxxxxxx-aaaa-xxxx-xxxx-xxxxxxxxxxxx
-        -dir=videos/lessons/week2"
+ -dir="videos/lessons/week2"
 ```
 
 ### Title template
@@ -214,7 +215,7 @@ iTerm2 on a Mac -
 
 ![screenshot](assets/screenshot-mac.png)
 
-By default, downloads are saved under `videos/` unless specified by `-o` (output directory).
+By default, downloads are saved under project root `Destreamer/videos/` ( Not the system media Videos folder ), unless specified by `-o` (output directory).
 
 ## Contributing
 
@@ -229,6 +230,7 @@ Please open an [issue](https://github.com/snobu/destreamer/issues) and we'll loo
 [xming]: https://sourceforge.net/projects/xming/
 [node]: https://nodejs.org/en/download/
 [git]: https://git-scm.com/downloads
+[aria2]: https://aria2.github.io
 [wsl]: https://github.com/snobu/destreamer/issues/90#issuecomment-619377950
 [polimi]: https://www.polimi.it
 [unipi]: https://www.unipi.it/

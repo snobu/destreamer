@@ -5,8 +5,6 @@ import { logger } from './Logger';
 /**
  * This file contains global destreamer process events
  *
- * @note SIGINT event is overridden in downloadVideo function
- *
  * @note function is required for non-packaged destreamer, so we can't do better
  */
 export function setProcessEvents(): void {
@@ -19,6 +17,16 @@ export function setProcessEvents(): void {
         const msg: string = (code in errors) ? `${errors[code]} \n` : `Unknown error: exit code ${code} \n`;
 
         logger.error({ message: msg, fatal: true });
+    });
+
+    process.on('SIGINT', signal => {
+        logger.error(signal);
+        process.exit(777);
+    });
+
+    process.on('uncaughtException', (err: Error) => {
+        logger.error(err);
+        process.exit(ERROR_CODE.UNHANDLED_ERROR);
     });
 
     process.on('unhandledRejection', (reason: {} | null | undefined) => {

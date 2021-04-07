@@ -9,6 +9,10 @@ import jwtDecode from 'jwt-decode';
 import puppeteer from 'puppeteer';
 
 
+type Jwt = {
+    [key: string]: any
+}
+
 export class TokenCache {
     private tokenCacheFile = '.token_cache';
 
@@ -19,30 +23,24 @@ export class TokenCache {
             return null;
         }
 
-        let session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
+        const session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
 
-        type Jwt = {
-            [key: string]: any
-        }
-        const decodedJwt: Jwt = jwtDecode(session.AccessToken);
+        const [isExpiring, timeLeft] = this.isExpiring(session);
 
-        let now: number = Math.floor(Date.now() / 1000);
-        let exp: number = decodedJwt['exp'];
-        let timeLeft: number = exp - now;
-
-        if (timeLeft < 120) {
+        if (isExpiring) {
             logger.warn('Access token has expired! \n');
 
             return null;
         }
+        else {
+            logger.info(`Access token still good for ${Math.floor(timeLeft / 60)} minutes.\n`.green);
 
-        logger.info(`Access token still good for ${Math.floor(timeLeft / 60)} minutes.\n`.green);
-
-        return session;
+            return session;
+        }
     }
 
     public Write(session: Session): void {
-        let s: string = JSON.stringify(session, null, 4);
+        const s: string = JSON.stringify(session, null, 4);
         fs.writeFile('.token_cache', s, (err: any) => {
             if (err) {
                 return logger.error(err);
@@ -50,11 +48,23 @@ export class TokenCache {
             logger.info('Fresh access token dropped into .token_cachen \n'.green);
         });
     }
+
+    public isExpiring(session: Session): [boolean, number] {
+        const decodedJwt: Jwt = jwtDecode(session.AccessToken);
+
+        const timeLeft: number = decodedJwt['exp'] - Math.floor(Date.now() / 1000);
+
+        if (timeLeft < (5 * 60)) {
+            return [true, 0];
+        }
+        else {
+            return [false, timeLeft];
+        }
+    }
 }
 
 
 export async function refreshSession(url: string): Promise<Session> {
-    const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
@@ -70,7 +80,7 @@ export async function refreshSession(url: string): Promise<Session> {
     const page: puppeteer.Page = (await browser.pages())[0];
     await page.goto(url, { waitUntil: 'load' });
 
-    await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 30000 });
+    await browser.waitForTarget((target: puppeteer.Target) => target.url().endsWith('microsoftstream.com/'), { timeout: 150000 });
 
     let session: Session | null = null;
     let tries = 1;

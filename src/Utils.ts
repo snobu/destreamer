@@ -22,9 +22,23 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
     else if (groupMatch) {
         const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
             .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
+        const result: Array<string> = [];
 
-        let result: Array<string> = await client.callApi(`groups/${groupMatch[1]}/videos?$top=${videoNumber}&$orderby=publishedDate asc`, 'get')
-            .then((response: AxiosResponse<any> | undefined) => response?.data.value.map((item: any) => item.id));
+        logger.error(videoNumber);
+
+        // Anything above $top=100 results in 400 Bad Request
+        // Use $skip to skip the first 100 and get another 100 and so on
+        for (let index = 0; index <= Math.floor(videoNumber / 100); index++) {
+            const partial: Array<string> = await client.callApi(
+                `groups/${groupMatch[1]}/videos?$skip=${100 * index}&` +
+                '$top=100&$orderby=publishedDate asc', 'get')
+                .then(
+                    (response: AxiosResponse<any> | undefined) =>
+                        response?.data.value.map((item: any) => item.id)
+                );
+
+        result.push(...partial);
+        }
 
         return result;
     }
@@ -48,7 +62,7 @@ export async function parseCLIinput(urlList: Array<string>, defaultOutDir: strin
     session: Session): Promise<Array<Array<string>>> {
 
     const apiClient: ApiClient = ApiClient.getInstance(session);
-    let guidList: Array<string> = [];
+    const guidList: Array<string> = [];
 
     for (const url of urlList) {
         const guids: Array<string> | null = await extractGuids(url, apiClient);
@@ -85,8 +99,8 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         .split(/\r?\n/);
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
-    let guidList: Array<string> = [];
-    let outDirList: Array<string> = [];
+    const guidList: Array<string> = [];
+    const outDirList: Array<string> = [];
     // if the last line was an url set this
     let foundUrl = false;
 
@@ -101,23 +115,23 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
         // parse if line is option
         else if (line.includes('-dir')) {
             if (foundUrl) {
-                let outDir: string | null = parseOption('-dir', line);
+                const outDir: string | null = parseOption('-dir', line);
 
                 if (outDir && checkOutDir(outDir)) {
                     outDirList.push(...Array(guidList.length - outDirList.length)
-                    .fill(outDir));
+                        .fill(outDir));
                 }
                 else {
                     outDirList.push(...Array(guidList.length - outDirList.length)
-                    .fill(defaultOutDir));
+                        .fill(defaultOutDir));
                 }
 
                 foundUrl = false;
                 continue;
             }
             else {
-            logger.warn(`Found options without preceding url at line ${i + 1}, skipping..`);
-            continue;
+                logger.warn(`Found options without preceding url at line ${i + 1}, skipping..`);
+                continue;
             }
         }
 
@@ -155,7 +169,7 @@ export async function parseInputFile(inputFile: string, defaultOutDir: string,
 function parseOption(optionSyntax: string, item: string): string | null {
     const match: RegExpMatchArray | null = item.match(
         RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)
-        );
+    );
 
     return match ? match[1] : null;
 }
@@ -168,7 +182,7 @@ export function checkOutDir(directory: string): boolean {
             logger.info('\nCreated directory: '.yellow + directory);
         }
         catch (e) {
-            logger.warn('Cannot create directory: '+ directory +
+            logger.warn('Cannot create directory: ' + directory +
                 '\nFalling back to default directory..');
 
             return false;
@@ -179,6 +193,13 @@ export function checkOutDir(directory: string): boolean {
 }
 
 
+export async function getUrlsFromPlaylist(playlistUrl: string, session: Session): Promise<Array<string>> {
+    return await ApiClient.getInstance(session).callUrl(playlistUrl, 'get', null, 'text')
+        .then(res => (res?.data as string).split(/\r?\n/)
+            .filter(line => !(line.startsWith('#') || line === '')));
+}
+
+
 export function checkRequirements(): void {
     try {
         const ffmpegVer: string = execSync('ffmpeg -version').toString().split('\n')[0];
@@ -186,6 +207,14 @@ export function checkRequirements(): void {
     }
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
+    }
+
+    try {
+        const aria2Ver: string = execSync('aria2c --version').toString().split('\n')[0];
+        logger.verbose(`Using ${aria2Ver}\n`);
+    }
+    catch (e) {
+        process.exit(ERROR_CODE.MISSING_ARIA2);
     }
 }
 

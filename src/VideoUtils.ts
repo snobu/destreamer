@@ -9,6 +9,7 @@ import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
 import sanitizeWindowsName from 'sanitize-filename';
 
+
 function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
     const day: string = dateJs.getDate().toString().padStart(2, '0');
@@ -35,18 +36,11 @@ function isoDurationToString(time: string): string {
 }
 
 
-function durationToTotalChunks(duration: string): number {
-    const durationObj: any = parseDuration(duration);
-    const hrs: number = durationObj.hours ?? 0;
-    const mins: number = durationObj.minutes ?? 0;
-    const secs: number = Math.ceil(durationObj.seconds ?? 0);
+export async function getVideosInfo(videoGuids: Array<string>,
+    session: Session, subtitles?: boolean): Promise<Array<Video>> {
 
-    return (hrs * 60) + mins + (secs / 60);
-}
+    const metadata: Array<Video> = [];
 
-
-export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
-    let metadata: Array<Video> = [];
     let title: string;
     let duration: string;
     let publishDate: string;
@@ -54,18 +48,18 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     let author: string;
     let authorEmail: string;
     let uniqueId: string;
-    const outPath = '';
-    let totalChunks: number;
+
     let playbackUrl: string;
     let posterImageUrl: string;
     let captionsUrl: string | undefined;
 
     const apiClient: ApiClient = ApiClient.getInstance(session);
 
-    /* TODO: change this to a single guid at a time to ease our footprint on the
-    MSS servers or we get throttled after 10 sequential reqs */
+
+    /* See 'https://github.com/snobu/destreamer/pull/203' for API throttling mitigation */
     for (const guid of videoGuids) {
-        let response: AxiosResponse<any> | undefined =
+
+        const response: AxiosResponse<any> | undefined =
             await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
 
         title = sanitizeWindowsName(response?.data['name']);
@@ -82,8 +76,6 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
         uniqueId = '#' + guid.split('-')[0];
 
-        totalChunks = durationToTotalChunks(response?.data.media['duration']);
-
         playbackUrl = response?.data['playbackUrls']
             .filter((item: { [x: string]: string; }) =>
                 item['mimeType'] == 'application/vnd.apple.mpegurl')
@@ -94,7 +86,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         posterImageUrl = response?.data['posterImage']['medium']['url'];
 
         if (subtitles) {
-            let captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
+            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
@@ -119,11 +111,14 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
             author: author,
             authorEmail: authorEmail,
             uniqueId: uniqueId,
-            outPath: outPath,
-            totalChunks: totalChunks,    // Abstraction of FFmpeg timemark
+
+            // totalChunks: totalChunks,    // Abstraction of FFmpeg timemark
             playbackUrl: playbackUrl,
             posterImageUrl: posterImageUrl,
-            captionsUrl: captionsUrl
+            captionsUrl: captionsUrl,
+
+            filename: '',
+            outPath: '',
         });
     }
 
@@ -131,7 +126,8 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 }
 
 
-export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, template: string, format: string, skip?: boolean): Array<Video> {
+export function createUniquePaths(videos: Array<Video>, outDirs: Array<string>,
+    template: string, format: string, skip?: boolean): Array<Video> {
 
     videos.forEach((video: Video, index: number) => {
         let title: string = template;
@@ -140,7 +136,7 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         let match = elementRegEx.exec(template);
 
         while (match) {
-            let value = video[match[1] as keyof Video] as string;
+            const value = video[match[1] as keyof Video] as string;
             title = title.replace(match[0], value);
             match = elementRegEx.exec(template);
         }
@@ -155,9 +151,14 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         const finalFileName = `${finalTitle}.${format}`;
         const cleanFileName = sanitizeWindowsName(finalFileName, { replacement: '_' });
         if (finalFileName !== cleanFileName) {
-            logger.warn(`Not a valid Windows file name: "${finalFileName}".\nReplacing invalid characters with underscores to preserve cross-platform consistency.`);
+            logger.warn(
+                `Not a valid Windows file name: "${finalFileName}"` +
+                '\nReplacing invalid characters with underscores to ' +
+                'preserve cross-platform consistency.');
         }
 
+
+        video.filename = finalFileName;
         video.outPath = path.join(outDirs[index], finalFileName);
 
     });

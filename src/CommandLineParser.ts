@@ -13,12 +13,12 @@ export const argv: any = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
-        describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you)',
+        describe: 'The username used to log into Microsoft Stream (enabling this will fill in the email field for you).',
         demandOption: false
     },
     videoUrls: {
         alias: 'i',
-        describe: 'List of video urls',
+        describe: 'List of urls to videos or Microsoft Stream groups.',
         type: 'array',
         demandOption: false
     },
@@ -30,7 +30,7 @@ export const argv: any = yargs.options({
     },
     outputDirectory: {
         alias: 'o',
-        describe: 'The directory where destreamer will save your downloads',
+        describe: 'The directory where destreamer will save your downloads.',
         type: 'string',
         default: 'videos',
         demandOption: false
@@ -44,30 +44,45 @@ export const argv: any = yargs.options({
     },
     keepLoginCookies: {
         alias: 'k',
-        describe: 'Let Chromium cache identity provider cookies so you can use "Remember me" during login',
+        describe: 'Let Chromium cache identity provider cookies so you can use "Remember me" during login.\n' +
+                  'Must be used every subsequent time you launch Destreamer if you want to log in automatically.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     noExperiments: {
         alias: 'x',
-        describe: 'Do not attempt to render video thumbnails in the console',
+        describe: 'Do not attempt to render video thumbnails in the console.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     simulate: {
         alias: 's',
-        describe: 'Disable video download and print metadata information to the console',
+        describe: 'Disable video download and print metadata information to the console.',
         type: 'boolean',
         default: false,
         demandOption: false
     },
     verbose: {
         alias: 'v',
-        describe: 'Print additional information to the console (use this before opening an issue on GitHub)',
+        describe: 'Print additional information to the console (use this before opening an issue on GitHub).',
         type: 'boolean',
         default: false,
+        demandOption: false
+    },
+    debug: {
+        alias: 'd',
+        describe: 'Set logging level to debug (only use this if you know what are doing)',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
+    selectQuality: {
+        alias: 'q',
+        describe: 'Select the quality with a number 1 (worst) trough 10 (best), 0 prompt the user for each video',
+        default: 10,
+        type: 'number',
         demandOption: false
     },
     closedCaptions: {
@@ -77,33 +92,14 @@ export const argv: any = yargs.options({
         default: false,
         demandOption: false
     },
-    noCleanup: {
-        alias: 'nc',
-        describe: 'Do not delete the downloaded video file when an FFmpeg error occurs',
-        type: 'boolean',
-        default: false,
-        demandOption: false
-    },
-    vcodec: {
-        describe: 'Re-encode video track. Specify FFmpeg codec (e.g. libx265) or set to "none" to disable video.',
-        type: 'string',
-        default: 'copy',
-        demandOption: false
-    },
-    acodec: {
-        describe: 'Re-encode audio track. Specify FFmpeg codec (e.g. libopus) or set to "none" to disable audio.',
-        type: 'string',
-        default: 'copy',
-        demandOption: false
-    },
     format: {
-        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports)',
+        describe: 'Output container format (mkv, mp4, mov, anything that FFmpeg supports).',
         type: 'string',
         default: 'mkv',
         demandOption: false
     },
     skip: {
-        describe: 'Skip download if file already exists',
+        describe: 'Skip download if file already exists.',
         type: 'boolean',
         default: false,
         demandOption: false
@@ -112,17 +108,9 @@ export const argv: any = yargs.options({
 .wrap(120)
 .check(() => noArguments())
 .check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
-.check((argv: any) => {
-    if (checkOutDir(argv.outputDirectory)) {
-        return true;
-    }
-    else {
-        logger.error(CLI_ERROR.INVALID_OUTDIR);
-
-        throw new Error(' ');
-    }
-})
+.check((argv: any) => checkOutputDirectoryExistance(argv.outputDirectory))
 .check((argv: any) => isOutputTemplateValid(argv))
+.check((argv: any) => checkQualityValue(argv))
 .argv;
 
 
@@ -172,6 +160,18 @@ function checkInputConflicts(videoUrls: Array<string | number> | undefined,
 }
 
 
+function checkOutputDirectoryExistance(dir: string): boolean {
+    if (checkOutDir(dir)) {
+        return true;
+    }
+    else {
+        logger.error(CLI_ERROR.INVALID_OUTDIR, { fatal: true });
+
+        throw new Error(' ');
+    }
+}
+
+
 function isOutputTemplateValid(argv: any): boolean {
     let finalTemplate: string = argv.outputTemplate;
     const elementRegEx = RegExp(/{(.*?)}/g);
@@ -205,8 +205,27 @@ function isOutputTemplateValid(argv: any): boolean {
 }
 
 
+function checkQualityValue(argv: any): boolean {
+    if (isNaN(argv.selectQuality)) {
+        logger.error('The quality value provided was not a number, switching to default');
+        argv.selectQuality = 10;
+
+        return true;
+    }
+    else if (argv.selectQuality < 0 || argv.selectQuality > 10) {
+        logger.error('The quality value provided was outside the valid range, switching to default');
+        argv.selectQuality = 10;
+
+        return true;
+    }
+    else {
+        return true;
+    }
+}
+
+
 export function promptUser(choices: Array<string>): number {
-    let index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
+    const index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
 
     if (index === -1) {
         process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
