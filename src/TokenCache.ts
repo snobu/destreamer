@@ -47,7 +47,8 @@ export class TokenCache {
             if (err) {
                 return logger.error(err);
             }
-            logger.info('Fresh access token dropped into .token_cachen \n'.green);
+
+            logger.info('Fresh access token dropped into .token_cache \n'.green);
         });
     }
 }
