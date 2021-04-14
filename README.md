@@ -57,19 +57,13 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 ## Can i plug in my own browser?
 
 Yes, yes you can. This may be useful if your main browser has some authentication plugins that are required for you to logon to your Microsoft Stream tenant.
-To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts`:
+To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts` and `src/TokenCache.ts`:
 
 ```typescript
 const browser: puppeteer.Browser = await puppeteer.launch({
-        executablePath: getPuppeteerChromiumPath(),
-        headless: false,
-        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
-        args: [
-            '--disable-dev-shm-usage',
-            '--fast-start',
-            '--no-sandbox'
-        ]
-    });
+  executablePath: getPuppeteerChromiumPath(),
+  // …
+});
 ```
 
 Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
