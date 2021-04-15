@@ -103,7 +103,14 @@ export const argv: any = yargs.options({
         type: 'boolean',
         default: false,
         demandOption: false
-    }
+    },
+    concat: {
+        alias: 'c',
+        describe: 'If enabled concatenate videos in the order they are typed in the file',
+        type: 'boolean',
+        default: false,
+        demandOption: false
+    },
 })
 .wrap(120)
 .check(() => noArguments())

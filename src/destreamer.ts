@@ -346,6 +346,36 @@ async function downloadVideo(videoGUIDs: Array<string>,
         logger.info(`Video no.${videos.indexOf(video) + 1} downloaded!!\n\n`);
     }
 
+    // START CONCATENATE
+    if(argv.concat){
+        logger.info("Concatenating videos...");
+        
+        let concatFiles = "";
+        let concatName = `videos_concatenated ${videos.length}`;
+        for(const video of videos){
+            concatFiles += ("file '" + video.outPath + "'\n");
+            logger.info("file " + video.outPath);
+        }
+
+        // Create a file containg all videos path
+        fs.writeFileSync('files.txt', concatFiles);
+        
+        const concatCommand = (
+            // set video concat settings
+            `ffmpeg -f concat -safe 0 -protocol_whitelist file,http,https,tcp,tls,crypto ` +
+            // add video list
+            `-i files.txt ` +
+            // copy codec and output path
+            `-c copy 'videos/${concatName}'.mkv`
+        );
+        try{
+            execSync(concatCommand, {stdio: 'ignore'});
+        }catch(err){
+            logger.error("There was an error during video merging");
+        }
+    }
+    // END CONCATENATE
+
     logger.info('Exiting, this will take some seconds...');
 
     logger.debug('[destreamer] closing downloader socket');
