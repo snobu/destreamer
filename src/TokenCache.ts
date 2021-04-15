@@ -43,12 +43,12 @@ export class TokenCache {
 
     public Write(session: Session): void {
         const s: string = JSON.stringify(session, null, 4);
-        fs.writeFile('.token_cache', s, (err: any) => {
+        fs.writeFile(this.tokenCacheFile, s, (err: any) => {
             if (err) {
                 return logger.error(err);
             }
 
-            logger.info('Fresh access token dropped into .token_cache \n'.green);
+            logger.info(`Fresh access token dropped into ${this.tokenCacheFile} \n`.green);
         });
     }
 }
