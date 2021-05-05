@@ -2,6 +2,9 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
+### IMPORTANT NOTE (May 2021)
+Please add `-x` (No experiements) to your command line as the MS Stream API is a little flaky returning thumbnails.
+
 **destreamer v3.0** is just around the corner. You can try out a pre-release today by cloning [this branch](https://github.com/snobu/destreamer/tree/aria2c_forRealNow).
 
 ![destreamer](assets/logo.png)
