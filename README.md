@@ -2,9 +2,6 @@
   <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
 </a>
 
-### IMPORTANT NOTE (May 2021)
-Please add `-x` (No experiements) to your command line as the MS Stream API is a little flaky returning thumbnails.
-
 **destreamer v3.0** is just around the corner. You can try out a pre-release today by cloning [this branch](https://github.com/snobu/destreamer/tree/aria2c_forRealNow).
 
 ![destreamer](assets/logo.png)
@@ -234,18 +231,6 @@ If you get a
 [FATAL ERROR] Unknown error: exit code 4
 ````
 when running destreamer, then make sure you're running a recent (post year 2019), stable version of **ffmpeg**.
-
-One more -
-```
-[WARNING] Got HTTP code 400. Retrying request...
-
-[WARNING] Here is the error message: 
-Buffer(128) [Uint8Array] [
-  123,  34, 101, 114, 114, 111, 114,  34,  58, 123,  34,  99,
-[...]
-```
-
-If you get this, add `-x` to your invocation. This should skip thumnbail fetching. The thumbnail API is currently unstable or the thumbnail has not been generated yet. We'll try-catch around that, hopefully soon.
 
 ## Contributing
 
