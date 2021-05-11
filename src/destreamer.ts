@@ -185,7 +185,9 @@ async function downloadVideo(videoGUIDs: Array<string>, outputDirectories: Array
         const headers: string = 'Authorization: Bearer ' + session.AccessToken;
 
         if (!argv.noExperiments) {
-            await drawThumbnail(video.posterImageUrl, session);
+            if (video.posterImageUrl) {
+                await drawThumbnail(video.posterImageUrl, session);
+            }
         }
 
         const ffmpegInpt: any = new FFmpegInput(video.playbackUrl, new Map([
