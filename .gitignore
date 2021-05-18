@@ -9,3 +9,5 @@ node_modules
 videos
 release
 build
+package-lock.json
+yarn.lock
