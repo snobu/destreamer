@@ -73,7 +73,7 @@ Now, change `executablePath` to reflect the path to your browser and profile (i.
         executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 ```
 
-You can add `userDataDir` right after `executablePath` with the path to your browser profile path if you want that loaded as well.
+You can add `userDataDir` right after `executablePath` with the path to your browser profile (also shown in `chrome://version`) if you want that loaded as well.
 
 Remember to rebuild (`npm run build`) every time you change this configuration.
 
