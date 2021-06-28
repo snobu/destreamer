@@ -66,19 +66,16 @@ const browser: puppeteer.Browser = await puppeteer.launch({
 });
 ```
 
+Navigate to `chrome://version` in the browser you want to plug in and copy executable path from there. Use double backslash for Windows.
+
 Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
 ```typescript
         executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 ```
-In Linux for Chromium,
-```typescript
-        executablePath: '/usr/bin/chromium-browser',
-```
-Depending on your distro, it may also be `/usr/bin/chromium`. You will have to change it appropriately for Google Chrome.
 
-Note that for Mac the path may look a little different but no other changes are necessary.
+You can add `userDataDir` right after `executablePath` with the path to your browser profile path if you want that loaded as well.
 
-You need to rebuild (`npm run build`) every time you change this configuration.
+Remember to rebuild (`npm run build`) every time you change this configuration.
 
 ## How to build
 
