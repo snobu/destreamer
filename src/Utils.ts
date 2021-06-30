@@ -11,7 +11,7 @@ import fs from 'fs';
 async function extractGuids(url: string, client: ApiClient): Promise<Array<string> | null> {
 
     const videoRegex = new RegExp(/https:\/\/.*\/video\/(\w{8}-(?:\w{4}-){3}\w{12})/);
-    const groupRegex = new RegExp(/https:\/\/.*\/group\/(\w{8}-(?:\w{4}-){3}\w{12})/);
+    const groupRegex = new RegExp(/https:\/\/.*\/(group|channel)\/(\w{8}-(?:\w{4}-){3}\w{12})/);
 
     const videoMatch: RegExpExecArray | null = videoRegex.exec(url);
     const groupMatch: RegExpExecArray | null = groupRegex.exec(url);
@@ -20,7 +20,7 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         return [videoMatch[1]];
     }
     else if (groupMatch) {
-        const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
+        const videoNumber: number = await client.callApi(`${groupMatch[1]}s/${groupMatch[2]}`, 'get')
             .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
         const result: Array<string> = [];
 
@@ -28,7 +28,7 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
         // Use $skip to skip the first 100 and get another 100 and so on
         for (let index = 0; index <= Math.floor(videoNumber / 100); index++) {
             const partial: Array<string> = await client.callApi(
-                `groups/${groupMatch[1]}/videos?$skip=${100 * index}&` +
+                `${groupMatch[1]}s/${groupMatch[2]}/videos?$skip=${100 * index}&` +
                 '$top=100&$orderby=publishedDate asc', 'get')
                 .then(
                     (response: AxiosResponse<any> | undefined) =>
