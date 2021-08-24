@@ -14,7 +14,7 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
-### Specialized vesions
+### Specialized versions
 
 - [Politecnico di Milano][polimi]: fork over at https://github.com/SamanFekri/destreamer
 - [Università di Pisa][unipi]: fork over at https://github.com/Guray00/destreamer-unipi
