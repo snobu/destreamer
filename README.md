@@ -92,6 +92,7 @@ To build destreamer clone this repository, install dependencies and run the buil
 ```sh
 $ git clone https://github.com/snobu/destreamer
 $ cd destreamer
+$ git checkout aria2c_forRealNow
 $ npm install
 $ npm run build
 ```
