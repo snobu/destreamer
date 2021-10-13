@@ -1,5 +1,5 @@
 import { CLI_ERROR, ERROR_CODE } from './Errors';
-import { checkOutDir } from './Utils';
+import { makeOutDir } from './Utils';
 import { logger } from './Logger';
 import { templateElements } from './Types';
 
@@ -9,7 +9,7 @@ import sanitize from 'sanitize-filename';
 import yargs from 'yargs';
 
 
-export const argv: any = yargs.options({
+export const argv = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
@@ -114,7 +114,7 @@ export const argv: any = yargs.options({
 .check(() => noArguments())
 .check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
 .check((argv: any) => {
-    if (checkOutDir(argv.outputDirectory)) {
+    if (makeOutDir(argv.outputDirectory)) {
         return true;
     }
     else {

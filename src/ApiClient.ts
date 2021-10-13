@@ -1,16 +1,16 @@
 import { logger } from './Logger';
-import { Session } from './Types';
+import { StreamSession } from './Types';
 
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';
 
 
-export class ApiClient {
-    private static instance: ApiClient;
+export class StreamApiClient {
+    private static instance: StreamApiClient;
     private axiosInstance?: AxiosInstance;
-    private session?: Session;
+    private session?: StreamSession;
 
-    private constructor(session?: Session) {
+    private constructor(session?: StreamSession) {
         this.session = session;
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
@@ -50,16 +50,16 @@ export class ApiClient {
      *
      * @param session used if initializing
      */
-    public static getInstance(session?: Session): ApiClient {
-        if (!ApiClient.instance) {
-            ApiClient.instance = new ApiClient(session);
+    public static getInstance(session?: StreamSession): StreamApiClient {
+        if (!StreamApiClient.instance) {
+            StreamApiClient.instance = new StreamApiClient(session);
         }
 
-        return ApiClient.instance;
+        return StreamApiClient.instance;
     }
 
-    public setSession(session: Session): void {
-        if (!ApiClient.instance) {
+    public setSession(session: StreamSession): void {
+        if (!StreamApiClient.instance) {
             logger.warn("Trying to update ApiCient session when it's not initialized!");
         }
 

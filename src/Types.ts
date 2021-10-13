@@ -1,11 +1,27 @@
-export type Session = {
+export type StreamSession = {
     AccessToken: string;
     ApiGatewayUri: string;
     ApiGatewayVersion: string;
 }
 
 
-export type Video = {
+export type VideoUrl = {
+    url: string,
+    outDir: string
+}
+
+
+export type SharepointVideo = {
+    // if we can download the MP4 or we need to use DASH
+    direct: boolean;
+    playbackUrl: string;
+    title: string;
+    outPath: string
+}
+
+
+export type StreamVideo = {
+    guid: string;
     title: string;
     duration: string;
     publishDate: string;

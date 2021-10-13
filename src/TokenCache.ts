@@ -2,7 +2,7 @@ import { chromeCacheFolder } from './destreamer';
 import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
-import { Session } from './Types';
+import { StreamSession } from './Types';
 
 import fs from 'fs';
 import jwtDecode from 'jwt-decode';
@@ -12,14 +12,14 @@ import puppeteer from 'puppeteer';
 export class TokenCache {
     private tokenCacheFile = '.token_cache';
 
-    public Read(): Session | null {
+    public Read(): StreamSession | null {
         if (!fs.existsSync(this.tokenCacheFile)) {
             logger.warn(`${this.tokenCacheFile} not found. \n`);
 
             return null;
         }
 
-        const session: Session = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
+        const session: StreamSession = JSON.parse(fs.readFileSync(this.tokenCacheFile, 'utf8'));
 
         type Jwt = {
             [key: string]: any
@@ -41,7 +41,7 @@ export class TokenCache {
         return session;
     }
 
-    public Write(session: Session): void {
+    public Write(session: StreamSession): void {
         const s: string = JSON.stringify(session, null, 4);
         fs.writeFile(this.tokenCacheFile, s, (err: any) => {
             if (err) {
@@ -54,7 +54,7 @@ export class TokenCache {
 }
 
 
-export async function refreshSession(url: string): Promise<Session> {
+export async function refreshSession(url: string): Promise<StreamSession> {
     const videoId: string = url.split('/').pop() ?? process.exit(ERROR_CODE.INVALID_VIDEO_GUID);
 
     const browser: puppeteer.Browser = await puppeteer.launch({
@@ -73,7 +73,7 @@ export async function refreshSession(url: string): Promise<Session> {
 
     await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(videoId), { timeout: 30000 });
 
-    let session: Session | null = null;
+    let session: StreamSession | null = null;
     let tries = 1;
 
     while (!session) {

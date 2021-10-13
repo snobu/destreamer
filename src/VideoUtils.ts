@@ -1,13 +1,14 @@
-import { ApiClient } from './ApiClient';
+import { StreamApiClient } from './ApiClient';
 import { promptUser } from './CommandLineParser';
 import { logger } from './Logger';
-import { Video, Session } from './Types';
+import { StreamVideo, StreamSession, VideoUrl } from './Types';
 
 import { AxiosResponse } from 'axios';
 import fs from 'fs';
 import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
 import sanitizeWindowsName from 'sanitize-filename';
+import { extractStreamGuids } from './Utils';
 
 function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
@@ -45,8 +46,8 @@ function durationToTotalChunks(duration: string): number {
 }
 
 
-export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
-    const metadata: Array<Video> = [];
+export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamSession, subtitles?: boolean): Promise<Array<StreamVideo>> {
+    const metadata: Array<StreamVideo> = [];
     let title: string;
     let duration: string;
     let publishDate: string;
@@ -54,19 +55,23 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     let author: string;
     let authorEmail: string;
     let uniqueId: string;
-    const outPath = '';
     let totalChunks: number;
     let playbackUrl: string;
     let posterImageUrl: string;
     let captionsUrl: string | undefined;
 
-    const apiClient: ApiClient = ApiClient.getInstance(session);
+    const apiClient: StreamApiClient = StreamApiClient.getInstance(session);
+
+
+    // we place the guid in the url field
+    const videoGUIDs = await extractStreamGuids(videoUrls, session);
+
 
     /* TODO: change this to a single guid at a time to ease our footprint on the
     MSS servers or we get throttled after 10 sequential reqs */
-    for (const guid of videoGuids) {
+    for (const guid of videoGUIDs) {
         const response: AxiosResponse<any> | undefined =
-            await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
+            await apiClient.callApi('videos/' + guid.url + '?$expand=creator', 'get');
 
         title = sanitizeWindowsName(response?.data['name']);
 
@@ -80,7 +85,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
         authorEmail = response?.data['creator'].mail;
 
-        uniqueId = '#' + guid.split('-')[0];
+        uniqueId = '#' + guid.url.split('-')[0];
 
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
@@ -112,18 +117,19 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         }
 
         metadata.push({
-            title: title,
-            duration: duration,
-            publishDate: publishDate,
-            publishTime: publishTime,
-            author: author,
-            authorEmail: authorEmail,
-            uniqueId: uniqueId,
-            outPath: outPath,
-            totalChunks: totalChunks,    // Abstraction of FFmpeg timemark
-            playbackUrl: playbackUrl,
-            posterImageUrl: posterImageUrl,
-            captionsUrl: captionsUrl
+            guid: guid.url,
+            title,
+            duration,
+            publishDate,
+            publishTime,
+            author,
+            authorEmail,
+            uniqueId,
+            outPath: guid.outDir,
+            totalChunks,    // Abstraction of FFmpeg timemark
+            playbackUrl,
+            posterImageUrl,
+            captionsUrl
         });
     }
 
@@ -131,16 +137,16 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 }
 
 
-export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, template: string, format: string, skip?: boolean): Array<Video> {
+export function createUniquePath(videos: Array<StreamVideo>, template: string, format: string, skip?: boolean): Array<StreamVideo> {
 
-    videos.forEach((video: Video, index: number) => {
+    videos.forEach((video: StreamVideo) => {
         let title: string = template;
         let finalTitle: string;
         const elementRegEx = RegExp(/{(.*?)}/g);
         let match = elementRegEx.exec(template);
 
         while (match) {
-            const value = video[match[1] as keyof Video] as string;
+            const value = video[match[1] as keyof StreamVideo] as string;
             title = title.replace(match[0], value);
             match = elementRegEx.exec(template);
         }
@@ -148,7 +154,7 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         let i = 0;
         finalTitle = title;
 
-        while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
+        while (!skip && fs.existsSync(path.join(video.outPath, finalTitle + '.' + format))) {
             finalTitle = `${title}.${++i}`;
         }
 
@@ -158,7 +164,7 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
             logger.warn(`Not a valid Windows file name: "${finalFileName}".\nReplacing invalid characters with underscores to preserve cross-platform consistency.`);
         }
 
-        video.outPath = path.join(outDirs[index], finalFileName);
+        video.outPath = path.join(video.outPath, finalFileName);
 
     });
 

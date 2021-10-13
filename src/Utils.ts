@@ -1,47 +1,63 @@
-import { ApiClient } from './ApiClient';
+import { StreamApiClient } from './ApiClient';
 import { ERROR_CODE } from './Errors';
 import { logger } from './Logger';
-import { Session } from './Types';
+import { StreamSession, VideoUrl } from './Types';
 
 import { AxiosResponse } from 'axios';
 import { execSync } from 'child_process';
 import fs from 'fs';
 
 
-async function extractGuids(url: string, client: ApiClient): Promise<Array<string> | null> {
+const streamUrlRegex = new RegExp(/https?:\/\/web\.microsoftstream\.com.*/);
+const shareUrlRegex = new RegExp(/https?:\/\/.+\.sharepoint\.com.*/);
 
+
+/** we place the guid in the url fild in the return */
+export async function extractStreamGuids(urlList: Array<VideoUrl>, session: StreamSession): Promise<Array<VideoUrl>> {
     const videoRegex = new RegExp(/https:\/\/.*\/video\/(\w{8}-(?:\w{4}-){3}\w{12})/);
     const groupRegex = new RegExp(/https:\/\/.*\/group\/(\w{8}-(?:\w{4}-){3}\w{12})/);
+    // const sharepointDirect = new RegExp(/https:\/\/(?<hostname>.+\.sharepoint\.com)\/(?:.*\/)?(?<filename>.*\.mp4)/);
+    // const sharepointEncoded = new RegExp(/https:\/\/(?<hostname>.+\.sharepoint\.com)\/.*id=(?<encodedFilename>.*mp4)/);
 
-    const videoMatch: RegExpExecArray | null = videoRegex.exec(url);
-    const groupMatch: RegExpExecArray | null = groupRegex.exec(url);
+    const apiClient: StreamApiClient = StreamApiClient.getInstance(session);
+    const guidList: Array<VideoUrl> = [];
 
-    if (videoMatch) {
-        return [videoMatch[1]];
-    }
-    else if (groupMatch) {
-        const videoNumber: number = await client.callApi(`groups/${groupMatch[1]}`, 'get')
-            .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
-        const result: Array<string> = [];
+    for (const url of urlList) {
+        const videoMatch: RegExpExecArray | null = videoRegex.exec(url.url);
+        const groupMatch: RegExpExecArray | null = groupRegex.exec(url.url);
 
-        // Anything above $top=100 results in 400 Bad Request
-        // Use $skip to skip the first 100 and get another 100 and so on
-        for (let index = 0; index <= Math.floor(videoNumber / 100); index++) {
-            const partial: Array<string> = await client.callApi(
-                `groups/${groupMatch[1]}/videos?$skip=${100 * index}&` +
-                '$top=100&$orderby=publishedDate asc', 'get')
-                .then(
-                    (response: AxiosResponse<any> | undefined) =>
-                        response?.data.value.map((item: any) => item.id)
-                );
-
-            result.push(...partial);
+        if (videoMatch) {
+            guidList.push({
+                url: videoMatch[1],
+                outDir: url.outDir
+            });
         }
+        else if (groupMatch) {
+            const videoNumber: number = await apiClient.callApi(`groups/${groupMatch[1]}`, 'get')
+                .then((response: AxiosResponse<any> | undefined) => response?.data.metrics.videos);
 
-        return result;
+            // Anything above $top=100 results in 400 Bad Request
+            // Use $skip to skip the first 100 and get another 100 and so on
+            for (let index = 0; index <= Math.floor(videoNumber / 100); index++) {
+                await apiClient.callApi(
+                    `groups/${groupMatch[1]}/videos?$skip=${100 * index}&` +
+                    '$top=100&$orderby=publishedDate asc', 'get'
+                ).then((response: AxiosResponse<any> | undefined) => {
+                    response?.data.value.forEach((video: { id: string }) =>
+                        guidList.push({
+                            url: video.id,
+                            outDir: url.outDir
+                        })
+                    );
+                });
+            }
+        }
+        else {
+            logger.warn(`Invalid url '${url.url}', skipping...`);
+        }
     }
 
-    return null;
+    return guidList;
 }
 
 
@@ -52,30 +68,32 @@ async function extractGuids(url: string, client: ApiClient): Promise<Array<strin
  *
  * @param {Array<string>} urlList       list of link to parse
  * @param {string}        defaultOutDir the directry used to save the videos
- * @param {Session}       session       used to call the API to get the GUIDs from group links
  *
- * @returns Array of 2 elements, 1st one being the GUIDs array, 2nd one the output directories array
+ * @returns Array of 2 elements: 1st an array of Microsoft Stream urls, 2nd an array of SharePoint urls
  */
-export async function parseCLIinput(urlList: Array<string>, defaultOutDir: string,
-    session: Session): Promise<Array<Array<string>>> {
-
-    const apiClient: ApiClient = ApiClient.getInstance(session);
-    const guidList: Array<string> = [];
+export function parseCLIinput(urlList: Array<string>, defaultOutDir: string): Array<Array<VideoUrl>> {
+    const stream: Array<VideoUrl> = [];
+    const share: Array<VideoUrl> = [];
 
     for (const url of urlList) {
-        const guids: Array<string> | null = await extractGuids(url, apiClient);
-
-        if (guids) {
-            guidList.push(...guids);
+        if (streamUrlRegex.test(url)) {
+            stream.push({
+                url: url,
+                outDir: defaultOutDir
+            });
+        }
+        else if (shareUrlRegex.test(url)) {
+            share.push({
+                url: url,
+                outDir: defaultOutDir
+            });
         }
         else {
             logger.warn(`Invalid url '${url}', skipping..`);
         }
     }
 
-    const outDirList: Array<string> = Array(guidList.length).fill(defaultOutDir);
-
-    return [guidList, outDirList];
+    return [stream, share];
 }
 
 
@@ -86,94 +104,84 @@ export async function parseCLIinput(urlList: Array<string>, defaultOutDir: strin
  *
  * @param {string}  inputFile     path to the text file
  * @param {string}  defaultOutDir the default/fallback directory used to save the videos
- * @param {Session} session       used to call the API to get the GUIDs from group links
  *
  * @returns Array of 2 elements, 1st one being the GUIDs array, 2nd one the output directories array
  */
-export async function parseInputFile(inputFile: string, defaultOutDir: string,
-    session: Session): Promise<Array<Array<string>>> {
+export function parseInputFile(inputFile: string, defaultOutDir: string): Array<Array<VideoUrl>> {
     // rawContent is a list of each line of the file
-    const rawContent: Array<string> = fs.readFileSync(inputFile).toString()
-        .split(/\r?\n/);
-    const apiClient: ApiClient = ApiClient.getInstance(session);
-
-    const guidList: Array<string> = [];
-    const outDirList: Array<string> = [];
-    // if the last line was an url set this
-    let foundUrl = false;
+    const rawContent: Array<string> = fs.readFileSync(inputFile).toString().split(/\r?\n/);
+    const stream: Array<VideoUrl> = [];
+    const share: Array<VideoUrl> = [];
+    let streamUrl = false;
 
     for (let i = 0; i < rawContent.length; i++) {
         const line: string = rawContent[i];
+        const nextLine: string | null = i < rawContent.length ? rawContent[i + 1] : null;
+        let outDir = defaultOutDir;
 
         // filter out lines with no content
         if (!line.match(/\S/)) {
             logger.warn(`Line ${i + 1} is empty, skipping..`);
             continue;
         }
-        // parse if line is option
-        else if (line.includes('-dir')) {
-            if (foundUrl) {
-                const outDir: string | null = parseOption('-dir', line);
+        // check for urls
+        else if (streamUrlRegex.test(line)) {
+            streamUrl = true;
+        }
+        else if (shareUrlRegex.test(line)) {
+            streamUrl = false;
+        }
+        // now invalid line since we skip ahead one line if we find dir option
+        else {
+            logger.warn(`Line ${i + 1}: '${line}' is invalid, skipping..`);
 
-                if (outDir && checkOutDir(outDir)) {
-                    outDirList.push(...Array(guidList.length - outDirList.length)
-                        .fill(outDir));
-                }
-                else {
-                    outDirList.push(...Array(guidList.length - outDirList.length)
-                        .fill(defaultOutDir));
-                }
+            continue;
+        }
 
-                foundUrl = false;
-                continue;
-            }
-            else {
-                logger.warn(`Found options without preceding url at line ${i + 1}, skipping..`);
-                continue;
+        // we now have a valid url, check next line for option
+        if (nextLine) {
+            const optionDir = parseOption('-dir', nextLine);
+
+            if (optionDir && makeOutDir(optionDir)) {
+                outDir = optionDir;
+                // if there was an option we skip a line
+                i++;
             }
         }
 
-        /* now line is not empty nor an option line.
-        If foundUrl is still true last line didn't have a directory option
-        so we stil need to add the default outDir to outDirList to  */
-        if (foundUrl) {
-            outDirList.push(...Array(guidList.length - outDirList.length)
-                .fill(defaultOutDir));
-            foundUrl = false;
-        }
-
-        const guids: Array<string> | null = await extractGuids(line, apiClient);
-
-        if (guids) {
-            guidList.push(...guids);
-            foundUrl = true;
+        if (streamUrl) {
+            stream.push({
+                url: line,
+                outDir
+            });
         }
         else {
-            logger.warn(`Invalid url at line ${i + 1}, skipping..`);
+            share.push({
+                url: line,
+                outDir
+            });
         }
     }
 
-    // if foundUrl is still true after the loop we have some url without an outDir
-    if (foundUrl) {
-        outDirList.push(...Array(guidList.length - outDirList.length)
-            .fill(defaultOutDir));
-    }
 
-    return [guidList, outDirList];
+    return [stream, share];
 }
 
 
 // This leaves us the option to add more options (badum tss) _Luca
 function parseOption(optionSyntax: string, item: string): string | null {
     const match: RegExpMatchArray | null = item.match(
-        RegExp(`^\\s*${optionSyntax}\\s?=\\s?['"](.*)['"]`)
+        RegExp(`^\\s+${optionSyntax}\\s*=\\s*['"](.*)['"]`)
     );
 
     return match ? match[1] : null;
 }
 
-
-export function checkOutDir(directory: string): boolean {
+/**
+ * @param directory path to create
+ * @returns true on success, false otherwise
+ */
+export function makeOutDir(directory: string): boolean {
     if (!fs.existsSync(directory)) {
         try {
             fs.mkdirSync(directory);
