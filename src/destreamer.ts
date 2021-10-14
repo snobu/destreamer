@@ -6,7 +6,7 @@ import { VideoUrl } from './Types';
 import { checkRequirements, parseInputFile, parseCLIinput } from './Utils';
 
 import isElevated from 'is-elevated';
-import { downloadStreamVideo } from './Downloaders';
+import { downloadShareVideo, downloadStreamVideo } from './Downloaders';
 
 
 export const chromeCacheFolder = '.chrome_data';
@@ -48,13 +48,18 @@ async function main(): Promise<void> {
         [streamVideos, shareVideos] = await parseInputFile(argv.inputFile!, argv.outputDirectory);
     }
 
-    logger.verbose('List of GUIDs and corresponding output directory \n' +
-        streamVideos.map(video => `\t${video.url} => ${video.outDir} \n`).join(''));
+    logger.verbose(
+        'List of urls and corresponding output directory \n' +
+        streamVideos.map(video => `\t${video.url} => ${video.outDir} \n`).join('') +
+        shareVideos.map(video => `\t${video.url} => ${video.outDir} \n`).join('')
+    );
 
-
-    await downloadStreamVideo(streamVideos);
-
-    logger.debug(shareVideos);
+    if (streamVideos.length) {
+        await downloadStreamVideo(streamVideos);
+    }
+    if (shareVideos.length) {
+        await downloadShareVideo(shareVideos);
+    }
 }
 
 

@@ -1,7 +1,7 @@
 import { StreamApiClient } from './ApiClient';
 import { promptUser } from './CommandLineParser';
 import { logger } from './Logger';
-import { StreamVideo, StreamSession, VideoUrl } from './Types';
+import { Video, StreamSession, VideoUrl } from './Types';
 
 import { AxiosResponse } from 'axios';
 import fs from 'fs';
@@ -10,7 +10,7 @@ import path from 'path';
 import sanitizeWindowsName from 'sanitize-filename';
 import { extractStreamGuids } from './Utils';
 
-function publishedDateToString(date: string): string {
+export function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
     const day: string = dateJs.getDate().toString().padStart(2, '0');
     const month: string = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
@@ -19,7 +19,7 @@ function publishedDateToString(date: string): string {
 }
 
 
-function publishedTimeToString(date: string): string {
+export function publishedTimeToString(date: string): string {
     const dateJs: Date = new Date(date);
     const hours: string = dateJs.getHours().toString();
     const minutes: string = dateJs.getMinutes().toString();
@@ -46,8 +46,8 @@ function durationToTotalChunks(duration: string): number {
 }
 
 
-export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamSession, subtitles?: boolean): Promise<Array<StreamVideo>> {
-    const metadata: Array<StreamVideo> = [];
+export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamSession, subtitles?: boolean): Promise<Array<Video>> {
+    const metadata: Array<Video> = [];
     let title: string;
     let duration: string;
     let publishDate: string;
@@ -137,16 +137,24 @@ export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamS
 }
 
 
-export function createUniquePath(videos: Array<StreamVideo>, template: string, format: string, skip?: boolean): Array<StreamVideo> {
+export function createUniquePath(videos: Array<Video>, template: string, format: string, skip?: boolean): Array<Video>
+export function createUniquePath(videos: Video, template: string, format: string, skip?: boolean): Video
+export function createUniquePath(videos: Array<Video> | Video, template: string, format: string, skip?: boolean): Array<Video> | Video {
+    let singleInput = false;
 
-    videos.forEach((video: StreamVideo) => {
+    if (!Array.isArray(videos)) {
+        videos = [videos];
+        singleInput = true;
+    }
+
+    videos.forEach((video: Video) => {
         let title: string = template;
         let finalTitle: string;
         const elementRegEx = RegExp(/{(.*?)}/g);
         let match = elementRegEx.exec(template);
 
         while (match) {
-            const value = video[match[1] as keyof StreamVideo] as string;
+            const value = video[match[1] as keyof (Video)] as string;
             title = title.replace(match[0], value);
             match = elementRegEx.exec(template);
         }
@@ -167,6 +175,10 @@ export function createUniquePath(videos: Array<StreamVideo>, template: string, f
         video.outPath = path.join(video.outPath, finalFileName);
 
     });
+
+    if (singleInput) {
+        return videos[0];
+    }
 
     return videos;
 }

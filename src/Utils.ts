@@ -16,8 +16,6 @@ const shareUrlRegex = new RegExp(/https?:\/\/.+\.sharepoint\.com.*/);
 export async function extractStreamGuids(urlList: Array<VideoUrl>, session: StreamSession): Promise<Array<VideoUrl>> {
     const videoRegex = new RegExp(/https:\/\/.*\/video\/(\w{8}-(?:\w{4}-){3}\w{12})/);
     const groupRegex = new RegExp(/https:\/\/.*\/group\/(\w{8}-(?:\w{4}-){3}\w{12})/);
-    // const sharepointDirect = new RegExp(/https:\/\/(?<hostname>.+\.sharepoint\.com)\/(?:.*\/)?(?<filename>.*\.mp4)/);
-    // const sharepointEncoded = new RegExp(/https:\/\/(?<hostname>.+\.sharepoint\.com)\/.*id=(?<encodedFilename>.*mp4)/);
 
     const apiClient: StreamApiClient = StreamApiClient.getInstance(session);
     const guidList: Array<VideoUrl> = [];
@@ -212,6 +210,21 @@ export function checkRequirements(): void {
     }
     catch (e) {
         process.exit(ERROR_CODE.MISSING_FFMPEG);
+    }
+
+    try {
+        const versionRegex = new RegExp(/aria2 version (.*)/);
+        const aira2Ver: string = execSync('aria2c --version').toString().split('\n')[0];
+
+        if (versionRegex.test(aira2Ver)) {
+            logger.verbose(`Using ${aira2Ver}\n`);
+        }
+        else {
+            throw new Error();
+        }
+    }
+    catch (e) {
+        process.exit(ERROR_CODE.MISSING_ARIA2);
     }
 }
 

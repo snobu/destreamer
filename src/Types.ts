@@ -5,6 +5,12 @@ export type StreamSession = {
 }
 
 
+export type ShareSession = {
+    FedAuth: string;
+    rtFa: string;
+}
+
+
 export type VideoUrl = {
     url: string,
     outDir: string
@@ -20,8 +26,9 @@ export type SharepointVideo = {
 }
 
 
-export type StreamVideo = {
-    guid: string;
+export type Video = {
+    guid?: string;
+    direct?: boolean;
     title: string;
     duration: string;
     publishDate: string;
@@ -32,7 +39,7 @@ export type StreamVideo = {
     outPath: string;
     totalChunks: number;    // Abstraction of FFmpeg timemark
     playbackUrl: string;
-    posterImageUrl: string | null;
+    posterImageUrl?: string;
     captionsUrl?: string
 }
 
