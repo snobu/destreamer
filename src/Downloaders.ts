@@ -234,7 +234,7 @@ export async function downloadShareVideo(videoUrls: Array<VideoUrl>): Promise<vo
             }
         }
         else {
-            logger.verbose('TODO: manifest download');
+            logger.error('TODO: manifest download');
 
             continue;
         }
