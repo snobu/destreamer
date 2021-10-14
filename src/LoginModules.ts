@@ -23,7 +23,7 @@ export async function doStreamLogin(url: string, tokenCache: TokenCache, usernam
         ]
     });
 
-     // try-finally because we were leaving zombie processes if there was an error
+    // try-finally because we were leaving zombie processes if there was an error
     try {
         const page: puppeteer.Page = (await browser.pages())[0];
 
@@ -94,7 +94,11 @@ export async function doStreamLogin(url: string, tokenCache: TokenCache, usernam
 export async function doShareLogin(url: string, username?: string): Promise<ShareSession> {
     logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
 
-    const hostname = new URL(url).hostname;
+    const hostname = new URL(url).host;
+    logger.verbose(new URL(url).host);
+    logger.verbose(new URL(url).hostname);
+
+
     const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
         headless: false,
@@ -135,7 +139,7 @@ export async function doShareLogin(url: string, username?: string): Promise<Shar
 
         logger.info('Waiting for target!');
 
-        await browser.waitForTarget((target: puppeteer.Target) => target.url().includes(hostname), { timeout: 150000 });
+        await browser.waitForTarget((target: puppeteer.Target) => target.url().startsWith(`https://${hostname}`), { timeout: 150000 });
         logger.info('We are logged in.');
 
         let session: ShareSession | null = null;
