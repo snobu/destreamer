@@ -108,7 +108,7 @@ export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamS
         posterImageUrl = response?.data['posterImage']['medium']['url'];
 
         if (subtitles) {
-            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
+            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid.url}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
