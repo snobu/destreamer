@@ -161,7 +161,7 @@ export class ShareApiClient {
     }
 
 
-    public async getVideoInfo(filePath: string, outDir: string): Promise<Video> {
+    public async getVideoInfo(filePath: string, outPath: string): Promise<Video> {
         let playbackUrl: string;
 
         // TODO: Ripped this straigth from chromium inspector. Don't know don't care what it is right now. Check later
@@ -193,27 +193,43 @@ export class ShareApiClient {
         }
 
         const direct = await this.canDirectDownload(filePath);
+        const b64VideoMetadata = JSON.parse(
+            info.ListData.Row[0].MediaServiceFastMetadata
+        ).video.altManifestMetadata;
+        const durationSeconds = Math.ceil(
+            (JSON.parse(
+                Buffer.from(b64VideoMetadata, 'base64').toString()
+            ).Duration100Nano) / 10 / 1000 / 1000
+        );
 
         if (direct) {
-            playbackUrl = this.axiosInstance.getUri({ url: filePath });
+            playbackUrl = this.axiosInstance.defaults.baseURL + filePath;
+            // logger.verbose(playbackUrl);
         }
         else {
-            playbackUrl = 'placeholder';
+            playbackUrl = info.ListSchema['.videoManifestUrl'];
+            playbackUrl = playbackUrl.replace('{.mediaBaseUrl}', info.ListSchema['.mediaBaseUrl']);
+            // the only filetype works I found
+            playbackUrl = playbackUrl.replace('{.fileType}', 'mp4');
+            playbackUrl = playbackUrl.replace('{.callerStack}', info.ListSchema['.callerStack']);
+            playbackUrl = playbackUrl.replace('{.spItemUrl}', info.ListData.Row[0]['.spItemUrl']);
+            playbackUrl = playbackUrl.replace('{.driveAccessToken}', info.ListSchema['.driveAccessToken']);
+            playbackUrl += '&part=index&format=dash';
         }
 
 
         return {
             direct,
             title: filePath.split('/').pop() ?? 'video.mp4',
-            duration: '',
+            duration: publishedTimeToString(durationSeconds),
             publishDate: publishedDateToString(info.ListData.Row[0]['Modified.']),
             publishTime: publishedTimeToString(info.ListData.Row[0]['Modified.']),
             author: info.ListData.Row[0]['Author.title'],
             authorEmail: info.ListData.Row[0]['Author.email'],
-            uniqueId: info.ListData.Row[0]['GUID'].substring(1, 9),
-            outPath: outDir,
+            uniqueId: info.ListData.Row[0].GUID.substring(1, 9),
+            outPath,
             playbackUrl,
-            totalChunks: 0
+            totalChunks: durationSeconds
         };
     }
 

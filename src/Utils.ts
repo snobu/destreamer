@@ -228,12 +228,12 @@ export function checkRequirements(): void {
     }
 }
 
-
+// number of seconds
 export function ffmpegTimemarkToChunk(timemark: string): number {
     const timeVals: Array<string> = timemark.split(':');
     const hrs: number = parseInt(timeVals[0]);
     const mins: number = parseInt(timeVals[1]);
     const secs: number = parseInt(timeVals[2]);
 
-    return (hrs * 60) + mins + (secs / 60);
+    return (hrs * 60 * 60) + (mins * 60) + secs;
 }

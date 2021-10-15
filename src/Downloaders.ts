@@ -234,9 +234,102 @@ export async function downloadShareVideo(videoUrls: Array<VideoUrl>): Promise<vo
             }
         }
         else {
-            logger.error('TODO: manifest download');
+            // FIXME: just a copy-paste, should move to separate function
+            const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
+                barCompleteChar: '\u2588',
+                barIncompleteChar: '\u2591',
+                format: 'progress [{bar}] {percentage}% {speed} {eta_formatted}',
+                // process.stdout.columns may return undefined in some terminals (Cygwin/MSYS)
+                barsize: Math.floor((process.stdout.columns || 30) / 3),
+                stopOnComplete: true,
+                hideCursor: true,
+            });
 
-            continue;
+            logger.info(`\nDownloading Video: ${video.title} \n`);
+            logger.verbose('Extra video info \n' +
+                '\t Video m3u8 playlist URL: '.cyan + video.playbackUrl + '\n' +
+                '\t Video tumbnail URL: '.cyan + video.posterImageUrl + '\n' +
+                '\t Video subtitle URL (may not exist): '.cyan + video.captionsUrl + '\n' +
+                '\t Video total chunks: '.cyan + video.totalChunks + '\n');
+
+            logger.info('Spawning ffmpeg with access token and HLS URL. This may take a few seconds...\n\n');
+            if (!process.stdout.columns) {
+                logger.warn(
+                    'Unable to get number of columns from terminal.\n' +
+                    'This happens sometimes in Cygwin/MSYS.\n' +
+                    'No progress bar can be rendered, however the download process should not be affected.\n\n' +
+                    'Please use PowerShell or cmd.exe to run destreamer on Windows.'
+                );
+            }
+
+            const ffmpegInpt: any = new FFmpegInput(video.playbackUrl);
+            const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
+                argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
+                argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
+                ['n', null]
+            ]));
+            const ffmpegCmd: any = new FFmpegCommand();
+
+            const cleanupFn: () => void = () => {
+                pbar.stop();
+
+                if (argv.noCleanup) {
+                    return;
+                }
+
+                try {
+                    fs.unlinkSync(video.outPath);
+                }
+                catch (e) {
+                    // Future handling of an error (maybe)
+                }
+            };
+
+            pbar.start(video.totalChunks, 0, {
+                speed: '0'
+            });
+
+            // prepare ffmpeg command line
+            ffmpegCmd.addInput(ffmpegInpt);
+            ffmpegCmd.addOutput(ffmpegOutput);
+
+            ffmpegCmd.on('update', async (data: any) => {
+                const currentChunks: number = ffmpegTimemarkToChunk(data.out_time);
+
+                pbar.update(currentChunks, {
+                    speed: data.bitrate
+                });
+
+                // Graceful fallback in case we can't get columns (Cygwin/MSYS)
+                if (!process.stdout.columns) {
+                    process.stdout.write(`--- Speed: ${data.bitrate}, Cursor: ${data.out_time}\r`);
+                }
+            });
+
+            process.on('SIGINT', cleanupFn);
+
+            // let the magic begin...
+            await new Promise((resolve: any) => {
+                ffmpegCmd.on('error', (error: any) => {
+                    cleanupFn();
+
+                    logger.error(`FFmpeg returned an error: ${error.message}`);
+                    process.exit(ERROR_CODE.UNK_FFMPEG_ERROR);
+                });
+
+                ffmpegCmd.on('success', () => {
+                    pbar.update(video.totalChunks); // set progress bar to 100%
+                    logger.info(`\nDownload finished: ${video.outPath} \n`);
+                    resolve();
+                });
+
+                ffmpegCmd.spawn();
+            });
+
+            process.removeListener('SIGINT', cleanupFn);
+            // logger.error('TODO: manifest download');
+
+            // continue;
         }
     }
 }

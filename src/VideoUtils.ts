@@ -18,31 +18,40 @@ export function publishedDateToString(date: string): string {
     return `${dateJs.getFullYear()}-${month}-${day}`;
 }
 
+export function publishedTimeToString(seconds: number): string
+export function publishedTimeToString(date: string): string
+export function publishedTimeToString(date: string | number): string {
+    let dateJs: Date;
 
-export function publishedTimeToString(date: string): string {
-    const dateJs: Date = new Date(date);
+    if (typeof (date) === 'number') {
+        dateJs = new Date(0, 0, 0, 0, 0, date);
+    }
+    else {
+        dateJs = new Date(date);
+    }
+
     const hours: string = dateJs.getHours().toString();
     const minutes: string = dateJs.getMinutes().toString();
     const seconds: string = dateJs.getSeconds().toString();
 
-    return `${hours}.${minutes}.${seconds}`;
+    return `${hours}h ${minutes}m ${seconds}s`;
 }
 
 
-function isoDurationToString(time: string): string {
+export function isoDurationToString(time: string): string {
     const duration: Duration = parseDuration(time);
 
     return `${duration.hours ?? '00'}.${duration.minutes ?? '00'}.${duration.seconds?.toFixed(0) ?? '00'}`;
 }
 
-
-function durationToTotalChunks(duration: string): number {
+// it's the number of seconds in the video
+export function durationToTotalChunks(duration: string,): number {
     const durationObj: any = parseDuration(duration);
     const hrs: number = durationObj.hours ?? 0;
     const mins: number = durationObj.minutes ?? 0;
     const secs: number = Math.ceil(durationObj.seconds ?? 0);
 
-    return (hrs * 60) + mins + (secs / 60);
+    return (hrs * 60 * 60) + (mins * 60) + secs;
 }
 
 

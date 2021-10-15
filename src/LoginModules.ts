@@ -94,10 +94,8 @@ export async function doStreamLogin(url: string, tokenCache: TokenCache, usernam
 export async function doShareLogin(url: string, username?: string): Promise<ShareSession> {
     logger.info('Launching headless Chrome to perform the OpenID Connect dance...');
 
+    let session: ShareSession | null = null;
     const hostname = new URL(url).host;
-    logger.verbose(new URL(url).host);
-    logger.verbose(new URL(url).hostname);
-
 
     const browser: puppeteer.Browser = await puppeteer.launch({
         executablePath: getPuppeteerChromiumPath(),
@@ -142,7 +140,6 @@ export async function doShareLogin(url: string, username?: string): Promise<Shar
         await browser.waitForTarget((target: puppeteer.Target) => target.url().startsWith(`https://${hostname}`), { timeout: 150000 });
         logger.info('We are logged in.');
 
-        let session: ShareSession | null = null;
         let tries = 1;
         while (!session) {
             const cookieJar = (await page.cookies()).filter(
@@ -168,10 +165,12 @@ export async function doShareLogin(url: string, username?: string): Promise<Shar
         logger.info("At this point Chromium's job is done, shutting it down...\n");
 
         // await page.waitForTimeout(1000 * 60 * 60 * 60);
-        return session;
     }
     finally {
+        logger.verbose('Stream login browser closing...');
         await browser.close();
+        logger.verbose('Stream login browser closed');
     }
 
+    return session;
 }
