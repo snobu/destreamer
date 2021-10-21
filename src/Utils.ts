@@ -6,6 +6,7 @@ import { StreamSession, VideoUrl } from './Types';
 import { AxiosResponse } from 'axios';
 import { execSync } from 'child_process';
 import fs from 'fs';
+import readlineSync from 'readline-sync';
 
 
 const streamUrlRegex = new RegExp(/https?:\/\/web\.microsoftstream\.com.*/);
@@ -236,4 +237,15 @@ export function ffmpegTimemarkToChunk(timemark: string): number {
     const secs: number = parseInt(timeVals[2]);
 
     return (hrs * 60 * 60) + (mins * 60) + secs;
+}
+
+
+export function promptUser(choices: Array<string>): number {
+    const index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
+
+    if (index === -1) {
+        process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
+    }
+
+    return index;
 }

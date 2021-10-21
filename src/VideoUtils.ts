@@ -1,5 +1,5 @@
 import { StreamApiClient } from './ApiClient';
-import { promptUser } from './CommandLineParser';
+import { promptUser } from './Utils';
 import { logger } from './Logger';
 import { Video, StreamSession, VideoUrl } from './Types';
 

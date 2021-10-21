@@ -6,6 +6,7 @@ import { StreamSession, VideoUrl } from './Types';
 
 
 // we cannot test groups parsing as that requires an actual session
+// TODO: add SharePoint urls
 describe('Destreamer parsing', () => {
     it('Input file to arrays of guids', async () => {
         const testSession: StreamSession = {
