@@ -50,9 +50,13 @@ export async function downloadStreamVideo(videoUrls: Array<VideoUrl>): Promise<v
     }
 
     for (const [index, video] of videos.entries()) {
-
-        if (argv.skip && fs.existsSync(video.outPath)) {
-            logger.info(`File already exists, skipping: ${video.outPath} \n`);
+        const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
+            argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
+            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
+            ['n', null]
+        ]));
+        if(fs.existsSync(ffmpegOutput.url) && argv.skip){
+            logger.info(`File already exists, skipping: ${ffmpegOutput.url} \n`);
             continue;
         }
 
@@ -100,11 +104,7 @@ export async function downloadStreamVideo(videoUrls: Array<VideoUrl>): Promise<v
         const ffmpegInpt: any = new FFmpegInput(video.playbackUrl, new Map([
             ['headers', headers]
         ]));
-        const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
-            argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
-            argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
-            ['n', null]
-        ]));
+
         const ffmpegCmd: any = new FFmpegCommand();
 
         const cleanupFn: () => void = () => {
@@ -234,6 +234,16 @@ export async function downloadShareVideo(videoUrls: Array<VideoUrl>): Promise<vo
             }
         }
         else {
+            const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
+                argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
+                argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
+                ['n', null]
+            ]));
+            if(fs.existsSync(ffmpegOutput.url) && argv.skip){
+                logger.info(`File already exists, skipping: ${ffmpegOutput.url} \n`);
+                continue;
+            }
+
             // FIXME: just a copy-paste, should move to separate function
             const pbar: cliProgress.SingleBar = new cliProgress.SingleBar({
                 barCompleteChar: '\u2588',
@@ -263,11 +273,7 @@ export async function downloadShareVideo(videoUrls: Array<VideoUrl>): Promise<vo
             }
 
             const ffmpegInpt: any = new FFmpegInput(video.playbackUrl);
-            const ffmpegOutput: any = new FFmpegOutput(video.outPath, new Map([
-                argv.acodec === 'none' ? ['an', null] : ['c:a', argv.acodec],
-                argv.vcodec === 'none' ? ['vn', null] : ['c:v', argv.vcodec],
-                ['n', null]
-            ]));
+
             const ffmpegCmd: any = new FFmpegCommand();
 
             const cleanupFn: () => void = () => {

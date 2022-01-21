@@ -9,7 +9,7 @@ import isElevated from 'is-elevated';
 import { downloadShareVideo, downloadStreamVideo } from './Downloaders';
 
 
-export const chromeCacheFolder = '.chrome_data';
+export var chromeCacheFolder = '.chrome_data';
 
 
 async function init(): Promise<void> {
@@ -27,6 +27,7 @@ async function init(): Promise<void> {
 
     if (argv.username) {
         logger.info(`Username: ${argv.username}`);
+        chromeCacheFolder+=`_${argv.username}`;
     }
 
     if (argv.simulate) {
