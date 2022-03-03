@@ -177,7 +177,7 @@ export async function downloadStreamVideo(videoUrls: Array<VideoUrl>): Promise<v
 
 // TODO: complete overhaul of this function
 export async function downloadShareVideo(videoUrls: Array<VideoUrl>): Promise<void> {
-    const shareUrlRegex = new RegExp(/(?<domain>https:\/\/.+\.sharepoint\.com).*?(?<baseSite>\/(?:teams|sites)\/.*?)(?:(?<filename>\/.*\.mp4)|\/.*id=(?<paramFilename>.*mp4))/);
+    const shareUrlRegex = new RegExp(/(?<domain>https:\/\/.+\.sharepoint\.com).*?(?<baseSite>\/(?:teams|sites|personal)\/.*?)(?:(?<filename>\/.*\.mp4)|\/.*id=(?<paramFilename>.*mp4))/);
 
     logger.info('Downloading SharePoint videos...\n\n');
 
