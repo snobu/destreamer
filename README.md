@@ -14,7 +14,7 @@ _(Alternative artwork proposals are welcome! Submit one through an Issue.)_
 
 This release would not have been possible without the code and time contributed by two distinguished developers: [@lukaarma](https://github.com/lukaarma) and [@kylon](https://github.com/kylon). Thank you!
 
-### Specialized vesions
+### Specialized versions
 
 - [Politecnico di Milano][polimi]: fork over at https://github.com/SamanFekri/destreamer
 - [Università di Pisa][unipi]: fork over at https://github.com/Guray00/destreamer-unipi
@@ -57,34 +57,25 @@ Note that destreamer won't run in an elevated (Administrator/root) shell. Runnin
 ## Can i plug in my own browser?
 
 Yes, yes you can. This may be useful if your main browser has some authentication plugins that are required for you to logon to your Microsoft Stream tenant.
-To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts`:
+To use your own browser for the authentication part, locate the following snippet in `src/destreamer.ts` and `src/TokenCache.ts`:
 
 ```typescript
 const browser: puppeteer.Browser = await puppeteer.launch({
-        executablePath: getPuppeteerChromiumPath(),
-        headless: false,
-        userDataDir: (argv.keepLoginCookies) ? chromeCacheFolder : undefined,
-        args: [
-            '--disable-dev-shm-usage',
-            '--fast-start',
-            '--no-sandbox'
-        ]
-    });
+  executablePath: getPuppeteerChromiumPath(),
+  // …
+});
 ```
+
+Navigate to `chrome://version` in the browser you want to plug in and copy executable path from there. Use double backslash for Windows.
 
 Now, change `executablePath` to reflect the path to your browser and profile (i.e. to use Microsoft Edge on Windows):
 ```typescript
-        executablePath: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+        executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 ```
-In Linux for Chromium,
-```typescript
-        executablePath: '/usr/bin/chromium-browser',
-```
-Depending on your distro, it may also be `/usr/bin/chromium`. You will have to change it appropriately for Google Chrome.
 
-Note that for Mac the path may look a little different but no other changes are necessary.
+You can add `userDataDir` right after `executablePath` with the path to your browser profile (also shown in `chrome://version`) if you want that loaded as well.
 
-You need to rebuild (`npm run build`) every time you change this configuration.
+Remember to rebuild (`npm run build`) every time you change this configuration.
 
 ## How to build
 
