@@ -1,12 +1,12 @@
-import { ApiClient } from './ApiClient';
-import { Session } from './Types';
+import { StreamApiClient } from './ApiClient';
+import { StreamSession } from './Types';
 
 import terminalImage from 'terminal-image';
 import { AxiosResponse } from 'axios';
 
 
-export async function drawThumbnail(posterImage: string, session: Session): Promise<void> {
-    const apiClient: ApiClient = ApiClient.getInstance(session);
+export async function drawThumbnail(posterImage: string, session: StreamSession): Promise<void> {
+    const apiClient: StreamApiClient = StreamApiClient.getInstance(session);
 
     const thumbnail: Buffer = await apiClient.callUrl(posterImage, 'get', null, 'arraybuffer')
         .then((response: AxiosResponse<any> | undefined) => response?.data);
