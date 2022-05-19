@@ -175,7 +175,7 @@ export class ShareApiClient {
                 AddRequiredFields: true
             }
         };
-        const url = `${this.site}/_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1='${filePath}'`;
+        const url = `${this.site}/_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1='${encodeURIComponent(filePath)}'`;
 
         logger.verbose(`Requesting video info for '${url}'`);
         const info = await this.axiosInstance.post(url, payload, {
