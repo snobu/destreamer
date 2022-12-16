@@ -214,7 +214,7 @@ export function checkRequirements(): void {
     }
 
     try {
-        const versionRegex = new RegExp(/aria2 version (.*)/);
+        const versionRegex = new RegExp(/aria2 .* (\d+\.\d+\.\d+.*)/);
         const aira2Ver: string = execSync('aria2c --version').toString().split('\n')[0];
 
         if (versionRegex.test(aira2Ver)) {
