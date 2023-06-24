@@ -6,7 +6,7 @@ import { StreamSession } from './Types';
 
 import fs from 'fs';
 import jwtDecode from 'jwt-decode';
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 
 
 export class TokenCache {
@@ -96,7 +96,7 @@ export async function refreshSession(url: string): Promise<StreamSession> {
 
             session = null;
             tries++;
-            await page.waitFor(3000);
+            await page.waitForTimeout(3000);
         }
     }
     browser.close();

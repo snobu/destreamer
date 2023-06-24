@@ -1,5 +1,5 @@
 import { logger } from './Logger';
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 import { getPuppeteerChromiumPath } from './PuppeteerHelper';
 import { chromeCacheFolder } from './destreamer';
 import { argv } from './CommandLineParser';
