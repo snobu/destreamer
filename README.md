@@ -1,8 +1,10 @@
-<a href="https://github.com/snobu/destreamer/actions">
-  <img src="https://github.com/snobu/destreamer/workflows/Node%20CI/badge.svg" alt="CI build status" />
-</a>
+# This project is abandoned. It will probably not work anymore against your MS Stream tenant.
 
-**destreamer v3.0** is just around the corner. You can try out a pre-release today by cloning [this branch](https://github.com/snobu/destreamer/tree/aria2c_forRealNow).
+# A heartfelt thank you to all the contributors over the years. You are the real MVPs. 💖
+
+## Check out kylon's Sharedown for a SharePoint-backend implementation - https://github.com/kylon/Sharedown
+
+<hr>
 
 ![destreamer](assets/logo.png)
 
