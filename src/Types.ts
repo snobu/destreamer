@@ -1,11 +1,34 @@
-export type Session = {
+export type StreamSession = {
     AccessToken: string;
     ApiGatewayUri: string;
     ApiGatewayVersion: string;
 }
 
 
+export type ShareSession = {
+    FedAuth: string;
+    rtFa: string;
+}
+
+
+export type VideoUrl = {
+    url: string,
+    outDir: string
+}
+
+
+export type SharepointVideo = {
+    // if we can download the MP4 or we need to use DASH
+    direct: boolean;
+    playbackUrl: string;
+    title: string;
+    outPath: string
+}
+
+
 export type Video = {
+    guid?: string;
+    direct?: boolean;
     title: string;
     duration: string;
     publishDate: string;
@@ -16,7 +39,7 @@ export type Video = {
     outPath: string;
     totalChunks: number;    // Abstraction of FFmpeg timemark
     playbackUrl: string;
-    posterImageUrl: string | null;
+    posterImageUrl?: string;
     captionsUrl?: string
 }
 

@@ -1,16 +1,18 @@
 import { logger } from './Logger';
-import { Session } from './Types';
+import { ShareSession, StreamSession, Video } from './Types';
+import { publishedDateToString, publishedTimeToString } from './VideoUtils';
 
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry';
+// import fs from 'fs';
 
 
-export class ApiClient {
-    private static instance: ApiClient;
+export class StreamApiClient {
+    private static instance: StreamApiClient;
     private axiosInstance?: AxiosInstance;
-    private session?: Session;
+    private session?: StreamSession;
 
-    private constructor(session?: Session) {
+    private constructor(session?: StreamSession) {
         this.session = session;
         this.axiosInstance = axios.create({
             baseURL: session?.ApiGatewayUri,
@@ -50,16 +52,16 @@ export class ApiClient {
      *
      * @param session used if initializing
      */
-    public static getInstance(session?: Session): ApiClient {
-        if (!ApiClient.instance) {
-            ApiClient.instance = new ApiClient(session);
+    public static getInstance(session?: StreamSession): StreamApiClient {
+        if (!StreamApiClient.instance) {
+            StreamApiClient.instance = new StreamApiClient(session);
         }
 
-        return ApiClient.instance;
+        return StreamApiClient.instance;
     }
 
-    public setSession(session: Session): void {
-        if (!ApiClient.instance) {
+    public setSession(session: StreamSession): void {
+        if (!StreamApiClient.instance) {
             logger.warn("Trying to update ApiCient session when it's not initialized!");
         }
 
@@ -111,5 +113,136 @@ export class ApiClient {
             url: url,
             responseType: responseType
         });
+    }
+}
+
+export class ShareApiClient {
+    private axiosInstance: AxiosInstance;
+    private site: string;
+
+    public constructor(domain: string, site: string, session: ShareSession) {
+        this.axiosInstance = axios.create({
+            baseURL: domain,
+            // timeout: 7000,
+            headers: {
+                'User-Agent': 'destreamer/3.0 ALPHA',
+                'Cookie': `rtFa=${session.rtFa}; FedAuth=${session.FedAuth}`
+            }
+        });
+        this.site = site;
+
+
+        // FIXME: disabled because it was messing with the direct download check
+        // axiosRetry(this.axiosInstance, {
+        //     // The following option is not working.
+        //     // We should open an issue on the relative GitHub
+        //     shouldResetTimeout: true,
+        //     retries: 6,
+        //     retryDelay: (retryCount: number) => {
+        //         return retryCount * 2000;
+        //     },
+        //     retryCondition: (err: AxiosError) => {
+        //         const retryCodes: Array<number> = [429, 500, 502, 503];
+        //         if (isNetworkOrIdempotentRequestError(err)) {
+        //             logger.warn(`${err}. Retrying request...`);
+
+        //             return true;
+        //         }
+        //         logger.warn(`Got HTTP code ${err?.response?.status ?? undefined}.`);
+        //         logger.warn('Here is the error message: ');
+        //         console.dir(err.response?.data);
+        //         logger.warn('We called this URL: ' + err.response?.config.baseURL + err.response?.config.url);
+
+        //         const shouldRetry: boolean = retryCodes.includes(err?.response?.status ?? 0);
+
+        //         return shouldRetry;
+        //     }
+        // });
+    }
+
+
+    public async getVideoInfo(filePath: string, outPath: string): Promise<Video> {
+        let playbackUrl: string;
+
+        // TODO: Ripped this straigth from chromium inspector. Don't know don't care what it is right now. Check later
+        const payload = {
+            parameters: {
+                __metadata: {
+                    type: 'SP.RenderListDataParameters'
+                },
+                ViewXml: `<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name="FileRef" /><Value Type="Text"><![CDATA[${filePath}]]></Value></Eq></Where></Query><RowLimit Paged="TRUE">1</RowLimit></View>`,
+                RenderOptions: 12295,
+                AddRequiredFields: true
+            }
+        };
+        const url = `${this.site}/_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1='${encodeURIComponent(filePath)}'`;
+
+        logger.verbose(`Requesting video info for '${url}'`);
+        const info = await this.axiosInstance.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json;odata=verbose'
+            }
+        }).then(res => res.data);
+        // fs.writeFileSync('info.json', JSON.stringify(info, null, 4));
+
+        // FIXME: very bad but usefull in alpha stage to check for edge cases
+        if (info.ListData.Row.length !== 1) {
+            logger.error('More than 1 row in SharePoint video info', { fatal: true });
+
+            process.exit(1000);
+        }
+
+        const direct = await this.canDirectDownload(filePath);
+        const b64VideoMetadata = JSON.parse(
+            info.ListData.Row[0].MediaServiceFastMetadata
+        ).video.altManifestMetadata;
+        const durationSeconds = Math.ceil(
+            (JSON.parse(
+                Buffer.from(b64VideoMetadata, 'base64').toString()
+            ).Duration100Nano) / 10 / 1000 / 1000
+        );
+
+        if (direct) {
+            playbackUrl = this.axiosInstance.defaults.baseURL + filePath;
+            // logger.verbose(playbackUrl);
+        }
+        else {
+            playbackUrl = info.ListSchema['.videoManifestUrl'];
+            playbackUrl = playbackUrl.replace('{.mediaBaseUrl}', info.ListSchema['.mediaBaseUrl']);
+            // the only filetype works I found
+            playbackUrl = playbackUrl.replace('{.fileType}', 'mp4');
+            playbackUrl = playbackUrl.replace('{.callerStack}', info.ListSchema['.callerStack']);
+            playbackUrl = playbackUrl.replace('{.spItemUrl}', info.ListData.Row[0]['.spItemUrl']);
+            playbackUrl = playbackUrl.replace('{.driveAccessToken}', info.ListSchema['.driveAccessToken']);
+            playbackUrl += '&part=index&format=dash';
+        }
+
+
+        return {
+            direct,
+            title: filePath.split('/').pop() ?? 'video.mp4',
+            duration: publishedTimeToString(durationSeconds),
+            publishDate: publishedDateToString(info.ListData.Row[0]['Modified.']),
+            publishTime: publishedTimeToString(info.ListData.Row[0]['Modified.']),
+            author: info.ListData.Row[0]['Author.title'],
+            authorEmail: info.ListData.Row[0]['Author.email'],
+            uniqueId: info.ListData.Row[0].GUID.substring(1, 9),
+            outPath,
+            playbackUrl,
+            totalChunks: durationSeconds
+        };
+    }
+
+
+    private async canDirectDownload(filePath: string): Promise<boolean> {
+        logger.verbose(`Checking direct download for '${filePath}'`);
+
+        return this.axiosInstance.head(
+            filePath, { maxRedirects: 0 }
+        ).then(
+            res => (res.status === 200)
+        ).catch(
+            () => false
+        );
     }
 }

@@ -1,8 +1,9 @@
 export const enum ERROR_CODE {
-    UNHANDLED_ERROR,
+    UNHANDLED_ERROR = 200,
     ELEVATED_SHELL,
     CANCELLED_USER_INPUT,
     MISSING_FFMPEG,
+    MISSING_ARIA2,
     OUTDATED_FFMPEG,
     UNK_FFMPEG_ERROR,
     INVALID_VIDEO_GUID,
@@ -22,7 +23,10 @@ export const errors: { [key: number]: string } = {
     [ERROR_CODE.MISSING_FFMPEG]: 'FFmpeg is missing!\n' +
         'Destreamer requires a fairly recent release of FFmpeg to download videos',
 
-    [ERROR_CODE.MISSING_FFMPEG]: 'The FFmpeg version currently installed is too old!\n' +
+    [ERROR_CODE.MISSING_ARIA2]: 'Aria2 is missing!\n' +
+        'Destreamer requires a fairly recent release of Aria2 to download videos',
+
+    [ERROR_CODE.OUTDATED_FFMPEG]: 'The FFmpeg version currently installed is too old!\n' +
         'Destreamer requires a fairly recent release of FFmpeg to download videos',
 
     [ERROR_CODE.UNK_FFMPEG_ERROR]: 'Unknown FFmpeg error',

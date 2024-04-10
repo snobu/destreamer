@@ -1,50 +1,51 @@
 {
-  "name": "destreamer",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/snobu/destreamer.git"
-  },
-  "version": "2.1.0",
-  "description": "Save Microsoft Stream videos for offline enjoyment.",
-  "main": "build/src/destreamer.js",
-  "bin": "build/src/destreamer.js",
-  "scripts": {
-    "build": "echo Transpiling TypeScript to JavaScript... && node node_modules/typescript/bin/tsc && echo Destreamer was built successfully.",
-    "test": "mocha build/test",
-    "lint": "eslint src/*.ts"
-  },
-  "keywords": [],
-  "author": "snobu",
-  "license": "MIT",
-  "devDependencies": {
-    "@types/mocha": "^8.0.4",
-    "@types/puppeteer": "^5.4.0",
-    "@types/readline-sync": "^1.4.3",
-    "@types/tmp": "^0.2.0",
-    "@types/yargs": "^15.0.11",
-    "@typescript-eslint/eslint-plugin": "^4.9.0",
-    "@typescript-eslint/parser": "^4.9.0",
-    "eslint": "^7.14.0",
-    "mocha": "^8.2.1",
-    "tmp": "^0.2.1"
-  },
-  "dependencies": {
-    "@tedconf/fessonia": "^2.1.2",
-    "@types/cli-progress": "^3.8.0",
-    "@types/jwt-decode": "^2.2.1",
-    "axios": "^0.21.2",
-    "axios-retry": "^3.1.9",
-    "cli-progress": "^3.8.2",
-    "colors": "^1.4.0",
-    "is-elevated": "^3.0.0",
-    "iso8601-duration": "^1.3.0",
-    "jwt-decode": "^3.1.2",
-    "puppeteer": "5.5.0",
-    "readline-sync": "^1.4.10",
-    "sanitize-filename": "^1.6.3",
-    "terminal-image": "^1.2.1",
-    "typescript": "^4.1.2",
-    "winston": "^3.3.3",
-    "yargs": "^16.1.1"
-  }
+    "name": "destreamer",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/snobu/destreamer.git"
+    },
+    "version": "2.1.0",
+    "description": "Save Microsoft Stream videos for offline enjoyment.",
+    "main": "build/src/destreamer.js",
+    "bin": "build/src/destreamer.js",
+    "scripts": {
+        "build": "echo Transpiling TypeScript to JavaScript... && tsc && echo Destreamer was built successfully.",
+        "watch": "tsc --watch",
+        "test": "mocha build/test",
+        "lint": "eslint src/*.ts"
+    },
+    "keywords": [],
+    "author": "snobu",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/mocha": "^8.0.4",
+        "@types/puppeteer": "^5.4.0",
+        "@types/readline-sync": "^1.4.3",
+        "@types/tmp": "^0.2.0",
+        "@types/yargs": "^15.0.11",
+        "@typescript-eslint/eslint-plugin": "^4.9.0",
+        "@typescript-eslint/parser": "^4.9.0",
+        "eslint": "^7.14.0",
+        "mocha": "^8.2.1",
+        "tmp": "^0.2.1"
+    },
+    "dependencies": {
+        "@tedconf/fessonia": "^2.1.2",
+        "@types/cli-progress": "^3.8.0",
+        "@types/jwt-decode": "^2.2.1",
+        "axios": "^0.21.2",
+        "axios-retry": "^3.1.9",
+        "cli-progress": "^3.8.2",
+        "colors": "^1.4.0",
+        "is-elevated": "^3.0.0",
+        "iso8601-duration": "^1.3.0",
+        "jwt-decode": "^3.1.2",
+        "puppeteer": "5.5.0",
+        "readline-sync": "^1.4.10",
+        "sanitize-filename": "^1.6.3",
+        "terminal-image": "^1.2.1",
+        "typescript": "^4.1.2",
+        "winston": "^3.3.3",
+        "yargs": "^16.1.1"
+    }
 }
