@@ -215,7 +215,7 @@ export function checkRequirements(): void {
 
     try {
         const versionRegex = new RegExp(/aria2 version (.*)/);
-        const aira2Ver: string = execSync('aria2c --version').toString().split('\n')[0];
+        const aira2Ver: string = execSync('LANG=en_US.UTF-8 aria2c --version').toString().split('\n')[0];
 
         if (versionRegex.test(aira2Ver)) {
             logger.verbose(`Using ${aira2Ver}\n`);
