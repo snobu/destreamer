@@ -3,10 +3,12 @@
 *.log
 *.js
 *.zip
+*.xml
+
+yarn.lock
 
 .chrome_data
 node_modules
 videos
 release
 build
-yarn.lock

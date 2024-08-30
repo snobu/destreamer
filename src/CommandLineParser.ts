@@ -1,15 +1,14 @@
-import { CLI_ERROR, ERROR_CODE } from './Errors';
-import { checkOutDir } from './Utils';
+import { CLI_ERROR } from './Errors';
+import { makeOutDir } from './Utils';
 import { logger } from './Logger';
 import { templateElements } from './Types';
 
 import fs from 'fs';
-import readlineSync from 'readline-sync';
 import sanitize from 'sanitize-filename';
 import yargs from 'yargs';
 
 
-export const argv: any = yargs.options({
+export const argv = yargs.options({
     username: {
         alias: 'u',
         type: 'string',
@@ -114,7 +113,7 @@ export const argv: any = yargs.options({
 .check(() => noArguments())
 .check((argv: any) => checkInputConflicts(argv.videoUrls, argv.inputFile))
 .check((argv: any) => {
-    if (checkOutDir(argv.outputDirectory)) {
+    if (makeOutDir(argv.outputDirectory)) {
         return true;
     }
     else {
@@ -197,15 +196,4 @@ function isOutputTemplateValid(argv: any): boolean {
     argv.outputTemplate = sanitize(argv.outputTemplate.trim());
 
     return true;
-}
-
-
-export function promptUser(choices: Array<string>): number {
-    const index: number = readlineSync.keyInSelect(choices, 'Which resolution/format do you prefer?');
-
-    if (index === -1) {
-        process.exit(ERROR_CODE.CANCELLED_USER_INPUT);
-    }
-
-    return index;
 }

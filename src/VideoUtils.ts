@@ -1,15 +1,16 @@
-import { ApiClient } from './ApiClient';
-import { promptUser } from './CommandLineParser';
+import { StreamApiClient } from './ApiClient';
+import { promptUser } from './Utils';
 import { logger } from './Logger';
-import { Video, Session } from './Types';
+import { Video, StreamSession, VideoUrl } from './Types';
 
 import { AxiosResponse } from 'axios';
 import fs from 'fs';
 import { parse as parseDuration, Duration } from 'iso8601-duration';
 import path from 'path';
 import sanitizeWindowsName from 'sanitize-filename';
+import { extractStreamGuids } from './Utils';
 
-function publishedDateToString(date: string): string {
+export function publishedDateToString(date: string): string {
     const dateJs: Date = new Date(date);
     const day: string = dateJs.getDate().toString().padStart(2, '0');
     const month: string = (dateJs.getMonth() + 1).toString(10).padStart(2, '0');
@@ -17,35 +18,44 @@ function publishedDateToString(date: string): string {
     return `${dateJs.getFullYear()}-${month}-${day}`;
 }
 
+export function publishedTimeToString(seconds: number): string
+export function publishedTimeToString(date: string): string
+export function publishedTimeToString(date: string | number): string {
+    let dateJs: Date;
 
-function publishedTimeToString(date: string): string {
-    const dateJs: Date = new Date(date);
+    if (typeof (date) === 'number') {
+        dateJs = new Date(0, 0, 0, 0, 0, date);
+    }
+    else {
+        dateJs = new Date(date);
+    }
+
     const hours: string = dateJs.getHours().toString();
     const minutes: string = dateJs.getMinutes().toString();
     const seconds: string = dateJs.getSeconds().toString();
 
-    return `${hours}.${minutes}.${seconds}`;
+    return `${hours}h ${minutes}m ${seconds}s`;
 }
 
 
-function isoDurationToString(time: string): string {
+export function isoDurationToString(time: string): string {
     const duration: Duration = parseDuration(time);
 
     return `${duration.hours ?? '00'}.${duration.minutes ?? '00'}.${duration.seconds?.toFixed(0) ?? '00'}`;
 }
 
-
-function durationToTotalChunks(duration: string): number {
+// it's the number of seconds in the video
+export function durationToTotalChunks(duration: string,): number {
     const durationObj: any = parseDuration(duration);
     const hrs: number = durationObj.hours ?? 0;
     const mins: number = durationObj.minutes ?? 0;
     const secs: number = Math.ceil(durationObj.seconds ?? 0);
 
-    return (hrs * 60) + mins + (secs / 60);
+    return (hrs * 60 * 60) + (mins * 60) + secs;
 }
 
 
-export async function getVideoInfo(videoGuids: Array<string>, session: Session, subtitles?: boolean): Promise<Array<Video>> {
+export async function getStreamInfo(videoUrls: Array<VideoUrl>, session: StreamSession, subtitles?: boolean): Promise<Array<Video>> {
     const metadata: Array<Video> = [];
     let title: string;
     let duration: string;
@@ -54,19 +64,23 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
     let author: string;
     let authorEmail: string;
     let uniqueId: string;
-    const outPath = '';
     let totalChunks: number;
     let playbackUrl: string;
     let posterImageUrl: string;
     let captionsUrl: string | undefined;
 
-    const apiClient: ApiClient = ApiClient.getInstance(session);
+    const apiClient: StreamApiClient = StreamApiClient.getInstance(session);
+
+
+    // we place the guid in the url field
+    const videoGUIDs = await extractStreamGuids(videoUrls, session);
+
 
     /* TODO: change this to a single guid at a time to ease our footprint on the
     MSS servers or we get throttled after 10 sequential reqs */
-    for (const guid of videoGuids) {
+    for (const guid of videoGUIDs) {
         const response: AxiosResponse<any> | undefined =
-            await apiClient.callApi('videos/' + guid + '?$expand=creator', 'get');
+            await apiClient.callApi('videos/' + guid.url + '?$expand=creator', 'get');
 
         title = sanitizeWindowsName(response?.data['name']);
 
@@ -80,7 +94,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 
         authorEmail = response?.data['creator'].mail;
 
-        uniqueId = '#' + guid.split('-')[0];
+        uniqueId = '#' + guid.url.split('-')[0];
 
         totalChunks = durationToTotalChunks(response?.data.media['duration']);
 
@@ -94,7 +108,7 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         posterImageUrl = response?.data['posterImage']['medium']['url'];
 
         if (subtitles) {
-            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid}/texttracks`, 'get');
+            const captions: AxiosResponse<any> | undefined = await apiClient.callApi(`videos/${guid.url}/texttracks`, 'get');
 
             if (!captions?.data.value.length) {
                 captionsUrl = undefined;
@@ -112,18 +126,19 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
         }
 
         metadata.push({
-            title: title,
-            duration: duration,
-            publishDate: publishDate,
-            publishTime: publishTime,
-            author: author,
-            authorEmail: authorEmail,
-            uniqueId: uniqueId,
-            outPath: outPath,
-            totalChunks: totalChunks,    // Abstraction of FFmpeg timemark
-            playbackUrl: playbackUrl,
-            posterImageUrl: posterImageUrl,
-            captionsUrl: captionsUrl
+            guid: guid.url,
+            title,
+            duration,
+            publishDate,
+            publishTime,
+            author,
+            authorEmail,
+            uniqueId,
+            outPath: guid.outDir,
+            totalChunks,    // Abstraction of FFmpeg timemark
+            playbackUrl,
+            posterImageUrl,
+            captionsUrl
         });
     }
 
@@ -131,16 +146,24 @@ export async function getVideoInfo(videoGuids: Array<string>, session: Session, 
 }
 
 
-export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, template: string, format: string, skip?: boolean): Array<Video> {
+export function createUniquePath(videos: Array<Video>, template: string, format: string, skip?: boolean): Array<Video>
+export function createUniquePath(videos: Video, template: string, format: string, skip?: boolean): Video
+export function createUniquePath(videos: Array<Video> | Video, template: string, format: string, skip?: boolean): Array<Video> | Video {
+    let singleInput = false;
 
-    videos.forEach((video: Video, index: number) => {
+    if (!Array.isArray(videos)) {
+        videos = [videos];
+        singleInput = true;
+    }
+
+    videos.forEach((video: Video) => {
         let title: string = template;
         let finalTitle: string;
         const elementRegEx = RegExp(/{(.*?)}/g);
         let match = elementRegEx.exec(template);
 
         while (match) {
-            const value = video[match[1] as keyof Video] as string;
+            const value = video[match[1] as keyof (Video)] as string;
             title = title.replace(match[0], value);
             match = elementRegEx.exec(template);
         }
@@ -148,7 +171,7 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
         let i = 0;
         finalTitle = title;
 
-        while (!skip && fs.existsSync(path.join(outDirs[index], finalTitle + '.' + format))) {
+        while (!skip && fs.existsSync(path.join(video.outPath, finalTitle + '.' + format))) {
             finalTitle = `${title}.${++i}`;
         }
 
@@ -158,9 +181,13 @@ export function createUniquePath(videos: Array<Video>, outDirs: Array<string>, t
             logger.warn(`Not a valid Windows file name: "${finalFileName}".\nReplacing invalid characters with underscores to preserve cross-platform consistency.`);
         }
 
-        video.outPath = path.join(outDirs[index], finalFileName);
+        video.outPath = path.join(video.outPath, finalFileName);
 
     });
+
+    if (singleInput) {
+        return videos[0];
+    }
 
     return videos;
 }
